@@ -549,6 +549,7 @@ function setMarkMode(mode) {
 }
 function setMarksHidden(off) {
   document.body.classList.toggle('marks-off',off); $('hide-tool').classList.toggle('on',off);
+  if(off&&markMode) setMarkMode(null);  // hidden marks can't be edited, so drop the active tool
   try {localStorage.setItem('marksOff',off?'1':'0');} catch {}
 }
 try {setMarksHidden(localStorage.getItem('marksOff')==='1');} catch {}
