@@ -5,6 +5,9 @@ Discovery roots: --root (repeatable), else $MEDIA_RATER_ROOTS (os.pathsep
 separated), else the current directory.
 
 Ratings live in .review.json; each change rebuilds REVIEW.md in that folder.
+PNG files also carry their review in an iTXt chunk ("simple-media-rater"),
+so a copy in another folder brings its rating along: opening that folder
+imports embedded reviews for files it has no entry for.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
@@ -32,6 +35,7 @@ import subprocess
 import sys
 import threading
 import time
+import zlib
 from urllib.parse import parse_qs, urlsplit
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
@@ -42,6 +46,8 @@ FLAGS = ["redo", "broken", "trash"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
+EMBED_KEY = b"simple-media-rater"
+NO_EMBED = set()  # (path, mtime_ns, size) of PNGs already found without an embedded review
 
 
 def configuration():
@@ -115,6 +121,86 @@ def load_state(d: Path) -> dict:
             backup = d / f"{STATE_FILE}.bad-{time.time_ns()}"
         p.rename(backup)
         return {"version": 1, "items": {}}
+
+
+def png_chunks(f):
+    # Yields (offset, type, data reader) without loading IDAT: only headers are read.
+    if f.read(8) != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("not a PNG")
+    while True:
+        offset, head = f.tell(), f.read(8)
+        if len(head) < 8:
+            return
+        length, kind = int.from_bytes(head[:4], "big"), head[4:]
+        yield offset, kind, length
+        f.seek(offset + 12 + length)
+
+
+def read_embedded(p: Path) -> dict | None:
+    found = None
+    with p.open("rb") as f:
+        for offset, kind, length in png_chunks(f):
+            if kind == b"iTXt" and length < 1048576:
+                f.seek(offset + 8)
+                data = f.read(length)
+                if data.startswith(EMBED_KEY + b"\0\0\0\0\0"):
+                    found = json.loads(data[len(EMBED_KEY) + 5:])
+    return found
+
+
+def embed_review(p: Path, item: dict | None):
+    # Rewrites only the tail: our chunk sits right before IEND, so pixels and other metadata stay untouched.
+    # The mtime is restored, because it orders the file list.
+    stat = p.stat()
+    with p.open("r+b") as f:
+        ours = iend = None
+        for offset, kind, length in png_chunks(f):
+            if kind == b"IEND":
+                iend = offset
+                break
+            f.seek(offset + 8)
+            ours = offset if kind == b"iTXt" and f.read(len(EMBED_KEY) + 1) == EMBED_KEY + b"\0" else None
+        if iend is None:
+            raise ValueError(f"no IEND chunk: {p.name}")
+        tail = b""
+        if item:
+            text = json.dumps(item, ensure_ascii=False).encode()
+            tail = png_chunk(b"iTXt", EMBED_KEY + b"\0\0\0\0\0" + text)
+        f.seek(ours if ours is not None else iend)
+        f.write(tail + png_chunk(b"IEND", b""))
+        f.truncate()
+    os.utime(p, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+
+
+def png_chunk(kind: bytes, data: bytes) -> bytes:
+    return len(data).to_bytes(4, "big") + kind + data + zlib.crc32(kind + data).to_bytes(4, "big")
+
+
+def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
+    # Caller holds LOCK. Adopts embedded reviews of PNGs this folder has no entry for.
+    added = False
+    for f in files:
+        p = d / f["name"]
+        if f["name"] in state["items"] or p.suffix.lower() != ".png":
+            continue
+        stat = p.stat()
+        key = (str(p), stat.st_mtime_ns, stat.st_size)
+        if key in NO_EMBED:
+            continue
+        try:
+            item = read_embedded(p)
+        except (OSError, ValueError):
+            item = None
+        if not isinstance(item, dict):
+            NO_EMBED.add(key)
+            continue
+        item["rating"] = LEGACY.get(item.get("rating"), item.get("rating"))
+        if (item.get("rating") in [None, *RATINGS] and item.get("flag") in [None, *FLAGS]
+                and isinstance(item.get("comment", ""), str)):
+            state["items"][f["name"]] = dict(rating=item.get("rating"), flag=item.get("flag"),
+                                             comment=item.get("comment", ""), updated=item.get("updated"))
+            added = True
+    return added
 
 
 def atomic_write(p: Path, text: str):
@@ -211,10 +297,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif url.path in {"/api/list", "/media"}:
             d = resolve_dir(query.get("dir", [""])[0])
             if url.path == "/api/list":
+                files = list_media(d)
                 with LOCK:
                     state = load_state(d)
-                self.json_response(200, {"dir": str(d), "files": list_media(d),
-                                         "items": state["items"]})
+                    if import_embedded(d, state, files):
+                        state.update(dir=str(d), updated=datetime.now().astimezone().isoformat(timespec="seconds"))
+                        save_state(d, state)
+                        write_report(d, state, files)
+                self.json_response(200, {"dir": str(d), "files": files, "items": state["items"]})
             else:
                 self.stream_media(safe_media_path(d, query.get("name", [""])[0]))
         else:
@@ -322,6 +412,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     else:
                         atomic_write(state_path, previous)
                     raise
+                if Path(name).suffix.lower() == ".png":
+                    try:
+                        embed_review(d / name, state["items"].get(name))
+                    except (OSError, ValueError) as e:
+                        print(f"embed skipped: {e}", file=sys.stderr, flush=True)
                 self.json_response(200, {"ok": True, "items": state["items"]})
         except (BrokenPipeError, ConnectionResetError):
             pass
