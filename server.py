@@ -203,6 +203,70 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
     return added
 
 
+def png_text(p: Path) -> dict:
+    # tEXt/iTXt chunks (uncompressed), without our own review chunk.
+    out = {}
+    with p.open("rb") as f:
+        for offset, kind, length in png_chunks(f):
+            if kind not in (b"tEXt", b"iTXt") or length > 4194304:
+                continue
+            f.seek(offset + 8)
+            key, _, rest = f.read(length).partition(b"\0")
+            if key == EMBED_KEY:
+                continue
+            if kind == b"iTXt":
+                if rest[:1] != b"\0":
+                    continue  # compressed iTXt: skip
+                rest = rest[2:].split(b"\0", 2)[-1]
+            out[key.decode("latin-1")] = rest.decode("utf-8" if kind == b"iTXt" else "latin-1", "replace")
+    return out
+
+
+def media_meta(p: Path) -> list:
+    # Generation details as [label, value] rows: ComfyUI API graphs ("prompt") or A1111 "parameters".
+    if p.suffix.lower() != ".png":
+        return []
+    text = png_text(p)
+    rows = []
+    try:
+        graph = json.loads(text.get("prompt", ""))
+    except ValueError:
+        graph = None
+    if isinstance(graph, dict):
+        models, prompts, sampling, scale = [], [], [], []
+        for node in graph.values():
+            inputs = node.get("inputs", {}) if isinstance(node, dict) else {}
+            kind = node.get("class_type", "") if isinstance(node, dict) else ""
+            for key, value in inputs.items():
+                if isinstance(value, str) and key.endswith("_name") and "." in value:
+                    models.append(value.rsplit(".", 1)[0])
+                if isinstance(value, str) and key in ("prompt", "text") and len(value) > 15:
+                    prompts.append(value)
+            if "seed" in inputs and not isinstance(inputs["seed"], list):
+                sampling.append(f"seed {inputs['seed']}")
+                sampling += [f"{inputs[k]} steps" for k in ["steps"] if k in inputs]
+                sampling += [f"cfg {inputs['cfg']}" for k in ["cfg"] if k in inputs]
+                if "sampler_name" in inputs:
+                    sampling.append(f"{inputs['sampler_name']}/{inputs.get('scheduler', '')}".rstrip("/"))
+                if inputs.get("denoise", 1) != 1:
+                    sampling.append(f"denoise {inputs['denoise']}")
+            if kind == "LoadImage" and isinstance(inputs.get("image"), str):
+                rows.append(["Source", inputs["image"]])
+            if kind == "ImageScale" and "width" in inputs:
+                scale.append(f"{inputs.get('upscale_method', '')} → {inputs['width']}×{inputs['height']}")
+        if models:
+            rows.append(["Models", " · ".join(dict.fromkeys(models))])
+        if sampling:
+            rows.append(["Sampling", " · ".join(sampling)])
+        if scale:
+            rows.append(["Resize", " · ".join(scale)])
+        if prompts:
+            rows.append(["Prompt", prompts[0]])
+    elif text.get("parameters"):
+        rows.append(["Parameters", text["parameters"]])
+    return rows
+
+
 def atomic_write(p: Path, text: str):
     tmp = p.with_name(p.name + ".tmp")
     tmp.write_text(text, encoding="utf-8")
@@ -294,6 +358,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif url.path == "/api/dirs":
             self.json_response(200, {"roots": [str(p) for p in self.server.roots],
                                      "dirs": discover_dirs(self.server.roots)})
+        elif url.path == "/api/meta":
+            d = resolve_dir(query.get("dir", [""])[0])
+            p = safe_media_path(d, query.get("name", [""])[0])
+            try:
+                rows = media_meta(p)
+            except (OSError, ValueError):
+                rows = []
+            self.json_response(200, {"rows": rows})
         elif url.path in {"/api/list", "/media"}:
             d = resolve_dir(query.get("dir", [""])[0])
             if url.path == "/api/list":
