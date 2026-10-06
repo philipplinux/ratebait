@@ -98,6 +98,30 @@ def safe_media_path(d: Path, name: str) -> Path:
     return p
 
 
+def clean_marks(item: dict) -> dict:
+    # Pins {x, y, note} and pen strokes {pts: [[x, y], ...], color}; x and y are 0..1 of the image size.
+    pins, strokes = item.get("pins") or [], item.get("strokes") or []
+    if not isinstance(pins, list) or not isinstance(strokes, list) or len(pins) > 200 or len(strokes) > 1000:
+        raise ValueError("invalid marks")
+    unit = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1
+    out = {}
+    for pin in pins:
+        if not (isinstance(pin, dict) and unit(pin.get("x")) and unit(pin.get("y"))
+                and isinstance(pin.get("note", ""), str) and len(pin.get("note", "")) <= 2000):
+            raise ValueError("invalid pin")
+    for stroke in strokes:
+        pts = stroke.get("pts") if isinstance(stroke, dict) else None
+        if not (isinstance(pts, list) and 1 <= len(pts) <= 20000
+                and all(isinstance(q, list) and len(q) == 2 and unit(q[0]) and unit(q[1]) for q in pts)
+                and re.fullmatch(r"#[0-9a-fA-F]{6}", str(stroke.get("color", "")))):
+            raise ValueError("invalid stroke")
+    if pins:
+        out["pins"] = [dict(x=round(q["x"], 4), y=round(q["y"], 4), note=q.get("note", "").strip()) for q in pins]
+    if strokes:
+        out["strokes"] = [dict(pts=[[round(x, 4), round(y, 4)] for x, y in q["pts"]], color=q["color"]) for q in strokes]
+    return out
+
+
 def load_state(d: Path) -> dict:
     # Caller holds LOCK: malformed-state preservation is also a write.
     p = d / STATE_FILE
@@ -112,6 +136,7 @@ def load_state(d: Path) -> dict:
                     or item.get("flag") not in [None, *FLAGS]
                     or not isinstance(item.get("comment"), str)):
                 raise ValueError("invalid review item")
+            clean_marks(item)
         return state
     except FileNotFoundError:
         return {"version": 1, "items": {}}
@@ -197,8 +222,12 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
         item["rating"] = LEGACY.get(item.get("rating"), item.get("rating"))
         if (item.get("rating") in [None, *RATINGS] and item.get("flag") in [None, *FLAGS]
                 and isinstance(item.get("comment", ""), str)):
+            try:
+                marks = clean_marks(item)
+            except ValueError:
+                marks = {}
             state["items"][f["name"]] = dict(rating=item.get("rating"), flag=item.get("flag"),
-                                             comment=item.get("comment", ""), updated=item.get("updated"))
+                                             comment=item.get("comment", ""), updated=item.get("updated"), **marks)
             added = True
     return added
 
@@ -319,6 +348,11 @@ def write_report(d: Path, state: dict, files: list[dict]):
             comment = " ".join(item.get("comment", "").splitlines())
             kind = f["kind"] + (f", {item['rating']}" if item.get("flag") and item.get("rating") else "")
             lines.append(f"- `{f['name']}` ({kind})" + (f": {comment}" if comment else ""))
+            for n, pin in enumerate(item.get("pins", []), 1):
+                note = " ".join(pin["note"].splitlines())
+                lines.append(f"  - Pin {n} ({pin['x']:.0%}, {pin['y']:.0%})" + (f": {note}" if note else ""))
+            if item.get("strokes"):
+                lines.append(f"  - Drawing: {len(item['strokes'])} strokes (shown in the rater)")
         lines.append("")
     atomic_write(d / REPORT_FILE, "\n".join(lines))
 
@@ -464,15 +498,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if not isinstance(comment, str):
                 raise ValueError("comment must be a string")
             comment = comment.strip()
+            marks = clean_marks(data)
             with LOCK:
                 state = load_state(d)
                 state_path = d / STATE_FILE
                 previous = state_path.read_text(encoding="utf-8") if state_path.exists() else None
                 now = datetime.now().astimezone().isoformat(timespec="seconds")
-                if rating is None and flag is None and not comment:
+                if rating is None and flag is None and not comment and not marks:
                     state["items"].pop(name, None)
                 else:
-                    state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now)
+                    state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now, **marks)
                 state.update(dir=str(d), updated=now)
                 save_state(d, state)
                 try:
