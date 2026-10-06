@@ -8,6 +8,8 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Full-size 4K screenshot: [do
 
 ![RateBait: grid view with ratings, numpad buttons and comment box](docs/screenshot.png)
 
+![Demo: scroll the grid, open single view, zoom in fullscreen, flip A/B to the next image at the same zoom, pin a note, scribble, rate](docs/demo.gif)
+
 ## Setup
 
 - **Required:** Python 3.10+ and a modern browser. Nothing to install: clone and run.

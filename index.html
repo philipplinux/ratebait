@@ -347,7 +347,7 @@ $('set-peek').onchange=e=>setPeek(e.target.checked);
 try {setPeek(localStorage.getItem('peek')!=='0');} catch {setPeek(true);}
 // Grid size (columns × rows), kept per browser. ↑↓ move one row, PgUp/PgDn one page.
 const gridSize={cols:3,rows:3};
-function setGrid(cols,rows) {
+function setGridSize(cols,rows) {
   const fit=v=>Math.min(10,Math.max(1,Math.round(+v)||3));
   gridSize.cols=fit(cols); gridSize.rows=fit(rows);
   document.body.style.setProperty('--gcols',gridSize.cols); document.body.style.setProperty('--grows',gridSize.rows);
@@ -355,9 +355,9 @@ function setGrid(cols,rows) {
   for(const b of document.querySelectorAll('.grid-presets button')) b.classList.toggle('on',b.dataset.grid===gridSize.cols+'x'+gridSize.rows);
   try {localStorage.setItem('gridSize',gridSize.cols+'x'+gridSize.rows);} catch {}
 }
-for(const b of document.querySelectorAll('.grid-presets button')) b.onclick=()=>setGrid(...b.dataset.grid.split('x'));
-$('grid-cols').onchange=$('grid-rows').onchange=()=>setGrid($('grid-cols').value,$('grid-rows').value);
-try {const [c,r]=(localStorage.getItem('gridSize')||'3x3').split('x'); setGrid(c,r);} catch {setGrid(3,3);}
+for(const b of document.querySelectorAll('.grid-presets button')) b.onclick=()=>setGridSize(...b.dataset.grid.split('x'));
+$('grid-cols').onchange=$('grid-rows').onchange=()=>setGridSize($('grid-cols').value,$('grid-rows').value);
+try {const [c,r]=(localStorage.getItem('gridSize')||'3x3').split('x'); setGridSize(c,r);} catch {setGridSize(3,3);}
 // Key hint bar: small by default, click toggles a bigger size (kept per browser).
 {const h=document.querySelector('main>.hint'); h.title='Click to resize';
  const setBig=on=>{h.classList.toggle('big',on); try {localStorage.setItem('hintBig',on?'1':'0');} catch {}};
