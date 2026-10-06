@@ -10,8 +10,8 @@ may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
 and keys 1–6 save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
-Flags sit beside the rating: Redo (R) asks for changes described in the comment,
-Broken (B) marks a defective file, Trash (X/Delete) marks it for deletion; each
+Flags sit beside the rating: Redo (7) asks for changes described in the comment,
+Broken (8) marks a defective file, Trash (9) marks it for deletion; each
 gets its own REVIEW.md section.
 Arrow keys navigate, C focuses comments, and Space toggles audio playback.
 Browse opens the system folder dialog (XDG desktop portal, falling back to Tk)
