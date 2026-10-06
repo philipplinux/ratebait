@@ -41,7 +41,9 @@ python3 server.py                          # scans the current directory → htt
 python3 server.py --root ~/Pictures --root ~/Music --port 8765
 ```
 
-**Try it first:** `sample-wallpapers/` holds 13 example 4K wallpapers, already rated, with comments, pins, drawings and made-up generation metadata (prompt, model, sampler). Start with `python3 server.py --root sample-wallpapers` to see a finished review, including its `REVIEW.md`.
+**Try it first:** I included some 4K wallpapers in `sample-wallpapers/`, 13 of them. They're already rated, with comments, pins, drawings and made-up generation metadata (prompt, model, sampler). Start with `python3 server.py --root sample-wallpapers` to see a finished review, including its `REVIEW.md`.
+
+![12 of the included 4K sample wallpapers](docs/sample-wallpapers.jpg)
 
 ## Use
 
