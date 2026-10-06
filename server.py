@@ -9,7 +9,9 @@ No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
 and keys 1–5 save and advance to the next file, wrapping at the end. Comments
-save on blur or Ctrl+Enter. Clear removes both the rating and comment.
+save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
+Flags sit beside the rating: Redo (R) asks for changes described in the comment,
+Broken (X) marks a file as trash; both get their own REVIEW.md section.
 Arrow keys navigate, C focuses comments, and Space toggles audio playback.
 Browse opens the system folder dialog (XDG desktop portal, falling back to Tk)
 and fills the path; click Open to review it. Cancel leaves the path unchanged.
@@ -33,6 +35,7 @@ from urllib.parse import parse_qs, urlsplit
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
 RATINGS = ["reject", "neutral", "good", "great", "love"]
+FLAGS = ["redo", "broken"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
@@ -95,6 +98,7 @@ def load_state(d: Path) -> dict:
             raise ValueError("invalid state")
         for item in state["items"].values():
             if (not isinstance(item, dict) or item.get("rating") not in [None, *RATINGS]
+                    or item.get("flag") not in [None, *FLAGS]
                     or not isinstance(item.get("comment"), str)):
                 raise ValueError("invalid review item")
         return state
@@ -140,23 +144,26 @@ def discover_dirs(roots) -> list[dict]:
 
 
 def write_report(d: Path, state: dict, files: list[dict]):
-    sections = [*reversed(RATINGS), "unrated"]
-    groups = {rating: [] for rating in sections}
+    # Flagged files are listed under their flag (rating kept in the line), not their rating.
+    sections = ["redo", *reversed(RATINGS), "broken", "unrated"]
+    groups = {section: [] for section in sections}
     for f in files:
         item = state["items"].get(f["name"], {})
-        groups[item.get("rating") or "unrated"].append((f, item))
+        groups[item.get("flag") or item.get("rating") or "unrated"].append((f, item))
     rated = len(files) - len(groups["unrated"])
     counts = " · ".join(f"{r} {len(groups[r])}" for r in sections)
+    titles = {"redo": "Redo / changes requested", "broken": "Broken / trash"}
     lines = ["# Media review", "", f"- Folder: `{d}`",
              f"- Updated: {state['updated']}",
              f"- Progress: {rated}/{len(files)} rated · {counts}", ""]
     for rating in sections:
-        lines.append(f"## {rating.title()}")
+        lines.append(f"## {titles.get(rating, rating.title())}")
         if not groups[rating]:
             lines.append("- (none)")
         for f, item in groups[rating]:
             comment = " ".join(item.get("comment", "").splitlines())
-            lines.append(f"- `{f['name']}` ({f['kind']})" + (f": {comment}" if comment else ""))
+            kind = f["kind"] + (f", {item['rating']}" if item.get("flag") and item.get("rating") else "")
+            lines.append(f"- `{f['name']}` ({kind})" + (f": {comment}" if comment else ""))
         lines.append("")
     atomic_write(d / REPORT_FILE, "\n".join(lines))
 
@@ -283,6 +290,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             rating = data.get("rating")
             if rating not in [None, *RATINGS]:
                 raise ValueError("invalid rating")
+            flag = data.get("flag")
+            if flag not in [None, *FLAGS]:
+                raise ValueError("invalid flag")
             comment = data.get("comment")
             if not isinstance(comment, str):
                 raise ValueError("comment must be a string")
@@ -292,10 +302,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 state_path = d / STATE_FILE
                 previous = state_path.read_text(encoding="utf-8") if state_path.exists() else None
                 now = datetime.now().astimezone().isoformat(timespec="seconds")
-                if rating is None and not comment:
+                if rating is None and flag is None and not comment:
                     state["items"].pop(name, None)
                 else:
-                    state["items"][name] = dict(rating=rating, comment=comment, updated=now)
+                    state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now)
                 state.update(dir=str(d), updated=now)
                 save_state(d, state)
                 try:
