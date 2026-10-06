@@ -11,7 +11,8 @@ Open the printed URL; pick a discovered folder or type its path. Rating clicks
 and keys 1–6 save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
 Flags sit beside the rating: Redo (R) asks for changes described in the comment,
-Broken (X) marks a file as trash; both get their own REVIEW.md section.
+Broken (B) marks a defective file, Trash (X/Delete) marks it for deletion; each
+gets its own REVIEW.md section.
 Arrow keys navigate, C focuses comments, and Space toggles audio playback.
 Browse opens the system folder dialog (XDG desktop portal, falling back to Tk)
 and fills the path; click Open to review it. Cancel leaves the path unchanged.
@@ -36,7 +37,7 @@ from urllib.parse import parse_qs, urlsplit
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
 RATINGS = ["reject", "neutral", "good", "great", "love", "mvp"]
-FLAGS = ["redo", "broken"]
+FLAGS = ["redo", "broken", "trash"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
@@ -146,14 +147,14 @@ def discover_dirs(roots) -> list[dict]:
 
 def write_report(d: Path, state: dict, files: list[dict]):
     # Flagged files are listed under their flag (rating kept in the line), not their rating.
-    sections = ["redo", *reversed(RATINGS), "broken", "unrated"]
+    sections = ["redo", *reversed(RATINGS), "broken", "trash", "unrated"]
     groups = {section: [] for section in sections}
     for f in files:
         item = state["items"].get(f["name"], {})
         groups[item.get("flag") or item.get("rating") or "unrated"].append((f, item))
     rated = len(files) - len(groups["unrated"])
     counts = " · ".join(f"{r} {len(groups[r])}" for r in sections)
-    titles = {"redo": "Redo / changes requested", "broken": "Broken / trash", "mvp": "MVP / best"}
+    titles = {"redo": "Redo / changes requested", "broken": "Broken", "trash": "Trash / marked for deletion", "mvp": "MVP / best"}
     lines = ["# Media review", "", f"- Folder: `{d}`",
              f"- Updated: {state['updated']}",
              f"- Progress: {rated}/{len(files)} rated · {counts}", ""]
