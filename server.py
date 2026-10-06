@@ -8,7 +8,7 @@ Ratings live in .review.json; each change rebuilds REVIEW.md in that folder.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
-and keys 1–6 save and advance to the next file, wrapping at the end. Comments
+and keys (0 Neutral, 1–4 Good…MVP, 6 Reject) save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
 Flags sit beside the rating: Redo (7) asks for changes described in the comment,
 Broken (8) marks a defective file, Trash (9) marks it for deletion; each

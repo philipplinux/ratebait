@@ -28,15 +28,14 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 <header><h1>Simple Media Rater <span>Pictures & music · Local files · Markdown notes</span></h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="browse">Browse…</button><button id="open">Open</button><span id="progress">0/0 rated</span></div><nav id="ticks" aria-label="Review progress"></nav></header>
 <aside id="sidebar" aria-label="Media files"></aside>
 <!-- Review order: media, ratings, comment, then filename/date. -->
-<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 1–6 Rate · 7 Redo · 8 Broken · 9 Trash · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
+<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 0 Neutral · 1–4 Good→MVP · 6 Reject · 7 Redo · 8 Broken · 9 Trash · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
 <div id="viewer" hidden><img alt=""><div id="zoom-level"></div></div>
 <div id="toast" role="alert" hidden></div>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 const ratings = ['reject','neutral','good','great','love','mvp'];
-const flags = {trash:['🗑','9 Trash'], broken:['⚠','8 Broken'], redo:['↻','7 Redo']};
-const flagKeys = {'7':'redo','8':'broken','9':'trash'};
+const flags = ['redo','broken','trash'];
 let dir='', files=[], items={}, index=0, busy=false, toastTimer;
 const current = () => files[index];
 const titleCase = s => s[0].toUpperCase()+s.slice(1);
@@ -156,20 +155,19 @@ function openFolder(raw) {
     history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
   });
 }
-for(const [flag,[symbol,label]] of Object.entries(flags)) {
-  const b=document.createElement('button'); b.dataset.rating=flag; b.className='flag';
+// One row, keyed by the number shown: 0 Neutral, 1–4 better and better,
+// 6–9 worse and worse (5 is a buffer). Flags toggle; ratings save and advance.
+const buttons=[['0','neutral','−'],['1','good','👍'],['2','great','★'],['3','love','♥'],['4','mvp','👑'],null,
+               ['6','reject','✕'],['7','redo','↻'],['8','broken','⚠'],['9','trash','🗑']];
+const keyAction={};
+for(const entry of buttons) {
+  if(!entry) {$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'})); continue;}
+  const [key,value,symbol]=entry, flag=flags.includes(value);
+  const b=document.createElement('button'); b.dataset.rating=value; if(flag) b.className='flag';
   const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
-  icon.textContent=symbol; b.append(icon,document.createTextNode(label));
-  b.onclick=()=>toggleFlag(flag); $('ratings').append(b);
+  icon.textContent=symbol; b.append(icon,document.createTextNode(`${key} ${value==='mvp'?'MVP':titleCase(value)}`));
+  keyAction[key]=b.onclick=()=>flag?toggleFlag(value):rate(value); $('ratings').append(b);
 }
-$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'}));
-ratings.forEach((rating,i)=>{
-  const b=document.createElement('button'); b.dataset.rating=rating;
-  const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
-  icon.textContent=['✕','−','👍','★','♥','👑'][i];
-  b.append(icon,document.createTextNode(`${i+1} ${rating==='mvp'?'MVP':titleCase(rating)}`));
-  b.onclick=()=>rate(rating); $('ratings').append(b);
-});
 $('open').onclick=()=>openFolder($('path').value);
 $('browse').onclick=()=>transact(async()=>{
   await saveComment();
@@ -244,8 +242,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&typing) {e.target.blur(); return;}
   if(e.ctrlKey&&e.key==='Enter'&&e.target===$('comment')) {e.preventDefault(); transact(saveComment); return;}
   if(typing||busy||e.ctrlKey||e.metaKey||e.altKey) return;
-  if(/^[1-6]$/.test(e.key)) {e.preventDefault(); rate(ratings[Number(e.key)-1]);}
-  else if(flagKeys[e.key]) {e.preventDefault(); toggleFlag(flagKeys[e.key]);}
+  if(keyAction[e.key]) {e.preventDefault(); keyAction[e.key]();}
   else if(e.key==='ArrowLeft') {e.preventDefault(); jump(index-1);}
   else if(e.key==='ArrowRight') {e.preventDefault(); jump(index+1);}
   else if(e.key.toLowerCase()==='c') {e.preventDefault(); $('comment').focus();}
