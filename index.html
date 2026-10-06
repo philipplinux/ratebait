@@ -4,12 +4,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RateBait</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#f7768e;--neutral:#8b95a7;--great:#9ece6a;--love:#f78fc6;--mvp:#e0af68;--redo:#7aa2f7;--broken:#ff9e64;--trash:#bb9af7}
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#f7768e;--neutral:#8b95a7;--great:#9ece6a;--love:#f78fc6;--mvp:#e0af68;--redo:#7aa2f7;--broken:#ff9e64;--trash:#bb9af7;--custom7:#73daca;--custom8:#e9e46b;--custom9:#ff8fa3}
 *{box-sizing:border-box}body{margin:0;height:100vh;display:grid;grid-template: auto minmax(0,1fr)/var(--list) minmax(0,1fr);--list:300px}
-header{grid-column:1/-1;padding:20px 24px;background:#191e27;border-bottom:1px solid #303746}.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap}h1{font-size:20px;margin:0;white-space:nowrap}.controls{flex:1;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header{grid-column:1/-1;padding:20px 24px;background:#191e27;border-bottom:1px solid #303746}.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap}h1{font-size:20px;margin:0;white-space:nowrap}.controls{flex:1;min-width:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button,input,select,textarea{font:inherit;border:1px solid #3d4657;border-radius:7px;background:#222936;color:inherit;padding:9px 12px}button{cursor:pointer}button:hover{border-color:#aab7ce}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #aab7ce}select{max-width:40%;min-width:210px}#path{flex:1;min-width:200px}#progress{font-size:13px;color:#b7c1d2}
 #ticks{display:flex;gap:4px;margin-top:18px;min-height:14px}#ticks button{flex:1;min-width:0;padding:0;height:14px;border:0;border-radius:3px;background:var(--unrated)}#ticks .current{outline:2px solid white;outline-offset:2px}
-[data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}[data-rating=mvp]{--tone:var(--mvp)}[data-rating=redo]{--tone:var(--redo)}[data-rating=broken]{--tone:var(--broken)}[data-rating=trash]{--tone:var(--trash)}#ticks button[data-rating]{background:var(--tone)}
+[data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}[data-rating=mvp]{--tone:var(--mvp)}[data-rating=redo]{--tone:var(--redo)}[data-rating=broken]{--tone:var(--broken)}[data-rating=trash]{--tone:var(--trash)}[data-rating=custom7]{--tone:var(--custom7)}[data-rating=custom8]{--tone:var(--custom8)}[data-rating=custom9]{--tone:var(--custom9)}#ticks button[data-rating]{background:var(--tone)}
 aside{overflow:auto;background:#151a22;padding:12px;border-right:1px solid #303746}.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:5px;background:transparent;border-color:transparent;padding:8px}.row.current{background:#2a3343;border-color:#64758d}.thumb{width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0}.note{font-size:28px;text-align:center}.row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.row-name{overflow:hidden;text-overflow:ellipsis;font-size:12px}.row-meta{color:#7d8696;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{color:var(--tone,#a2aabb);font-size:11px}.comment-marker{font-size:12px}.row.dragging{opacity:.45}.row.drop-before{box-shadow:inset 0 3px 0 #8fb3ff}.row.drop-after{box-shadow:inset 0 -3px 0 #8fb3ff}body.sorting{user-select:none;cursor:grabbing}.order-bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7d8696;margin:0 0 8px;padding:0 4px}.order-bar button{font-size:11px;padding:2px 8px}
 main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#banner{background:#294534;color:#b9efc8;padding:10px 14px;border-radius:7px}#media{flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;background:#0b0e13;border-radius:10px;overflow:hidden}#media>img{width:100%;height:100%;max-height:calc(100vh - 400px);object-fit:contain}.audio-card{display:flex;flex-direction:column;align-items:center;gap:20px;padding:24px;max-width:100%}.audio-card .symbol{font-size:90px;color:#ecc268}.audio-card audio{width:min(520px,100%)}.audio-card .audio-name{overflow-wrap:anywhere;text-align:center}#filename{font-weight:600;overflow-wrap:anywhere}#date{font-size:12px;color:#929daf;margin-top:4px}#ratings{display:flex;gap:8px;flex-wrap:wrap}:is(#ratings,#grid-box) button{color:var(--tone)}:is(#ratings,#grid-box) button.selected{background:var(--tone);color:#11161b;border-color:var(--tone)}textarea{display:block;width:100%;resize:vertical;min-height:72px}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:13px}.hint{color:#929daf;font-size:12px}#toast{position:fixed;bottom:24px;right:24px;max-width:80vw;background:#762f38;color:white;padding:16px;border-radius:8px;z-index:10}[hidden]{display:none!important}body.busy button:not(#ticks button),body.busy select{pointer-events:none;opacity:.65}
 #ratings{justify-content:center;gap:10px;padding:10px 0 14px;flex-shrink:0;flex-wrap:nowrap}
@@ -31,17 +31,16 @@ body.side main{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-templ
 body.side #banner{grid-area:1/1/2/-1}body.side #media{grid-area:2/1/7/2;height:calc(100vh - 170px)}body.side #media>img{max-height:none}
 body.side #ratings{grid-area:2/2;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0}body.side #comments{grid-area:3/2}body.side #grid-box{grid-area:4/2}body.side #details{grid-area:5/2}
 body.side #ratings .flag-sep{display:none}body.side :is(#ratings,#grid-box) button{max-width:none}
-body.side [data-key="4"]{grid-area:1/1}body.side [data-key="5"]{grid-area:1/2}body.side [data-key="6"]{grid-area:1/3}body.side [data-key="1"]{grid-area:2/1}body.side [data-key="2"]{grid-area:2/2}body.side [data-key="3"]{grid-area:2/3}body.side [data-key="0"]{grid-area:3/1/4/3}body.side [data-key="."]{grid-area:3/3}
-#layout{padding:9px 12px;font-size:16px;line-height:1}#grid-toggle{--tone:#a2aabb}#grid-toggle.on{background:#3a4560;border-color:#fff}#grid-box{display:flex}#grid-box[hidden]{display:none}#grid-box button{flex:1;max-width:none}body.side #grid-toggle{min-height:48px;flex-direction:row}
+body.side [data-key="4"]{grid-area:1/1}body.side [data-key="5"]{grid-area:1/2}body.side [data-key="6"]{grid-area:1/3}body.side [data-key="1"]{grid-area:2/1}body.side [data-key="2"]{grid-area:2/2}body.side [data-key="3"]{grid-area:2/3}body.side [data-key="0"]{grid-area:3/1/4/3}body.side [data-key="."]{grid-area:3/3}body.side [data-key="7"]{grid-area:4/1}body.side [data-key="8"]{grid-area:4/2}body.side [data-key="9"]{grid-area:4/3}body.side.customs [data-key="7"]{grid-area:1/1}body.side.customs [data-key="8"]{grid-area:1/2}body.side.customs [data-key="9"]{grid-area:1/3}body.side.customs [data-key="4"]{grid-area:2/1}body.side.customs [data-key="5"]{grid-area:2/2}body.side.customs [data-key="6"]{grid-area:2/3}body.side.customs [data-key="1"]{grid-area:3/1}body.side.customs [data-key="2"]{grid-area:3/2}body.side.customs [data-key="3"]{grid-area:3/3}body.side.customs [data-key="0"]{grid-area:4/1/5/3}body.side.customs [data-key="."]{grid-area:4/3}#ratings button[hidden],#ratings .flag-sep[hidden]{display:none}
+#settings-box{position:relative;margin-left:auto}#settings{padding:7px 11px;font-size:18px;line-height:1}#settings[aria-expanded=true]{background:#3a4560;border-color:#fff}#settings-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:260px;padding:10px 12px;background:#1c222d;border:1px solid #3d4657;border-radius:9px;box-shadow:0 12px 32px #0009;display:flex;flex-direction:column;gap:6px}#settings-menu[hidden]{display:none}.set-row{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}.set-row input[type=checkbox]{width:16px;height:16px;margin:0;padding:0;accent-color:#7aa2f7}.set-row input:not([type]){flex:1;min-width:0;padding:5px 8px;font-size:13px}.set-head{margin-top:6px;padding-top:8px;border-top:1px solid #303746;font-size:12px;color:#b7c1d2}.set-hint{margin:0;font-size:11px;color:#7d8696}#grid-toggle{--tone:#a2aabb}#grid-toggle.on{background:#3a4560;border-color:#fff}#grid-box{display:flex}#grid-box[hidden]{display:none}#grid-box button{flex:1;max-width:none}body.side #grid-toggle{min-height:48px;flex-direction:row}
 /* Grid view: every file in 3 columns, 3 rows visible, scrolls; ratings still apply to the outlined tile. */
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:calc((100% - 12px) / 3);gap:6px;position:absolute;inset:0;overflow-y:auto}#media{position:relative}.tile{position:relative;overflow:hidden;border-radius:6px;background:#000;border:2px solid transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:40px;color:#ecc268}.tile.current{border-color:#fff}.tile img{width:100%;height:100%;object-fit:contain}.tile .tile-name{position:absolute;left:0;right:0;bottom:0;padding:14px 8px 6px;background:linear-gradient(#0000,#000c);color:#c8d0dc;font-size:11px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tile.current .tile-name{color:#fff}.tile:has(.tile-badge:not([hidden])) .tile-name{padding-right:64px}.tile .tile-badge{position:absolute;right:6px;bottom:4px;background:#000b;color:var(--tone,#a2aabb);padding:2px 7px;border-radius:4px;font-size:12px;font-weight:600}
 @media(max-width:750px){body{--list:180px}header,main{padding:14px}.row{flex-wrap:wrap}.badge{margin-left:auto}select{max-width:100%}#media>img{max-height:45vh}}
 /* File list collapses to the left; a small flag on its edge brings it back (L). */
-#list-tab{position:fixed;left:var(--list);top:50%;transform:translateY(-50%);z-index:5;width:18px;height:64px;padding:0;border-radius:0 8px 8px 0;border-left:0;background:#222936;color:#b7c1d2;font-size:14px}
-body.list-off{grid-template-columns:minmax(0,1fr)}body.list-off aside{display:none}body.list-off #list-tab{left:0}
+body.list-off{grid-template-columns:minmax(0,1fr)}body.list-off aside{display:none}
 #next{margin-left:auto}.comment-head button{white-space:nowrap;padding:7px 10px}body:not(.side) .comment-head .hint{display:block;font-size:11px;margin-top:2px;white-space:nowrap}body:not(.side) .comment-head .hint .blur{display:none}
 body:not(.side) #details{grid-area:3/1;display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr);column-gap:18px;overflow-wrap:anywhere;align-items:start;font-size:12px}body:not(.side) #fileinfo,body:not(.side) #genmeta{grid-area:auto;margin:0;max-height:none}
-#filemeta,#date{color:#7d8696;font-size:11px}#filemeta{margin-top:3px}#genmeta{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:11px}#genmeta:empty{display:none}#genmeta dt{color:#7d8696}#genmeta dd{margin:0;color:#b4bfce}#genmeta dd.prompt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}main>.hint{position:fixed;left:var(--list);right:0;bottom:0;z-index:4;text-align:center;padding:6px 16px;background:#0d1117cc;backdrop-filter:blur(8px);border-top:1px solid #303746;font-size:11.5px;color:#9aa5b6}body.list-off main>.hint{left:0}main{padding-bottom:40px}body:not(.side) #media{min-height:0}body:not(.side) #media>img{position:absolute;inset:0;max-height:none}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto;row-gap:16px;padding-top:8px}@media(max-width:1880px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(320px,24%) 90px;padding-bottom:52px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(200px,1fr) auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto auto}body:not(.side) #ratings{grid-area:3/1}body:not(.side) #ratings button{flex:1 1 0;min-width:0}body:not(.side) #fileinfo{max-width:none}body:not(.side) #comments{grid-area:3/2}body:not(.side) #grid-box{grid-area:3/3}body:not(.side) #details{grid-area:4/1/5/-1;grid-template-columns:minmax(200px,max-content) minmax(0,1fr);column-gap:28px;margin-top:4px}}@media(max-width:1400px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(320px,34%) 90px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(200px,1fr) auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto auto}body:not(.side) #ratings{grid-area:3/1/4/-1;container:ratings/inline-size}body:not(.side) #details{grid-area:4/1;grid-template-columns:minmax(0,1fr);row-gap:8px;margin-top:0}body:not(.side) #comments{grid-area:4/2}body:not(.side) #grid-box{grid-area:4/3}}@media(max-width:1000px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 90px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(160px,1fr) auto auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(160px,1fr) auto auto auto}body:not(.side) #comments{grid-area:4/1/5/3}body:not(.side) #details{grid-area:5/1/6/-1;margin-top:12px}}@container ratings (max-width:640px){#ratings .rating-word{display:none}#ratings button{font-size:15px}}.rating-foot{display:flex;align-items:center;justify-content:center;gap:5px}#ratings .rating-foot .comment-mode{position:static;width:20px;height:20px;font-size:11px}.keycap{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 4px;font:600 11px/1 ui-monospace,monospace;color:#d6dce6;background:linear-gradient(#3a4354,#262d3a);border:1px solid #556076;border-bottom-width:2px;border-radius:5px;box-shadow:0 1px 0 #0008}:is(#ratings,#grid-box) button.selected .keycap{color:#11161b;background:#ffffffb0;border-color:#11161b80}.rating-icon svg{width:27px;height:27px;display:block}
+#filemeta,#date{color:#7d8696;font-size:11px}#filemeta{margin-top:3px}#genmeta{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:11px}#genmeta:empty{display:none}#genmeta dt{color:#7d8696}#genmeta dd{margin:0;color:#b4bfce}#genmeta dd.prompt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}main>.hint{position:fixed;left:var(--list);right:0;bottom:0;z-index:4;text-align:center;padding:6px 16px;background:#0d1117cc;backdrop-filter:blur(8px);border-top:1px solid #303746;font-size:11.5px;color:#9aa5b6}body.list-off main>.hint{left:0}main{padding-bottom:40px}body:not(.side) #media{min-height:0}body:not(.side) #media>img{position:absolute;inset:0;max-height:none}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto;row-gap:16px;padding-top:8px}@media(max-width:1880px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(320px,24%) 90px;padding-bottom:52px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(200px,1fr) auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto auto}body:not(.side) #ratings{grid-area:3/1}body:not(.side) #ratings button{flex:1 1 0;min-width:0}body:not(.side) #fileinfo{max-width:none}body:not(.side) #comments{grid-area:3/2}body:not(.side) #grid-box{grid-area:3/3}body:not(.side) #details{grid-area:4/1/5/-1;grid-template-columns:minmax(200px,max-content) minmax(0,1fr);column-gap:28px;margin-top:4px}}/* Custom 7–9 make the button row too wide for the one-row layout: use the stacked one. */@media(min-width:1881px){body.customs:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(320px,24%) 90px;padding-bottom:52px}body.customs:not(.side) main,body.customs:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(200px,1fr) auto auto}body.customs:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto auto}body.customs:not(.side) #ratings{grid-area:3/1}body.customs:not(.side) #ratings button{flex:1 1 0;min-width:0}body.customs:not(.side) #fileinfo{max-width:none}body.customs:not(.side) #comments{grid-area:3/2}body.customs:not(.side) #grid-box{grid-area:3/3}body.customs:not(.side) #details{grid-area:4/1/5/-1;grid-template-columns:minmax(200px,max-content) minmax(0,1fr);column-gap:28px;margin-top:4px}}@media(max-width:1400px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(320px,34%) 90px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(200px,1fr) auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(200px,1fr) auto auto}body:not(.side) #ratings{grid-area:3/1/4/-1;container:ratings/inline-size}body:not(.side) #details{grid-area:4/1;grid-template-columns:minmax(0,1fr);row-gap:8px;margin-top:0}body:not(.side) #comments{grid-area:4/2}body:not(.side) #grid-box{grid-area:4/3}}@media(max-width:1000px){body:not(.side) main{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 90px}body:not(.side) main,body:not(.side) main:has(#banner[hidden]){grid-template-rows:auto minmax(160px,1fr) auto auto auto}body:not(.side) main:has(#banner[hidden]){grid-template-rows:0 minmax(160px,1fr) auto auto auto}body:not(.side) #comments{grid-area:4/1/5/3}body:not(.side) #details{grid-area:5/1/6/-1;margin-top:12px}}@container ratings (max-width:640px){#ratings .rating-word{display:none}#ratings button{font-size:15px}}.rating-foot{display:flex;align-items:center;justify-content:center;gap:5px}#ratings .rating-foot .comment-mode{position:static;width:20px;height:20px;font-size:11px}.keycap{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 4px;font:600 11px/1 ui-monospace,monospace;color:#d6dce6;background:linear-gradient(#3a4354,#262d3a);border:1px solid #556076;border-bottom-width:2px;border-radius:5px;box-shadow:0 1px 0 #0008}:is(#ratings,#grid-box) button.selected .keycap{color:#11161b;background:#ffffffb0;border-color:#11161b80}.rating-icon svg{width:27px;height:27px;display:block}
 /* Marks: pins and pen strokes in an overlay over the shown image (the file's pixels never change). */
 .marks{position:absolute;pointer-events:none;z-index:2}.marks svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.marks path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.marks path.halo{stroke:#000a;stroke-width:6}.marks path.ink{stroke-width:3}
 .pin{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;display:grid;place-items:center;border-radius:50%;background:#ff4d6d;color:#fff;font:700 12px/1 system-ui,sans-serif;border:2px solid #fff;box-shadow:0 2px 6px #000a;pointer-events:auto;cursor:pointer}
@@ -51,17 +50,22 @@ body.marks-off #media .marks,body.marks-off #viewer .marks{display:none}#media.m
 </style>
 </head>
 <body>
-<header><div class="top"><h1 title="Pictures & music · Local files · Markdown notes">RateBait</h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><button id="browse">Browse…</button><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="open">Open</button><span id="progress">0/0 rated</span></div><button id="layout" title="Controls: move to right sidebar" aria-label="Toggle sidebar layout">⇥</button></div><nav id="ticks" aria-label="Review progress"></nav></header>
-<aside id="sidebar" aria-label="Media files"></aside><button id="list-tab" title="Hide file list (L)" aria-label="Toggle file list">‹</button>
+<header><div class="top"><h1 title="Pictures & music · Local files · Markdown notes">RateBait</h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><button id="browse">Browse…</button><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="open">Open</button><span id="progress">0/0 rated</span></div><div id="settings-box"><button id="settings" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="settings-menu">⚙</button><div id="settings-menu" hidden><label class="set-row"><input type="checkbox" id="set-list"> File list <kbd class="keycap">L</kbd></label><label class="set-row"><input type="checkbox" id="set-side"> Controls in a right sidebar</label><div class="set-head">Custom buttons</div><p class="set-hint">Name a button to show it. Empty hides it.</p><label class="set-row"><kbd class="keycap">7</kbd><input id="name-custom7" maxlength="40" placeholder="e.g. Wallpaper"></label><label class="set-row"><kbd class="keycap">8</kbd><input id="name-custom8" maxlength="40" placeholder="e.g. Upscale"></label><label class="set-row"><kbd class="keycap">9</kbd><input id="name-custom9" maxlength="40" placeholder="e.g. Logo"></label></div></div></div><nav id="ticks" aria-label="Review progress"></nav></header>
+<aside id="sidebar" aria-label="Media files"></aside>
 <!-- Review order: media, ratings, comment, then filename/date. -->
-<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div id="marks-bar"><button id="pin-tool" title="Pin: click the image to drop a numbered note (P)">📍<kbd class="keycap">P</kbd></button><button id="draw-tool" title="Draw on the image, as an overlay (D)">✏️<kbd class="keycap">D</kbd></button><input id="mark-color" type="color" value="#ff4d6d" title="Pen colour"><button id="undo-tool" title="Remove the last stroke (Ctrl+Z)">↶</button><button id="hide-tool" title="Hide or show pins and drawing (H)">👁<kbd class="keycap">H</kbd></button><button id="next" title="Save the comment and go to the next file (Ctrl+Enter)">Next →</button><button id="clear" title="Remove rating, flag, comment, pins and drawing">Clear all</button></div><label class="comment-line" for="comment">Comment <span class="hint"><span class="blur">· saves on blur </span>· Ctrl+Enter: save &amp; next</span></label><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><aside id="marks-panel" hidden><div class="panel-head">Marks</div><ol id="pin-list"></ol></aside><div id="grid-box" hidden></div><section id="details" hidden><div id="fileinfo"><div id="filename"></div><div id="filemeta"></div><div id="date"></div></div><dl id="genmeta"></dl></section><div class="hint">← → Navigate · 0 Neutral · . Reject · 1–3 Great→MVP · 4 Redo · 5 Broken · 6 Trash · Space/G Grid open/close (Space plays audio) · ↑↓ previous/next (grid: rows) · L File list · C Comment · P Pin · D Draw · H Hide marks · Esc Leave comment/tool · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
+<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div id="marks-bar"><button id="pin-tool" title="Pin: click the image to drop a numbered note (P)">📍<kbd class="keycap">P</kbd></button><button id="draw-tool" title="Draw on the image, as an overlay (D)">✏️<kbd class="keycap">D</kbd></button><input id="mark-color" type="color" value="#ff4d6d" title="Pen colour"><button id="undo-tool" title="Remove the last stroke (Ctrl+Z)">↶</button><button id="hide-tool" title="Hide or show pins and drawing (H)">👁<kbd class="keycap">H</kbd></button><button id="next" title="Save the comment and go to the next file (Ctrl+Enter)">Next →</button><button id="clear" title="Remove rating, flag, comment, pins and drawing">Clear all</button></div><label class="comment-line" for="comment">Comment <span class="hint"><span class="blur">· saves on blur </span>· Ctrl+Enter: save &amp; next</span></label><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><aside id="marks-panel" hidden><div class="panel-head">Marks</div><ol id="pin-list"></ol></aside><div id="grid-box" hidden></div><section id="details" hidden><div id="fileinfo"><div id="filename"></div><div id="filemeta"></div><div id="date"></div></div><dl id="genmeta"></dl></section><div class="hint">← → Navigate · 0 Neutral · . Reject · 1–3 Great→MVP · 4 Redo · 5 Broken · 6 Trash · 7–9 custom (⚙) · Space/G Grid open/close (Space plays audio) · ↑↓ previous/next (grid: rows) · L File list · C Comment · P Pin · D Draw · H Hide marks · Esc Leave comment/tool · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
 <div id="viewer" hidden><img alt=""><div id="zoom-level"></div></div>
 <div id="toast" role="alert" hidden></div>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 const ratings = ['reject','neutral','great','love','mvp'];
-const flags = ['redo','broken','trash'];
+const flags = ['redo','broken','trash','custom7','custom8','custom9'];
+const customs = flags.slice(3);
+// Custom 7–9 names: kept per browser, sent with each save so REVIEW.md can use them.
+let customNames={}, folderLabels={};
+try {customNames=JSON.parse(localStorage.getItem('customNames'))||{};} catch {}
+const nameOf = v => customNames[v]||folderLabels[v]||(v==='mvp'?'MVP':v.startsWith('custom')?'Custom '+v.slice(6):titleCase(v));
 let dir='', files=[], items={}, index=0, busy=false, toastTimer;
 const current = () => files[index];
 const titleCase = s => s[0].toUpperCase()+s.slice(1);
@@ -117,7 +121,7 @@ function paintLists() {
     const text=document.createElement('span'); text.className='row-text'; text.append(name,meta);
     const badge=document.createElement('span'); badge.className='badge';
     if(rating) badge.dataset.rating=rating;
-    badge.textContent=rating?(rating==='mvp'?'MVP':titleCase(rating)):'—'; row.append(thumb,text,badge);
+    badge.textContent=rating?nameOf(rating):'—'; row.append(thumb,text,badge);
     if(item.comment) {
       const marker=document.createElement('span'); marker.className='comment-marker';
       marker.textContent='💬'; marker.title=item.comment; row.append(marker);
@@ -165,7 +169,7 @@ function paintRating() {
   $('ratings').querySelectorAll('button[data-rating]').forEach(b=>b.classList.toggle('selected',b.classList.contains('flag')?b.dataset.rating===flag:b.dataset.rating===rating));
 }
 let grid=false;
-const label=r=>r?(r==='mvp'?'MVP':titleCase(r)):'';
+const label=r=>r?nameOf(r):'';
 // Rebuilds the tiles only when the folder changes; otherwise just moves the outline and badges.
 function paintGrid() {
   const start=0;
@@ -225,7 +229,7 @@ function paintCard() {
 async function save(rating,comment,flag=items[current().name]?.flag||null,marks=null) {
   const item=items[current().name]||{};
   const {pins=item.pins||[],strokes=item.strokes||[]}=marks||{};
-  const result=await api('/api/review',{dir,name:current().name,rating,comment,flag,pins,strokes});
+  const result=await api('/api/review',{dir,name:current().name,rating,comment,flag,pins,strokes,labels:Object.fromEntries(customs.filter(v=>customNames[v]).map(v=>[v,customNames[v]]))});
   items=result.items; $('comment').value=items[current().name]?.comment||'';
   paintLists(); paintRating(); paintMarks(); paintPinList();
 }
@@ -272,7 +276,7 @@ function openFolder(raw) {
   return transact(async()=>{
     await saveComment();
     const result=await api('/api/list?'+new URLSearchParams({dir:raw}));
-    dir=result.dir; files=arrange(result.files); items=result.items;
+    dir=result.dir; files=arrange(result.files); items=result.items; folderLabels=result.labels||{}; paintCustoms();
     index=files.findIndex(f=>!items[f.name]?.rating); if(index<0) index=0;
     $('path').value=dir; $('folders').value=dir;
     history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
@@ -283,7 +287,8 @@ function openFolder(raw) {
 // Line icons in the button color (no plain-text thumbs-up glyph renders cleanly).
 const thumbsUp='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>';
 const buttons=[['0','neutral','−'],['.','reject','✕'],null,['1','great',thumbsUp],['2','love','♥'],['3','mvp','★'],null,
-               ['4','redo','↻'],['5','broken','⚠'],['6','trash','🗑']];
+               ['4','redo','↻'],['5','broken','⚠'],['6','trash','🗑'],null,
+               ['7','custom7','◆'],['8','custom8','▲'],['9','custom9','●']];
 const keyAction={};
 // Button face: word, icon, then a footer with the comment toggle (ratings only) and the keycap.
 // The word hides on narrow button rows; icon and key stay.
@@ -298,7 +303,7 @@ for(const entry of buttons) {
   if(!entry) {$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'})); continue;}
   const [key,value,symbol]=entry, flag=flags.includes(value);
   const b=document.createElement('button'); b.dataset.rating=value; b.dataset.key=key; if(flag) b.className='flag';
-  const label=value==='mvp'?'MVP':titleCase(value); b.title=`${label} (${key})`;
+  const label=nameOf(value); b.title=`${label} (${key})`;
   const box=document.createElement('span'); box.className='comment-mode'; box.textContent='💬'; box.setAttribute('role','checkbox');
   box.onclick=e=>{e.stopPropagation(); e.preventDefault(); setCommentMode(value,!commentMode[value]);};
   buttonFace(b,label,symbol,key,box); keyAction[key]=b.onclick=()=>act(value); $('ratings').append(b);
@@ -306,8 +311,7 @@ for(const entry of buttons) {
 }
 function setLayout(side) {
   document.body.classList.toggle('side',side);
-  $('layout').textContent=side?'⇩':'⇥';
-  $('layout').title=side?'Controls: move below the image':'Controls: move to right sidebar';
+  $('set-side').checked=side;
   try {localStorage.setItem('layout',side?'side':'bottom');} catch {}
   if(!$('viewer').hidden) resetView();
 }
@@ -324,13 +328,36 @@ function setGrid(on) {
 try {grid=localStorage.getItem('grid')==='1'; $('grid-toggle').classList.toggle('on',grid);} catch {}
 function setList(on) {
   document.body.classList.toggle('list-off',!on);
-  $('list-tab').textContent=on?'‹':'›'; $('list-tab').title=on?'Hide file list (L)':'Show file list (L)';
+  $('set-list').checked=on;
   try {localStorage.setItem('list',on?'1':'0');} catch {}
   if(!$('viewer').hidden) resetView();
 }
-$('list-tab').onclick=()=>setList(document.body.classList.contains('list-off'));
+$('set-list').onchange=e=>setList(e.target.checked);
 try {setList(localStorage.getItem('list')!=='0');} catch {setList(true);}
-$('layout').onclick=()=>setLayout(!document.body.classList.contains('side'));
+$('set-side').onchange=e=>setLayout(e.target.checked);
+function setMenu(open) {$('settings-menu').hidden=!open; $('settings').setAttribute('aria-expanded',open);}
+$('settings').onclick=()=>setMenu($('settings-menu').hidden);
+document.addEventListener('pointerdown',e=>{if(!$('settings-box').contains(e.target)) setMenu(false);});
+// Unnamed custom buttons are hidden and their keys do nothing (unless the file already carries that flag).
+function paintCustoms() {
+  const shown=customs.filter(v=>customNames[v]||folderLabels[v]);
+  for(const v of customs) {
+    const b=document.querySelector(`#ratings button[data-rating="${v}"]`), name=nameOf(v);
+    b.hidden=!shown.includes(v); b.title=`${name} (${b.dataset.key})`; b.querySelector('.rating-word').textContent=name;
+  }
+  $('ratings').querySelectorAll('.flag-sep')[2].hidden=!shown.length;
+  document.body.classList.toggle('customs',shown.length>0);
+  if(files.length) paintLists();
+}
+for(const v of customs) {
+  const input=$('name-'+v); input.value=customNames[v]||'';
+  input.oninput=()=>{
+    customNames[v]=input.value.trim(); if(!customNames[v]) delete customNames[v];
+    try {localStorage.setItem('customNames',JSON.stringify(customNames));} catch {}
+    paintCustoms();
+  };
+}
+paintCustoms();
 try {setLayout(localStorage.getItem('layout')==='side');} catch {setLayout(false);}
 $('open').onclick=()=>openFolder($('path').value);
 $('browse').onclick=()=>transact(async()=>{
@@ -424,6 +451,7 @@ $('viewer').addEventListener('pointerup',()=>{
 });
 document.addEventListener('keydown',e=>{
   if(!$('viewer').hidden&&e.key==='Escape') {closeViewer(); return;}
+  if(e.key==='Escape'&&!$('settings-menu').hidden) {setMenu(false); $('settings').focus(); return;}
   const typing=['TEXTAREA','INPUT','SELECT'].includes(e.target.tagName);
   if(e.key==='Escape'&&typing) {e.target.blur(); return;}
   if(e.ctrlKey&&e.key==='Enter'&&e.target===$('comment')) {e.preventDefault(); jump(index+1); e.target.blur(); return;}
@@ -432,7 +460,7 @@ document.addEventListener('keydown',e=>{
   if(typing||busy||e.ctrlKey||e.metaKey||e.altKey) return;
   // ',' is the numpad decimal key on some layouts.
   const key=e.key===','?'.':e.key;
-  if(keyAction[key]) {e.preventDefault(); keyAction[key]();}
+  if(keyAction[key]&&!document.querySelector(`#ratings button[data-key="${key}"]`).hidden) {e.preventDefault(); keyAction[key]();}
   else if(e.key==='ArrowLeft') {e.preventDefault(); jump(index-1);}
   else if(e.key==='ArrowRight') {e.preventDefault(); jump(index+1);}
   else if(e.key.toLowerCase()==='g') {e.preventDefault(); setGrid(!grid);}

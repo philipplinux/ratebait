@@ -42,7 +42,8 @@ IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
 RATINGS = ["reject", "neutral", "great", "love", "mvp"]
 LEGACY = {"good": "great", "bad": "reject"}  # retired ratings, mapped when a folder is loaded
-FLAGS = ["redo", "broken", "trash"]
+FLAGS = ["redo", "broken", "trash", "custom7", "custom8", "custom9"]
+CUSTOM = FLAGS[3:]  # numpad 7-9 flags; their names come from the browser and live in state["labels"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
@@ -331,19 +332,21 @@ def discover_dirs(roots) -> list[dict]:
 
 def write_report(d: Path, state: dict, files: list[dict]):
     # Flagged files are listed under their flag (rating kept in the line), not their rating.
-    sections = ["redo", *reversed(RATINGS), "broken", "trash", "unrated"]
+    sections = ["redo", *reversed(RATINGS), *CUSTOM, "broken", "trash", "unrated"]
     groups = {section: [] for section in sections}
     for f in files:
         item = state["items"].get(f["name"], {})
         groups[item.get("flag") or item.get("rating") or "unrated"].append((f, item))
+    labels = state.get("labels", {})
+    sections = [s for s in sections if s not in CUSTOM or s in labels or groups[s]]
     rated = len(files) - len(groups["unrated"])
-    counts = " · ".join(f"{r} {len(groups[r])}" for r in sections)
+    counts = " · ".join(f"{labels.get(r, r)} {len(groups[r])}" for r in sections)
     titles = {"redo": "Redo / changes requested", "broken": "Broken", "trash": "Trash / marked for deletion", "mvp": "MVP / best"}
     lines = ["# Media review", "", f"- Folder: `{d}`",
              f"- Updated: {state['updated']}",
              f"- Progress: {rated}/{len(files)} rated · {counts}", ""]
     for rating in sections:
-        lines.append(f"## {titles.get(rating, rating.title())}")
+        lines.append(f"## {labels.get(rating) or titles.get(rating, rating.title())}")
         if not groups[rating]:
             lines.append("- (none)")
         for f, item in groups[rating]:
@@ -413,7 +416,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         state.update(dir=str(d), updated=datetime.now().astimezone().isoformat(timespec="seconds"))
                         save_state(d, state)
                         write_report(d, state, files)
-                self.json_response(200, {"dir": str(d), "files": files, "items": state["items"]})
+                self.json_response(200, {"dir": str(d), "files": files, "items": state["items"],
+                                         "labels": state.get("labels", {})})
             else:
                 self.stream_media(safe_media_path(d, query.get("name", [""])[0]))
         else:
@@ -502,6 +506,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 raise ValueError("comment must be a string")
             comment = comment.strip()
             marks = clean_marks(data)
+            labels = data.get("labels") or {}
+            if (not isinstance(labels, dict) or not set(labels) <= set(CUSTOM)
+                    or not all(isinstance(v, str) and len(v) <= 40 for v in labels.values())):
+                raise ValueError("invalid labels")
+            labels = {k: v.strip() for k, v in labels.items() if v.strip()}
             with LOCK:
                 state = load_state(d)
                 state_path = d / STATE_FILE
@@ -512,6 +521,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 else:
                     state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now, **marks)
                 state.update(dir=str(d), updated=now)
+                if labels:
+                    state["labels"] = {**state.get("labels", {}), **labels}
                 save_state(d, state)
                 try:
                     write_report(d, state, list_media(d))
