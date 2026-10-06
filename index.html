@@ -268,7 +268,8 @@ $('browse').onclick=()=>transact(async()=>{
   if(result.path) $('path').value=result.path;
 });
 $('path').onkeydown=e=>{if(e.key==='Enter') openFolder($('path').value);};
-$('folders').onchange=()=>{if($('folders').value) openFolder($('folders').value);};
+// Leave the dropdown after picking, so the arrow keys move through the files instead of the folders.
+$('folders').onchange=()=>{$('folders').blur(); if($('folders').value) openFolder($('folders').value);};
 $('comment').onblur=e=>{
   // These controls save the draft themselves; do not swallow their click with a blur POST.
   if(e.relatedTarget?.closest('button')||e.relatedTarget===$('folders')) return;
