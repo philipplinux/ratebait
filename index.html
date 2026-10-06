@@ -278,7 +278,7 @@ $('comment').onblur=e=>{
 $('next').onclick=()=>jump(index+1);
 $('clear').onclick=()=>transact(async()=>{if(current()) await save(null,'',null);});
 // Fullscreen viewer: click opens, Ctrl+wheel zooms at the cursor, drag pans, a click without drag closes.
-const view={fit:1,scale:1,x:0,y:0,drag:null};
+const view={fit:1,scale:1,x:0,y:0,w:0,h:0,token:0,drag:null};
 const viewerImg=()=>$('viewer').querySelector('img');
 function paintView() {
   const img=viewerImg(), s=view.fit*view.scale;
@@ -286,26 +286,33 @@ function paintView() {
   $('viewer').classList.toggle('zoomed',view.scale>1);
   $('zoom-level').textContent=`${Math.round(s*100)}% · Ctrl+wheel zoom · click to close`;
 }
+// view.w/h are the shown picture's size; the next picture is preloaded and swapped in only once decoded,
+// so a half-loaded picture of another size is never drawn with the old transform.
 function resetView() {
-  const img=viewerImg(), w=innerWidth, h=innerHeight;
-  if(!img.naturalWidth) return;
-  view.fit=Math.min(w/img.naturalWidth,h/img.naturalHeight); view.scale=1;
-  view.x=(w-img.naturalWidth*view.fit)/2; view.y=(h-img.naturalHeight*view.fit)/2; paintView();
+  const w=innerWidth, h=innerHeight;
+  if(!view.w) return;
+  view.fit=Math.min(w/view.w,h/view.h); view.scale=1;
+  view.x=(w-view.w*view.fit)/2; view.y=(h-view.h*view.fit)/2; paintView();
 }
 function showInViewer(f) {
   const img=viewerImg();
   if(img.dataset.name===f.name) return;
-  // Zoomed in: the next picture keeps the zoom and shows the same spot (relative to the image) at the screen centre.
-  if(view.scale>1&&img.naturalWidth) {
-    const s=view.fit*view.scale, u=(innerWidth/2-view.x)/(img.naturalWidth*s), v=(innerHeight/2-view.y)/(img.naturalHeight*s);
-    img.onload=()=>keepView(u,v);
-  } else img.onload=resetView;
-  img.dataset.name=f.name; img.src=mediaUrl(f);
-}
-function keepView(u,v) {
-  const img=viewerImg(), scale=view.scale;
-  resetView(); view.scale=scale;
-  const s=view.fit*scale; view.x=innerWidth/2-u*img.naturalWidth*s; view.y=innerHeight/2-v*img.naturalHeight*s; paintView();
+  img.dataset.name=f.name;
+  const next=new Image(), token=++view.token;
+  next.onload=async()=>{
+    try {await next.decode();} catch {}
+    if(token!==view.token) return;
+    // Zoomed in: keep the zoom and show the same spot (relative to the image) at the screen centre.
+    const scale=view.scale, keep=scale>1&&view.w;
+    const s=view.fit*scale, u=keep&&(innerWidth/2-view.x)/(view.w*s), v=keep&&(innerHeight/2-view.y)/(view.h*s);
+    img.src=next.src; view.w=next.naturalWidth; view.h=next.naturalHeight;
+    resetView();
+    if(keep) {
+      view.scale=scale; const t=view.fit*scale;
+      view.x=innerWidth/2-u*view.w*t; view.y=innerHeight/2-v*view.h*t; paintView();
+    }
+  };
+  next.src=mediaUrl(f);
 }
 function openViewer() {
   const f=current(); if(!f||f.kind!=='image') return;
