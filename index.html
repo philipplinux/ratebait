@@ -47,14 +47,14 @@ body:not(.side) #details{grid-area:3/1;display:grid;grid-template-columns:minmax
 .pin{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;display:grid;place-items:center;border-radius:50%;background:#ff4d6d;color:#fff;font:700 12px/1 system-ui,sans-serif;border:2px solid #fff;box-shadow:0 2px 6px #000a;pointer-events:auto;cursor:pointer}
 body.marks-off #media .marks,body.marks-off #viewer .marks{display:none}#media.mode-pin .marks,#media.mode-draw .marks{pointer-events:auto;cursor:crosshair}
 #marks-bar{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}#marks-bar button{padding:4px 8px;font-size:12px;display:inline-flex;gap:5px;align-items:center}#marks-bar button.on{background:#3a4560;border-color:#fff}#marks-bar .keycap{min-width:16px;height:16px;font-size:10px}#mark-color{width:28px;height:26px;padding:0 2px;border-radius:6px}
-#pin-list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:140px;overflow:auto}#pin-list li{display:flex;gap:6px;align-items:center}#pin-list .pin-no{flex:none;width:20px;height:20px;border-radius:50%;background:#ff4d6d;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}#pin-list input{flex:1;min-width:0;padding:4px 8px;font-size:12px}#pin-list button{padding:2px 7px;font-size:12px}
+#marks-panel{z-index:3;justify-self:end;align-self:start;width:260px;max-height:calc(100% - 20px);margin:10px;display:flex;flex-direction:column;background:#151a22e6;backdrop-filter:blur(8px);border:1px solid #303746;border-radius:10px;padding:10px;box-shadow:0 8px 24px #0006}body:not(.side) #marks-panel{grid-area:2/1/3/-1}body.side #marks-panel{grid-area:2/1/7/2}body.marks-off #marks-panel{display:none}.panel-head{font-size:12px;color:#929daf;margin-bottom:6px}#pin-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;overflow:auto;min-height:0}#pin-list .swatch{flex:none;width:20px;height:6px;border-radius:3px}#pin-list .stroke-name{flex:1;font-size:12px;color:#b4bfce}#pin-list li{display:flex;gap:6px;align-items:center}#pin-list .pin-no{flex:none;width:20px;height:20px;border-radius:50%;background:#ff4d6d;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}#pin-list input{flex:1;min-width:0;padding:4px 8px;font-size:12px}#pin-list button{padding:2px 7px;font-size:12px}
 </style>
 </head>
 <body>
 <header><div class="top"><h1 title="Pictures & music · Local files · Markdown notes">RateBait</h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><button id="browse">Browse…</button><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="open">Open</button><span id="progress">0/0 rated</span></div><button id="layout" title="Controls: move to right sidebar" aria-label="Toggle sidebar layout">⇥</button></div><nav id="ticks" aria-label="Review progress"></nav></header>
 <aside id="sidebar" aria-label="Media files"></aside><button id="list-tab" title="Hide file list (L)" aria-label="Toggle file list">‹</button>
 <!-- Review order: media, ratings, comment, then filename/date. -->
-<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint"><span class="blur">· saves on blur · </span>Ctrl+Enter: save &amp; next</span></label><button id="next" title="Save the comment and go to the next file">Next →</button><button id="clear" title="Remove rating, flag, comment, pins and drawing">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea><div id="marks-bar"><button id="pin-tool" title="Pin: click the image to drop a numbered note (P)">📍 Pin <kbd class="keycap">P</kbd></button><button id="draw-tool" title="Draw on the image, as an overlay (D)">✏️ Draw <kbd class="keycap">D</kbd></button><input id="mark-color" type="color" value="#ff4d6d" title="Pen colour"><button id="undo-tool" title="Remove the last stroke (Ctrl+Z)">↶ Undo</button><button id="hide-tool" title="Hide or show pins and drawing (H)">👁 Hide <kbd class="keycap">H</kbd></button></div><ol id="pin-list"></ol></section><div id="grid-box" hidden></div><section id="details" hidden><div id="fileinfo"><div id="filename"></div><div id="filemeta"></div><div id="date"></div></div><dl id="genmeta"></dl></section><div class="hint">← → Navigate · 0 Neutral · . Reject · 1–3 Great→MVP · 4 Redo · 5 Broken · 6 Trash · Space/G Grid open/close (Space plays audio) · ↑↓ previous/next (grid: rows) · L File list · C Comment · P Pin · D Draw · H Hide marks · Esc Leave comment/tool · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
+<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint"><span class="blur">· saves on blur · </span>Ctrl+Enter: save &amp; next</span></label><button id="next" title="Save the comment and go to the next file">Next →</button><button id="clear" title="Remove rating, flag, comment, pins and drawing">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea><div id="marks-bar"><button id="pin-tool" title="Pin: click the image to drop a numbered note (P)">📍 Pin <kbd class="keycap">P</kbd></button><button id="draw-tool" title="Draw on the image, as an overlay (D)">✏️ Draw <kbd class="keycap">D</kbd></button><input id="mark-color" type="color" value="#ff4d6d" title="Pen colour"><button id="undo-tool" title="Remove the last stroke (Ctrl+Z)">↶ Undo</button><button id="hide-tool" title="Hide or show pins and drawing (H)">👁 Hide <kbd class="keycap">H</kbd></button></div></section><aside id="marks-panel" hidden><div class="panel-head">Marks</div><ol id="pin-list"></ol></aside><div id="grid-box" hidden></div><section id="details" hidden><div id="fileinfo"><div id="filename"></div><div id="filemeta"></div><div id="date"></div></div><dl id="genmeta"></dl></section><div class="hint">← → Navigate · 0 Neutral · . Reject · 1–3 Great→MVP · 4 Redo · 5 Broken · 6 Trash · Space/G Grid open/close (Space plays audio) · ↑↓ previous/next (grid: rows) · L File list · C Comment · P Pin · D Draw · H Hide marks · Esc Leave comment/tool · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
 <div id="viewer" hidden><img alt=""><div id="zoom-level"></div></div>
 <div id="toast" role="alert" hidden></div>
 <script>
@@ -309,7 +309,7 @@ function setLayout(side) {
 function setGrid(on) {
   grid=on; $('grid-toggle').classList.toggle('on',on);
   try {localStorage.setItem('grid',on?'1':'0');} catch {}
-  $('media').replaceChildren(); if(files.length) paintCard();
+  $('media').replaceChildren(); if(files.length) paintCard(); else paintPinList();
 }
 {
   const b=document.createElement('button'); b.id='grid-toggle'; b.title='Grid view of all files (G)';
@@ -479,9 +479,20 @@ function placeMarks() {
   Object.assign(layer.style,{left:r.left-m.left+(r.width-w)/2+'px',top:r.top-m.top+(r.height-h)/2+'px',width:w+'px',height:h+'px'});
 }
 new ResizeObserver(placeMarks).observe($('media'));
+// Right-hand panel over the picture, listing pins (with notes) and strokes; shown only when there is something to list.
 function paintPinList() {
-  const f=current(), pins=f?marksOf(f.name).pins||[]:[];
-  $('pin-list').replaceChildren(...pins.map((pin,i)=>{
+  const f=current(), {pins=[],strokes=[]}=f?marksOf(f.name):{};
+  $('marks-panel').hidden=grid||!f||f.kind!=='image'||!(pins.length||strokes.length||markMode);
+  const strokeRows=strokes.map((st,i)=>{
+    const li=document.createElement('li');
+    const sw=Object.assign(document.createElement('span'),{className:'swatch'}); sw.style.background=st.color;
+    const name=Object.assign(document.createElement('span'),{className:'stroke-name',textContent:'Stroke '+(i+1)});
+    const del=Object.assign(document.createElement('button'),{textContent:'✕',title:'Remove stroke '+(i+1)});
+    del.onclick=()=>saveMarks({strokes:strokes.filter((_,j)=>j!==i)});
+    li.append(sw,name,del); return li;
+  });
+  const empty=!pins.length&&!strokes.length?[Object.assign(document.createElement('li'),{className:'stroke-name',textContent:markMode==='pin'?'Click the image to drop a pin':'Drag on the image to draw'})]:[];
+  $('pin-list').replaceChildren(...empty,...pins.map((pin,i)=>{
     const li=document.createElement('li');
     const no=Object.assign(document.createElement('span'),{className:'pin-no',textContent:i+1});
     const note=Object.assign(document.createElement('input'),{value:pin.note||'',placeholder:'Note for pin '+(i+1)});
@@ -491,7 +502,7 @@ function paintPinList() {
     const del=Object.assign(document.createElement('button'),{textContent:'✕',title:'Remove pin '+(i+1)});
     del.onclick=()=>saveMarks({pins:pins.filter((_,j)=>j!==i)});
     li.append(no,note,del); return li;
-  }));
+  }),...strokeRows);
 }
 function setMarkMode(mode) {
   if(mode&&grid) setGrid(false);
@@ -499,6 +510,7 @@ function setMarkMode(mode) {
   $('media').classList.toggle('mode-pin',mode==='pin'); $('media').classList.toggle('mode-draw',mode==='draw');
   $('pin-tool').classList.toggle('on',mode==='pin'); $('draw-tool').classList.toggle('on',mode==='draw');
   if(mode) setMarksHidden(false);
+  paintPinList();
 }
 function setMarksHidden(off) {
   document.body.classList.toggle('marks-off',off); $('hide-tool').classList.toggle('on',off);
