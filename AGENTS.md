@@ -34,7 +34,7 @@ RateBait is a local web app in which a person rates AI-generated images and musi
    Then `systemctl --user daemon-reload && systemctl --user enable --now ratebait`. After a `git pull`, run `systemctl --user restart ratebait`.
 5. Optional: the **Browse…** folder dialog needs PyGObject (`python3-gobject` on Fedora, `python3-gi` on Debian/Ubuntu) and `xdg-desktop-portal`. Without them it falls back to Tk (`python3-tkinter` / `python3-tk`); typing a path in the path field always works.
 
-Check that it runs: `curl -s http://127.0.0.1:8765/api/dirs` returns JSON with `roots` and `dirs`.
+Check that it runs: `curl -s http://127.0.0.1:8765/api/dirs` returns JSON with `roots` and `dirs`. For a finished example review, read `sample-wallpapers/REVIEW.md` and `sample-wallpapers/.review.json` in the repo.
 
 ## What the person's review gives you
 

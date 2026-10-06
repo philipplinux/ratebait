@@ -41,6 +41,8 @@ python3 server.py                          # scans the current directory → htt
 python3 server.py --root ~/Pictures --root ~/Music --port 8765
 ```
 
+**Try it first:** `sample-wallpapers/` holds 13 example 4K wallpapers, already rated, with comments, pins, drawings and made-up generation metadata (prompt, model, sampler). Start with `python3 server.py --root sample-wallpapers` to see a finished review, including its `REVIEW.md`.
+
 ## Use
 
 - Pick a discovered folder (**F** opens the list; scans the roots up to 4 levels deep) or type/browse to any local folder (the path field suggests folders as you type, fuzzy matched: a bare name searches every folder below the start folder (the first root, which is the current directory unless `--root` is given), like a file manager's search; on first start a small popup asks whether to search your whole home folder instead (later: **Path field searches all of home** in ⚙). Hidden, `node_modules`-style and network-mounted folders are skipped and the list refreshes every 5 minutes. A path without a leading `/` or `~` is read as relative to the start folder (or `~`); **Tab** or **→** takes the highlighted one, **↑↓** pick, **Enter** opens); a folder picked with **Browse…** opens at once. Roots: `--root` (repeatable), else `MEDIA_RATER_ROOTS` (colon-separated), else the current directory.
