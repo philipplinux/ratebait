@@ -63,4 +63,4 @@ If RateBait saves you time: [![Buy me a beer?](https://img.buymeacoffee.com/butt
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+Copyright © 2026 philipplinux. Licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later), see [LICENSE](LICENSE). You may use, change and share it, including commercially, but you must keep the copyright notice and credit, and if you distribute a changed version or run one as a service for others, you must publish its source under the same license.
