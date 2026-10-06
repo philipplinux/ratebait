@@ -113,12 +113,14 @@ def clean_marks(item: dict) -> dict:
         pts = stroke.get("pts") if isinstance(stroke, dict) else None
         if not (isinstance(pts, list) and 1 <= len(pts) <= 20000
                 and all(isinstance(q, list) and len(q) == 2 and unit(q[0]) and unit(q[1]) for q in pts)
-                and re.fullmatch(r"#[0-9a-fA-F]{6}", str(stroke.get("color", "")))):
+                and re.fullmatch(r"#[0-9a-fA-F]{6}", str(stroke.get("color", "")))
+                and isinstance(stroke.get("note", ""), str) and len(stroke.get("note", "")) <= 2000):
             raise ValueError("invalid stroke")
     if pins:
         out["pins"] = [dict(x=round(q["x"], 4), y=round(q["y"], 4), note=q.get("note", "").strip()) for q in pins]
     if strokes:
-        out["strokes"] = [dict(pts=[[round(x, 4), round(y, 4)] for x, y in q["pts"]], color=q["color"]) for q in strokes]
+        out["strokes"] = [dict(pts=[[round(x, 4), round(y, 4)] for x, y in q["pts"]], color=q["color"],
+                               **({"note": q["note"].strip()} if q.get("note", "").strip() else {})) for q in strokes]
     return out
 
 
@@ -351,8 +353,9 @@ def write_report(d: Path, state: dict, files: list[dict]):
             for n, pin in enumerate(item.get("pins", []), 1):
                 note = " ".join(pin["note"].splitlines())
                 lines.append(f"  - Pin {n} ({pin['x']:.0%}, {pin['y']:.0%})" + (f": {note}" if note else ""))
-            if item.get("strokes"):
-                lines.append(f"  - Drawing: {len(item['strokes'])} strokes (shown in the rater)")
+            for n, stroke in enumerate(item.get("strokes", []), 1):
+                note = " ".join(stroke.get("note", "").splitlines())
+                lines.append(f"  - Stroke {n} ({stroke['color']})" + (f": {note}" if note else ""))
         lines.append("")
     atomic_write(d / REPORT_FILE, "\n".join(lines))
 

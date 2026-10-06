@@ -486,7 +486,9 @@ function paintPinList() {
   const strokeRows=strokes.map((st,i)=>{
     const li=document.createElement('li');
     const sw=Object.assign(document.createElement('span'),{className:'swatch'}); sw.style.background=st.color;
-    const name=Object.assign(document.createElement('span'),{className:'stroke-name',textContent:'Stroke '+(i+1)});
+    const name=Object.assign(document.createElement('input'),{value:st.note||'',placeholder:'Stroke '+(i+1),title:'Name this stroke'});
+    name.onkeydown=e=>{if(e.key==='Enter') {e.preventDefault(); name.blur();}};
+    name.onblur=()=>{if(name.value.trim()!==(st.note||'')) saveMarks({strokes:strokes.map((q,j)=>j===i?{...q,note:name.value}:q)});};
     const del=Object.assign(document.createElement('button'),{textContent:'✕',title:'Remove stroke '+(i+1)});
     del.onclick=()=>saveMarks({strokes:strokes.filter((_,j)=>j!==i)});
     li.append(sw,name,del); return li;
