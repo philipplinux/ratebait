@@ -37,11 +37,11 @@ Setting it up with an AI agent, or letting one act on your reviews? Point it at 
 ```bash
 git clone https://github.com/philipplinux/ratebait
 cd ratebait
-python3 server.py                          # scans the current directory → http://127.0.0.1:8765/
-python3 server.py --root ~/Pictures --root ~/Music --port 8765
+python3 ratebait.py                        # scans the current directory → http://127.0.0.1:8765/
+python3 ratebait.py --root ~/Pictures --root ~/Music --port 8765
 ```
 
-**Try it first:** I included some 4K wallpapers in `sample-wallpapers/`, 13 of them. They're already rated, with comments, pins, drawings and made-up generation metadata (prompt, model, sampler). Start with `python3 server.py --root sample-wallpapers` to see a finished review, including its `REVIEW.md`.
+**Try it first:** I included some 4K wallpapers in `sample-wallpapers/`, 13 of them. They're already rated, with comments, pins, drawings and made-up generation metadata (prompt, model, sampler). Start with `python3 ratebait.py --root sample-wallpapers` to see a finished review, including its `REVIEW.md`.
 
 ![12 of the included 4K sample wallpapers](docs/sample-wallpapers.jpg)
 

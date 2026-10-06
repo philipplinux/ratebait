@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
-"""RateBait. Run: python3 server.py [--root PATH] [--port 8765].
+"""RateBait. Run: python3 ratebait.py [--root PATH] [--port 8765].
 
 Discovery roots: --root (repeatable), else $MEDIA_RATER_ROOTS (os.pathsep
 separated), else the current directory.

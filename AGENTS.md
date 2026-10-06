@@ -1,6 +1,6 @@
 # AGENTS.md
 
-RateBait is a local web app in which a person rates AI-generated images and music. You (the agent) set it up, then read what the person decided and act on it. The person rates in the browser; you read the files the app writes. Two files, `server.py` (Python standard library only) and `index.html`; no install, no build.
+RateBait is a local web app in which a person rates AI-generated images and music. You (the agent) set it up, then read what the person decided and act on it. The person rates in the browser; you read the files the app writes. Two files, `ratebait.py` (Python standard library only) and `index.html`; no install, no build.
 
 ## Set it up
 
@@ -10,7 +10,7 @@ RateBait is a local web app in which a person rates AI-generated images and musi
    ```bash
    git clone https://github.com/philipplinux/ratebait
    cd ratebait
-   python3 server.py --root ~/Pictures --root ~/Music --port 8765
+   python3 ratebait.py --root ~/Pictures --root ~/Music --port 8765
    ```
 
    Without `--root` it uses `MEDIA_RATER_ROOTS` (colon-separated), else the current directory. It listens on `127.0.0.1` only; `--host` accepts IPv4 loopback addresses only.
@@ -24,7 +24,7 @@ RateBait is a local web app in which a person rates AI-generated images and musi
 
    [Service]
    WorkingDirectory=%h/ratebait
-   ExecStart=/usr/bin/python3 server.py --root %h/Pictures --port 8765
+   ExecStart=/usr/bin/python3 ratebait.py --root %h/Pictures --port 8765
    Restart=on-failure
 
    [Install]
@@ -104,5 +104,5 @@ curl -s http://127.0.0.1:8765/api/review -H 'Content-Type: application/json' -d 
 
 - Keep it dependency-free: standard-library Python and plain HTML/CSS/JS in one `index.html`, no build step.
 - Keep the AGPL-3.0-or-later header in both files.
-- Restart `server.py` after changing it; `index.html` only needs a browser reload.
+- Restart `ratebait.py` after changing it; `index.html` only needs a browser reload.
 - Update `README.md` when keys or behaviour change. The ⚙ Keybinds list in `index.html` is the in-app reference.
