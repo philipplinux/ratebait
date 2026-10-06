@@ -1,8 +1,8 @@
 # Simple Media Rater
 
-Tiny local web app for rating generated images and music one file at a time. Python standard library only: no install, no build.
+Tiny local web app for rating AI-generated images and music fast: numpad keys to rate (Reject → MVP) and flag (Redo, Broken, Trash), a comment per file, a scrollable grid view, and a `REVIEW.md` summary per folder that an LLM can read to learn your taste. Python standard library only: no install, no build.
 
-![Simple Media Rater: grid view with the rating buttons below](docs/screenshot.png)
+![Simple Media Rater: grid view with ratings, numpad buttons and comment box](docs/screenshot.png)
 
 ## Setup
 
