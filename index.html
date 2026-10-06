@@ -11,7 +11,9 @@ header{grid-column:1/-1;padding:20px 24px;background:#191e27;border-bottom:1px s
 button,input,select,textarea{font:inherit;border:1px solid #3d4657;border-radius:7px;background:#222936;color:inherit;padding:9px 12px}button{cursor:pointer}button:hover{border-color:#aab7ce}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #aab7ce}select{max-width:40%;min-width:210px}#path{flex:1;min-width:200px}#progress{font-size:13px;color:#b7c1d2}
 #ticks{display:flex;gap:4px;margin-top:18px;min-height:14px}#ticks button{flex:1;min-width:0;padding:0;height:14px;border:0;border-radius:3px;background:var(--unrated)}#ticks .current{outline:2px solid white;outline-offset:2px}
 [data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}[data-rating=mvp]{--tone:var(--mvp)}[data-rating=redo]{--tone:var(--redo)}[data-rating=broken]{--tone:var(--broken)}[data-rating=trash]{--tone:var(--trash)}[data-rating=custom7]{--tone:var(--custom7)}[data-rating=custom8]{--tone:var(--custom8)}[data-rating=custom9]{--tone:var(--custom9)}#ticks button[data-rating]{background:var(--tone)}
-aside{overflow:auto;background:#151a22;padding:12px;border-right:1px solid #303746}.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:5px;background:transparent;border-color:transparent;padding:8px}.row.current{background:#2a3343;border-color:#64758d}.thumb{width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0}.note{font-size:28px;text-align:center}.row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.row-name{overflow:hidden;text-overflow:ellipsis;font-size:12px}.row-meta{color:#7d8696;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{color:var(--tone,#a2aabb);font-size:11px}.comment-marker{font-size:12px}.row.dragging{opacity:.45}.row.drop-before{box-shadow:inset 0 3px 0 #8fb3ff}.row.drop-after{box-shadow:inset 0 -3px 0 #8fb3ff}body.sorting{user-select:none;cursor:grabbing}.order-bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7d8696;margin:0 0 8px;padding:0 4px}.order-bar button{font-size:11px;padding:2px 8px}
+aside{overflow:auto;background:#151a22;padding:12px;border-right:1px solid #303746}.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:5px;background:transparent;border-color:transparent;padding:8px}.row.current{background:#2a3343;border-color:#64758d}.thumb{width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0}.note{font-size:28px;text-align:center}.row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.row-name{overflow:hidden;text-overflow:ellipsis;font-size:12px}.row-meta{color:#7d8696;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{color:var(--tone,#a2aabb);font-size:11px}.comment-marker{font-size:12px}.row.dragging{opacity:.45}.row.drop-before{box-shadow:inset 0 3px 0 #8fb3ff}.row.drop-after{box-shadow:inset 0 -3px 0 #8fb3ff}body.sorting{user-select:none;cursor:grabbing}.side-views{position:sticky;top:-12px;z-index:2;display:flex;gap:4px;margin:-12px -12px 8px;padding:8px 12px;background:#151a22;border-bottom:1px solid #303746}.side-views button{flex:1;font-size:11px;padding:3px 6px;background:transparent}.side-views button.on{background:#2a3343;border-color:#64758d;color:#fff}
+body.side-grid .files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}body.side-grid .row{display:block;margin:0;padding:2px;border-width:2px}body.side-grid .row .thumb{display:block;width:100%;height:auto;aspect-ratio:1;margin:0}body.side-grid .row .thumb.note{display:grid;place-items:center;font-size:22px}body.side-grid .row-text,body.side-grid .row .badge,body.side-grid .row .comment-marker{display:none}body.side-grid .row[data-rating]{border-bottom-color:var(--tone)}body.side-grid .row.drop-before{box-shadow:inset 3px 0 0 #8fb3ff}body.side-grid .row.drop-after{box-shadow:inset -3px 0 0 #8fb3ff}
+.order-bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7d8696;margin:0 0 8px;padding:0 4px}.order-bar button{font-size:11px;padding:2px 8px}
 main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#banner{background:#294534;color:#b9efc8;padding:10px 14px;border-radius:7px}#media{flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;background:#0b0e13;border-radius:10px;overflow:hidden}#media>img{width:100%;height:100%;max-height:calc(100vh - 400px);object-fit:contain}.audio-card{display:flex;flex-direction:column;align-items:center;gap:20px;padding:24px;max-width:100%}.audio-card .symbol{font-size:90px;color:#ecc268}.audio-card audio{width:min(520px,100%)}.audio-card .audio-name{overflow-wrap:anywhere;text-align:center}#filename{font-weight:600;overflow-wrap:anywhere}#date{font-size:12px;color:#929daf;margin-top:4px}#ratings{display:flex;gap:8px;flex-wrap:wrap}:is(#ratings,#grid-box) button{color:var(--tone)}:is(#ratings,#grid-box) button.selected{background:var(--tone);color:#11161b;border-color:var(--tone)}textarea{display:block;width:100%;resize:vertical;min-height:72px}.comment-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:13px}.hint{color:#929daf;font-size:12px}#toast{position:fixed;bottom:24px;right:24px;max-width:80vw;background:#762f38;color:white;padding:16px;border-radius:8px;z-index:10}[hidden]{display:none!important}body.busy button:not(#ticks button),body.busy select{pointer-events:none;opacity:.65}
 #ratings{justify-content:center;gap:10px;padding:10px 0 14px;flex-shrink:0;flex-wrap:nowrap}
 :is(#ratings,#grid-box) button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex:1 1 0;min-width:0;max-width:150px;min-height:84px;padding:12px 6px;font-size:16px;white-space:nowrap;font-weight:750;letter-spacing:.2px;border:1px solid color-mix(in srgb,var(--tone) 65%,#344052);border-radius:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--tone) 18%,#273140),#17202c);box-shadow:inset 0 1px 0 #ffffff20,0 5px 0 #080d15,0 9px 18px #0004;transition:transform .15s,box-shadow .15s,background .15s}
@@ -22,7 +24,7 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 #ratings button{position:relative}#ratings .comment-mode{position:absolute;top:5px;left:5px;width:22px;height:22px;display:grid;place-items:center;font-size:12px;border:1px solid #4a5468;border-radius:6px;background:#11161bcc;opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s}#ratings .comment-mode:hover{opacity:.9}#ratings .comment-mode.on{opacity:1;filter:none;border-color:#fff;background:var(--tone)}#ratings button.selected .comment-mode.on{background:#11161b}
 :is(#ratings,#grid-box) .rating-icon{font-size:27px;line-height:1;margin:0;filter:drop-shadow(0 2px 2px #0004)}
 #details{padding-top:4px;color:#b4bfce}#filename{font-size:13px}
-#media>img{cursor:zoom-in;user-select:none;-webkit-user-drag:none}#media.zoomed>img{cursor:grab}#media.dragging>img{cursor:grabbing}#viewer{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:zoom-out;touch-action:none}#viewer img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none}#viewer.zoomed{cursor:grab}#viewer.dragging{cursor:grabbing}.peek{position:fixed;top:50%;transform:translateY(-50%);z-index:21;width:112px;height:72px;padding:0;border:2px solid #ffffffb0;border-radius:8px;background:#000a;opacity:.85;box-shadow:0 2px 12px #000c;cursor:pointer;transition:opacity .15s}.peek:hover,.peek:focus-visible{opacity:1;border-color:#fff}.peek[hidden],body.peek-off .peek{display:none}.peek.prev{left:16px}.peek.next{right:16px}#viewer .peek img{position:static;width:100%;height:100%;object-fit:cover;transform:none;border-radius:6px}.peek span{position:absolute;top:50%;transform:translateY(-50%);font-size:22px;line-height:1;color:#fff;text-shadow:0 1px 4px #000}.peek.prev span{left:6px}.peek.next span{right:6px}.peek .tile-badge{position:absolute;right:4px;bottom:3px;background:#000c;color:var(--tone,#a2aabb);padding:1px 5px;border-radius:4px;font-size:10.5px;font-weight:600;line-height:1.3}.peek .tile-badge{top:50%;bottom:auto;right:auto;font-size:14px;padding:3px 5px;line-height:1;border:1px solid #ffffff60}.peek.prev .tile-badge{left:calc(100% + 1px);transform:translate(-50%,-50%)}.peek.next .tile-badge{left:-1px;transform:translate(-50%,-50%)}.peek .tile-badge svg{width:14px;height:14px;display:block}.peek .tile-badge[hidden]{display:none}#viewer-badge{position:fixed;right:16px;top:16px;z-index:21;background:#000c;color:var(--tone,#a2aabb);padding:5px 7px;border:1px solid #ffffff60;border-radius:6px;font-size:20px;line-height:1;pointer-events:none}#viewer-badge svg{width:20px;height:20px;display:block}#viewer-badge[hidden]{display:none}#zoom-level{position:fixed;bottom:16px;right:16px;z-index:21;background:#000a;color:#e7eaf0;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;display:flex;align-items:center;gap:8px}#zoom-box{position:absolute;bottom:8px;right:8px;z-index:3;background:#000a;color:#e7eaf0;padding:4px 6px 4px 10px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:8px}#zoom-box[hidden],#zoom-level[hidden]{display:none}.zoom-reset{pointer-events:auto;background:#ffffff1a;color:#e7eaf0;border:1px solid #ffffff40;border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer}.zoom-reset:hover{background:#ffffff33}
+#media>img{cursor:zoom-in;user-select:none;-webkit-user-drag:none}#media.zoomed>img{cursor:grab;touch-action:none}#media.dragging>img{cursor:grabbing}#viewer{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:zoom-out;touch-action:none}#viewer img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none}#viewer.zoomed{cursor:grab}#viewer.dragging{cursor:grabbing}.peek{position:fixed;top:50%;transform:translateY(-50%);z-index:21;width:112px;height:72px;padding:0;border:2px solid #ffffffb0;border-radius:8px;background:#000a;opacity:.85;box-shadow:0 2px 12px #000c;cursor:pointer;transition:opacity .15s}.peek:hover,.peek:focus-visible{opacity:1;border-color:#fff}.peek[hidden],body.peek-off .peek{display:none}.peek.prev{left:16px}.peek.next{right:16px}#viewer .peek img{position:static;width:100%;height:100%;object-fit:cover;transform:none;border-radius:6px}.peek span{position:absolute;top:50%;transform:translateY(-50%);font-size:22px;line-height:1;color:#fff;text-shadow:0 1px 4px #000}.peek.prev span{left:6px}.peek.next span{right:6px}.peek .tile-badge{position:absolute;right:4px;bottom:3px;background:#000c;color:var(--tone,#a2aabb);padding:1px 5px;border-radius:4px;font-size:10.5px;font-weight:600;line-height:1.3}.peek .tile-badge{top:50%;bottom:auto;right:auto;font-size:14px;padding:3px 5px;line-height:1;border:1px solid #ffffff60}.peek.prev .tile-badge{left:calc(100% + 1px);transform:translate(-50%,-50%)}.peek.next .tile-badge{left:-1px;transform:translate(-50%,-50%)}.peek .tile-badge svg{width:14px;height:14px;display:block}.peek .tile-badge[hidden]{display:none}#viewer-badge{position:fixed;right:16px;top:16px;z-index:21;background:#000c;color:var(--tone,#a2aabb);padding:5px 7px;border:1px solid #ffffff60;border-radius:6px;font-size:20px;line-height:1;pointer-events:none}#viewer-badge svg{width:20px;height:20px;display:block}#viewer-badge[hidden]{display:none}#zoom-level{position:fixed;bottom:16px;right:16px;z-index:21;background:#000a;color:#e7eaf0;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;display:flex;align-items:center;gap:8px}#zoom-box{position:absolute;bottom:8px;right:8px;z-index:3;background:#000a;color:#e7eaf0;padding:4px 6px 4px 10px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:8px}#zoom-box[hidden],#zoom-level[hidden]{display:none}.zoom-reset{pointer-events:auto;background:#ffffff1a;color:#e7eaf0;border:1px solid #ffffff40;border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer}.zoom-reset:hover{background:#ffffff33}
 /* Bottom layout: buttons and comment share one row under the media. */
 body:not(.side) main{display:grid;grid-template-columns:minmax(240px,560px) minmax(max-content,1fr) minmax(320px,17%) 90px;grid-template-rows:auto minmax(200px,1fr) auto;column-gap:28px}
 body:not(.side) #banner{grid-area:1/1/2/-1}body:not(.side) #media{grid-area:2/1/3/-1}body:not(.side) #ratings{grid-area:3/2;padding:0}body:not(.side) #grid-box{grid-area:3/4}body:not(.side) #comments{grid-area:3/3;display:flex;flex-direction:column}body:not(.side) #comments textarea{flex:1;min-height:0;resize:none}
@@ -72,8 +74,12 @@ const current = () => files[index];
 // Kept as a reference: #media is often emptied, which detaches the box.
 const zoomBox=document.getElementById('zoom-box');
 const preloaded=new Map(); // media URL → <img> of the previous/next picture, see preloadNeighbours
+// Single view: + / - zoom around the centre (10%–800%), the wheel pans while zoomed in. Kept across files, like fullscreen.
+const single={scale:1,x:0,y:0,drag:null,dragged:false,token:0};
+// Wheel delta in pixels: Firefox mouse wheels report lines (deltaMode 1), some devices pages (2).
+const wheelPx=(e,d)=>d*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);
 const titleCase = s => s[0].toUpperCase()+s.slice(1);
-const mediaUrl = f => '/media?'+new URLSearchParams({dir,name:f.name});
+const mediaUrl = f => '/media?'+new URLSearchParams({dir,name:f.name,v:f.mtime});
 function toast(message) {
   $('toast').textContent=message; $('toast').hidden=false;
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>$('toast').hidden=true,4000);
@@ -92,6 +98,12 @@ async function transact(action) {
 }
 function paintLists() {
   $('ticks').replaceChildren(); $('sidebar').replaceChildren();
+  const views=document.createElement('div'); views.className='side-views';
+  for(const [mode,text,title] of [['list','☰ List','File list with names'],['grid','▦ Grid','Thumbnails only, 3 per row']]) {
+    const b=Object.assign(document.createElement('button'),{textContent:text,title});
+    b.classList.toggle('on',sideView===mode); b.onclick=()=>setSideView(mode); views.append(b);
+  }
+  $('sidebar').append(views);
   if(loadOrder().length) {
     const bar=document.createElement('div'); bar.className='order-bar';
     const reset=Object.assign(document.createElement('button'),{textContent:'Reset',title:'Back to oldest-first order (new files at the bottom)'});
@@ -100,6 +112,7 @@ function paintLists() {
     bar.append('Custom order (drag to sort)',reset); $('sidebar').append(bar);
   }
   let rated=0;
+  const list=document.createElement('div'); list.className='files'; $('sidebar').append(list);
   files.forEach((f,i)=>{
     const item=items[f.name]||{}, rating=item.flag||item.rating;
     if(rating) rated++;
@@ -108,8 +121,9 @@ function paintLists() {
     if(rating) tick.dataset.rating=rating;
     tick.classList.toggle('current',i===index); tick.onclick=()=>jump(i); $('ticks').append(tick);
     const row=document.createElement('button');
-    row.className='row'+(i===index?' current':''); row.title=f.name+' · drag to reorder'; row.onclick=()=>{if(!dragged) jump(i);};
-    row.addEventListener('pointerdown',e=>{if(e.button===0) drag={from:i,y:e.clientY,row,active:false,to:null};});
+    row.className='row'+(i===index?' current':''); row.title=f.name+(rating?' · '+nameOf(rating):'')+' · drag to reorder';
+    if(rating) row.dataset.rating=rating; row.onclick=()=>{if(!dragged) jump(i);};
+    row.addEventListener('pointerdown',e=>{if(e.button===0) drag={from:i,x:e.clientX,y:e.clientY,row,active:false,to:null};});
     const thumb=document.createElement(f.kind==='image'?'img':'span');
     thumb.className='thumb'+(f.kind==='audio'?' note':'');
     const name=document.createElement('span'); name.className='row-name'; name.textContent=f.name;
@@ -134,7 +148,7 @@ function paintLists() {
       const marker=document.createElement('span'); marker.className='comment-marker';
       marker.textContent='📍'; marker.title=`${item.pins?.length||0} pins · ${item.strokes?.length||0} strokes`; row.append(marker);
     }
-    $('sidebar').append(row);
+    list.append(row);
   });
   $('progress').textContent=`${rated}/${files.length} rated`;
   $('banner').hidden=!files.length||rated!==files.length;
@@ -227,6 +241,8 @@ function paintCard() {
     const token=++single.token;
     const show=()=>{
       if(token!==single.token||grid||current()!==f) return;
+      const old=$('media').querySelector(':scope>img'), a=fitSize(old), b=fitSize(image);
+      if(single.scale!==1&&a&&b&&old!==image) {single.x*=b.w/a.w; single.y*=b.h/a.h;}
       $('media').replaceChildren(image,marksLayer(f.name)); paintSingle();
     };
     if(image.complete&&image.naturalWidth) show(); else image.decode().then(show,show);
@@ -254,7 +270,8 @@ function preloadNeighbours() {
   for(const i of [ahead[1][0],ahead[-1][0],ahead[1][1]]) {
     if(i===undefined) continue;
     const u=mediaUrl(files[i]);
-    let img=preloaded.get(u);
+    const shown=$('media').querySelector(':scope>img');
+    let img=preloaded.get(u)||(shown?.getAttribute('src')===u?shown:null);
     if(!img) {img=document.createElement('img'); img.src=u; img.decode().catch(()=>{});}
     keep.set(u,img);
   }
@@ -295,7 +312,7 @@ function act(value) {
       on=!was||edited;
       next=on&&typed!=='';
     } else next=on||!flag;
-    if(flag) await save(on?null:item.rating||null,$('comment').value,on?value:null);
+    if(flag) await save(null,$('comment').value,on?value:null);
     else await save(on||!commentMode[value]?value:null,$('comment').value,null);
     if(next) {index=(index+1)%files.length; paintLists(); paintCard();}
   }).then(()=>{if(next) $('comment').blur();});
@@ -307,12 +324,14 @@ function setCommentMode(value,on) {
   box.classList.toggle('on',on); box.setAttribute('aria-checked',on);
   box.title=on?'Comment mode on: stays until there is a comment':'Comment mode off: saves and moves on';
 }
-function openFolder(raw) {
+const whenIdle=async()=>{for(let t=0;busy&&t<200;t++) await new Promise(r=>setTimeout(r,50));};
+async function openFolder(raw) {
+  await whenIdle();
   return transact(async()=>{
     await saveComment();
     const result=await api('/api/list?'+new URLSearchParams({dir:raw}));
     dir=result.dir; files=arrange(result.files); items=result.items; folderLabels=result.labels||{}; paintCustoms();
-    index=files.findIndex(f=>!items[f.name]?.rating); if(index<0) index=0;
+    index=files.findIndex(f=>!items[f.name]?.rating&&!items[f.name]?.flag); if(index<0) index=0;
     $('path').value=dir; $('folders').value=dir;
     history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
   });
@@ -361,6 +380,13 @@ function setGrid(on) {
   $('grid-box').append(b);
 }
 try {grid=localStorage.getItem('grid')==='1'; $('grid-toggle').classList.toggle('on',grid);} catch {}
+// Sidebar look: 'list' (thumbnail, name, details) or 'grid' (thumbnails only, 3 per row). Kept per browser.
+let sideView='list';
+function setSideView(mode) {
+  sideView=mode==='grid'?'grid':'list'; document.body.classList.toggle('side-grid',sideView==='grid');
+  try {localStorage.setItem('sideView',sideView);} catch {}
+  paintLists();
+}
 function setList(on) {
   document.body.classList.toggle('list-off',!on);
   $('set-list').checked=on;
@@ -371,6 +397,8 @@ function setList(on) {
 $('set-list').onchange=e=>setList(e.target.checked);
 $('list-flag').onclick=()=>setList(document.body.classList.contains('list-off'));
 try {setList(localStorage.getItem('list')!=='0');} catch {setList(true);}
+try {sideView=localStorage.getItem('sideView')==='grid'?'grid':'list';} catch {}
+document.body.classList.toggle('side-grid',sideView==='grid');
 $('set-side').onchange=e=>setLayout(e.target.checked);
 function setPeek(on) {
   document.body.classList.toggle('peek-off',!on); $('set-peek').checked=on;
@@ -381,8 +409,8 @@ try {setPeek(localStorage.getItem('peek')!=='0');} catch {setPeek(true);}
 // Grid size (columns × rows), kept per browser. ↑↓ move one row, PgUp/PgDn one page.
 const gridSize={cols:3,rows:3};
 function setGridSize(cols,rows) {
-  const fit=v=>Math.min(10,Math.max(1,Math.round(+v)||3));
-  gridSize.cols=fit(cols); gridSize.rows=fit(rows);
+  const fit=(v,old)=>String(v).trim()===''||!isFinite(+v)?old:Math.min(10,Math.max(1,Math.round(+v)));
+  gridSize.cols=fit(cols,gridSize.cols); gridSize.rows=fit(rows,gridSize.rows);
   // 1×1 is just the single view; the smallest grid is 2×1.
   if(gridSize.cols===1&&gridSize.rows===1) gridSize.cols=2;
   document.body.style.setProperty('--gcols',gridSize.cols); document.body.style.setProperty('--grows',gridSize.rows);
@@ -424,15 +452,13 @@ for(const v of customs) {
 paintCustoms();
 try {setLayout(localStorage.getItem('layout')==='side');} catch {setLayout(false);}
 $('open').onclick=()=>openFolder($('path').value);
-// A picked folder opens straight away (after the picker's transaction, since transact skips nested calls).
+// A picked folder opens straight away. The comment is saved first; the dialog itself does not block the app.
 $('browse').onclick=async()=>{
-  let picked='';
-  await transact(async()=>{
-    await saveComment();
+  await whenIdle(); await transact(saveComment);
+  try {
     const result=await api('/api/pick-folder',{initial:$('path').value||dir});
-    if(result.path) $('path').value=picked=result.path;
-  });
-  if(picked) openFolder(picked);
+    if(result.path) {$('path').value=result.path; openFolder(result.path);}
+  } catch(e) {toast(e.message);}
 };
 $('path').onkeydown=e=>{if(e.key==='Enter') openFolder($('path').value);};
 // Leave the dropdown after picking, so the arrow keys move through the files instead of the folders.
@@ -449,6 +475,10 @@ const view={fit:1,scale:1,x:0,y:0,w:0,h:0,token:0,drag:null};
 const viewerImg=()=>$('viewer').querySelector('img');
 function paintView() {
   const img=viewerImg(), s=view.fit*view.scale;
+  if(view.scale>1) {
+    const clampAxis=(v,size,screen)=>size<=screen?(screen-size)/2:Math.min(0,Math.max(screen-size,v));
+    view.x=clampAxis(view.x,view.w*s,innerWidth); view.y=clampAxis(view.y,view.h*s,innerHeight);
+  }
   img.style.transform=`translate(${view.x}px,${view.y}px) scale(${s})`;
   const layer=$('viewer').querySelector('.marks');
   if(layer) Object.assign(layer.style,{left:view.x+'px',top:view.y+'px',width:view.w*s+'px',height:view.h*s+'px'});
@@ -498,44 +528,49 @@ for(const b of document.querySelectorAll('#viewer .peek')) {
   b.addEventListener('pointerdown',e=>e.stopPropagation());
   b.onclick=e=>{e.stopPropagation(); jump(+b.dataset.i);};
 }
-function showInViewer(f) {
-  const img=viewerImg();
+// fresh: the viewer was just opened, so an older picture still in it is cleared rather than shown meanwhile.
+function showInViewer(f,fresh=false) {
+  const img=viewerImg(), u=mediaUrl(f);
   paintPeek();
-  if(img.dataset.name===f.name) return;
-  img.dataset.name=f.name;
+  if(img.dataset.url===u||view.pending===u) return;
+  const clear=()=>{img.removeAttribute('src'); img.dataset.url=''; $('viewer').querySelector('.marks')?.remove();};
+  if(fresh) clear();
+  view.pending=u;
   const next=new Image(), token=++view.token;
+  next.onerror=()=>{if(token!==view.token) return; view.pending=null; clear(); toast('Could not load '+f.name);};
   next.onload=async()=>{
     try {await next.decode();} catch {}
     if(token!==view.token) return;
+    view.pending=null; img.dataset.url=u;
     // Zoomed in: keep the zoom and show the same spot (relative to the image) at the screen centre.
     const scale=view.scale, keep=scale>1&&view.w;
-    const s=view.fit*scale, u=keep&&(innerWidth/2-view.x)/(view.w*s), v=keep&&(innerHeight/2-view.y)/(view.h*s);
+    const s=view.fit*scale, ru=keep&&(innerWidth/2-view.x)/(view.w*s), rv=keep&&(innerHeight/2-view.y)/(view.h*s);
     img.src=next.src; view.w=next.naturalWidth; view.h=next.naturalHeight;
     $('viewer').querySelector('.marks')?.remove(); $('viewer').append(marksLayer(f.name));
     resetView();
     if(keep) {
       view.scale=scale; const t=view.fit*scale;
-      view.x=innerWidth/2-u*view.w*t; view.y=innerHeight/2-v*view.h*t; paintView();
+      view.x=innerWidth/2-ru*view.w*t; view.y=innerHeight/2-rv*view.h*t; paintView();
     } else if(scale<1) {view.scale=scale; centerView();}
   };
-  next.src=mediaUrl(f);
+  next.src=u;
 }
 function openViewer() {
   const f=current(); if(!f||f.kind!=='image') return;
-  $('viewer').hidden=false; showInViewer(f); resetView();
+  $('viewer').hidden=false; showInViewer(f,true); resetView();
   $('viewer').requestFullscreen?.().catch(()=>{});
 }
 function closeViewer() {
   if($('viewer').hidden) return;
-  $('viewer').hidden=true; view.drag=null; view.scale=1;
+  $('viewer').hidden=true; view.drag=null; view.scale=1; view.pending=null; view.token++;
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
 }
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement) closeViewer(); else resetView();});
 addEventListener('resize',()=>{if(!$('viewer').hidden) resetView();});
 $('viewer').addEventListener('wheel',e=>{
   e.preventDefault();
-  if(!e.ctrlKey) {if(view.scale>1) {view.x-=e.deltaX; view.y-=e.deltaY; paintView();} return;}
-  zoomView(view.scale*Math.exp(-e.deltaY*0.002),e.clientX,e.clientY);
+  if(!e.ctrlKey) {if(view.scale>1) {view.x-=wheelPx(e,e.deltaX); view.y-=wheelPx(e,e.deltaY); paintView();} return;}
+  zoomView(view.scale*Math.exp(-wheelPx(e,e.deltaY)*0.002),e.clientX,e.clientY);
 },{passive:false});
 // Zooms the fullscreen picture to scale s, keeping the screen point (cx,cy) in place.
 // Below 100% of the fitted size the picture stays centred.
@@ -546,8 +581,6 @@ function zoomView(s,cx,cy) {
   const k=next/view.scale; view.x=cx-(cx-view.x)*k; view.y=cy-(cy-view.y)*k;
   view.scale=next; paintView();
 }
-// Single view: + / - zoom around the centre (10%–800%), the wheel pans while zoomed in. Kept across files, like fullscreen.
-const single={scale:1,x:0,y:0,drag:null,dragged:false,token:0};
 function paintSingle() {
   const img=$('media').querySelector(':scope>img'); if(!img) return;
   const m=$('media').getBoundingClientRect(), s=single.scale;
@@ -575,54 +608,59 @@ zoomBox.querySelector('button').onclick=e=>{
 };
 // (px,py): the point to keep in place, relative to the picture area's centre (default: the centre).
 function zoomSingle(f,px=0,py=0) {
+  if(!$('media').querySelector(':scope>img')) return;
   let s=Math.min(Math.max(single.scale*f,0.1),8); if(Math.abs(s-1)<1e-6) s=1;
   const k=s/single.scale;
   single.x=px-(px-single.x)*k; single.y=py-(py-single.y)*k; single.scale=s; paintSingle();
 }
 // Grid: +1 steps to more, smaller tiles, -1 to fewer, bigger ones: 2×1, 2×2, 3×3 … 10×10 (same as the ⚙ grid size).
-// A custom size steps from the nearest step by tile count.
+// From any size (also a custom one) it goes to the next step with more or fewer tiles; none left: unchanged.
 function stepGrid(dir) {
   const steps=[[2,1],...Array.from({length:9},(_,k)=>[k+2,k+2])], n=gridSize.cols*gridSize.rows;
-  let at=steps.findIndex(([c,r])=>c*r>=n); if(at<0) at=steps.length-1;
-  const exact=steps[at][0]*steps[at][1]===n;
-  const to=dir<0?at-1:(exact?at+1:at);
-  setGridSize(...steps[Math.min(Math.max(to,0),steps.length-1)]);
+  const to=dir>0?steps.find(([c,r])=>c*r>n):steps.findLast(([c,r])=>c*r<n);
+  if(!to) return;
+  setGridSize(...to);
   $('media').querySelector('.tile.current')?.scrollIntoView({block:'nearest'});
 }
 // Ctrl+wheel anywhere on the page zooms the picture (at the cursor) or steps the grid, like + and -,
 // instead of zooming the browser. Fullscreen has its own handler.
-let wheelSum=0;
+// Elsewhere (sidebar, settings, comment) Ctrl+wheel does nothing.
+let wheelSum=0, wheelAt=0;
 document.addEventListener('wheel',e=>{
-  if(!e.ctrlKey||!$('viewer').hidden||!current()) return;
+  if(!e.ctrlKey||!$('viewer').hidden) return;
   e.preventDefault();
+  if(!current()||!e.target.closest?.('#media')) return;
+  const dy=wheelPx(e,e.deltaY);
   if(grid) {
-    // Touchpads send many small deltas: one grid step per 100px of scrolling.
-    wheelSum+=e.deltaY; if(Math.abs(wheelSum)<100) return;
+    // Touchpads send many small deltas: one grid step per 100px of scrolling; a pause or a turn starts over.
+    if(e.timeStamp-wheelAt>400||Math.sign(dy)!==Math.sign(wheelSum)) wheelSum=0;
+    wheelAt=e.timeStamp; wheelSum+=dy; if(Math.abs(wheelSum)<100) return;
     stepGrid(wheelSum<0?1:-1); wheelSum=0; return;
   }
   if(!$('media').querySelector(':scope>img')) return;
   const m=$('media').getBoundingClientRect();
-  zoomSingle(Math.exp(-e.deltaY*0.002),e.clientX-m.left-m.width/2,e.clientY-m.top-m.height/2);
+  zoomSingle(Math.exp(-dy*0.002),e.clientX-m.left-m.width/2,e.clientY-m.top-m.height/2);
 },{passive:false});
 $('media').addEventListener('wheel',e=>{
   if(e.ctrlKey||single.scale<=1||!$('media').querySelector(':scope>img')) return;
-  e.preventDefault(); single.x-=e.deltaX; single.y-=e.deltaY; paintSingle();
+  e.preventDefault(); single.x-=wheelPx(e,e.deltaX); single.y-=wheelPx(e,e.deltaY); paintSingle();
 },{passive:false});
 // Zoomed in, drag the picture to pan; a drag does not open fullscreen. Pin/draw tools keep the mouse.
 $('media').addEventListener('pointerdown',e=>{
   single.dragged=false;
-  if(e.button!==0||markMode||single.scale<=1||e.target!==$('media').querySelector(':scope>img')) return;
-  e.preventDefault(); single.drag={x:e.clientX,y:e.clientY,ox:single.x,oy:single.y};
-  e.target.setPointerCapture(e.pointerId);
+  if(e.button!==0||markMode||single.scale<=1||!(e.target===$('media').querySelector(':scope>img')||e.target.closest('#media>.marks'))) return;
+  if(single.drag) return;
+  e.preventDefault(); single.drag={id:e.pointerId,x:e.clientX,y:e.clientY,ox:single.x,oy:single.y};
+  $('media').setPointerCapture(e.pointerId);
 });
 $('media').addEventListener('pointermove',e=>{
-  const d=single.drag; if(!d) return;
+  const d=single.drag; if(!d||e.pointerId!==d.id) return;
   if(!(e.buttons&1)) {single.drag=null; $('media').classList.remove('dragging'); return;}
   if(!single.dragged&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<=5) return;
   single.dragged=true; $('media').classList.add('dragging');
   single.x=d.ox+e.clientX-d.x; single.y=d.oy+e.clientY-d.y; paintSingle();
 });
-for(const t of ['pointerup','pointercancel']) $('media').addEventListener(t,()=>{single.drag=null; $('media').classList.remove('dragging');});
+for(const t of ['pointerup','pointercancel']) $('media').addEventListener(t,e=>{if(single.drag?.id!==e.pointerId) return; single.drag=null; $('media').classList.remove('dragging');});
 // Shift+arrows pan a zoomed picture (single view or fullscreen) by a tenth of the screen; plain arrows still change pictures.
 function panBy(dx,dy) {
   if(!$('viewer').hidden) {if(view.scale>1) {view.x+=dx*innerWidth/10; view.y+=dy*innerHeight/10; paintView();} return;}
@@ -636,20 +674,22 @@ for(const el of [$('viewer'),$('media')]) el.addEventListener('dragstart',e=>e.p
 $('viewer').addEventListener('pointerdown',e=>{
   if(e.button!==0) return;
   e.preventDefault();
-  view.drag={x:e.clientX,y:e.clientY,ox:view.x,oy:view.y,moved:false};
+  // A second finger cancels the click-to-close and is otherwise ignored.
+  if(view.drag) {view.drag.moved=true; return;}
+  view.drag={id:e.pointerId,x:e.clientX,y:e.clientY,ox:view.x,oy:view.y,moved:false};
   $('viewer').setPointerCapture(e.pointerId);
 });
 $('viewer').addEventListener('pointermove',e=>{
-  const d=view.drag; if(!d) return;
+  const d=view.drag; if(!d||e.pointerId!==d.id) return;
   if(!(e.buttons&1)) {view.drag=null; $('viewer').classList.remove('dragging'); return;}
   if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>5) d.moved=true;
   if(d.moved&&view.scale>1) {$('viewer').classList.add('dragging'); view.x=d.ox+e.clientX-d.x; view.y=d.oy+e.clientY-d.y; paintView();}
 });
-$('viewer').addEventListener('pointerup',()=>{
-  const d=view.drag; view.drag=null; $('viewer').classList.remove('dragging');
+$('viewer').addEventListener('pointerup',e=>{
+  const d=view.drag; if(d&&e.pointerId!==d.id) return; view.drag=null; $('viewer').classList.remove('dragging');
   if(d&&!d.moved) closeViewer();
 });
-$('viewer').addEventListener('pointercancel',()=>{view.drag=null; $('viewer').classList.remove('dragging');});
+$('viewer').addEventListener('pointercancel',e=>{if(view.drag&&e.pointerId!==view.drag.id) return; view.drag=null; $('viewer').classList.remove('dragging');});
 document.addEventListener('keydown',e=>{
   if(!$('viewer').hidden&&(e.key==='Escape'||e.key==='Enter')) {e.preventDefault(); closeViewer(); return;}
   if(e.key==='Escape'&&!$('settings-menu').hidden) {setMenu(false); $('settings').focus(); return;}
@@ -715,12 +755,18 @@ function fillMarks(layer) {
   pins.forEach((pin,i)=>{
     const el=document.createElement('div'); el.className='pin'; el.textContent=i+1; el.title=pin.note||'(no note)';
     Object.assign(el.style,{left:pin.x*100+'%',top:pin.y*100+'%'});
-    el.onpointerdown=e=>e.stopPropagation();
-    el.onclick=e=>{e.stopPropagation(); if($('viewer').hidden) $('pin-list').querySelectorAll('input')[i]?.focus();};
+    el.onpointerdown=e=>{if(markMode) e.stopPropagation();};
+    el.onclick=e=>{e.stopPropagation(); if($('viewer').hidden&&!single.dragged) $('pin-list').querySelectorAll('input')[i]?.focus();};
     layer.append(el);
   });
 }
 function paintMarks() {document.querySelectorAll('.marks').forEach(fillMarks);}
+// Unzoomed size of a picture fitted into the single-view area (object-fit:contain).
+function fitSize(img) {
+  if(!img?.naturalWidth) return null;
+  const m=$('media').getBoundingClientRect(), k=Math.min(m.width/img.naturalWidth,m.height/img.naturalHeight);
+  return {w:img.naturalWidth*k,h:img.naturalHeight*k};
+}
 // Sizes the single-view overlay to the picture inside its object-fit:contain box.
 function placeMarks() {
   const img=$('media').querySelector(':scope>img'), layer=$('media').querySelector(':scope>.marks');
@@ -783,6 +829,8 @@ const unitPoint=(e,layer)=>{const b=layer.getBoundingClientRect(); const c=v=>Ma
 $('media').addEventListener('pointerdown',e=>{
   const layer=e.target.closest('#media>.marks');
   if(!layer||!markMode||e.button!==0||busy) return;
+  // The previous picture stays visible while the next one decodes: no marks on it for the wrong file.
+  if(layer.dataset.name!==current()?.name) {e.preventDefault(); return;}
   e.preventDefault();
   const q=unitPoint(e,layer);
   if(markMode==='pin') {
@@ -803,7 +851,7 @@ $('media').addEventListener('pointermove',e=>{
 });
 $('media').addEventListener('pointerup',()=>{
   const p=pen; pen=null;
-  if(p) saveMarks({strokes:[...(marksOf(current().name).strokes||[]),{pts:p.pts,color:$('mark-color').value}]});
+  if(p&&p.layer.dataset.name===current()?.name) saveMarks({strokes:[...(marksOf(current().name).strokes||[]),{pts:p.pts,color:$('mark-color').value}]});
 });
 // Live refresh every 10 s while the tab is visible: new folders appear in the
 // dropdown, new files in the open folder, without touching the current card.
@@ -832,11 +880,13 @@ function clearDropMarks() {$('sidebar').querySelectorAll('.drop-before,.drop-aft
 document.addEventListener('pointermove',e=>{
   if(!drag) return;
   if(!drag.active) {
-    if(Math.abs(e.clientY-drag.y)<6) return;
+    if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6) return;
     drag.active=true; drag.row.classList.add('dragging'); document.body.classList.add('sorting');
   }
   const rows=[...$('sidebar').querySelectorAll('.row')];
-  let to=rows.findIndex(r=>{const b=r.getBoundingClientRect(); return e.clientY<b.top+b.height/2;});
+  // List: before the first row whose middle is below the pointer. Grid: also left of a tile's middle in its line.
+  const tiles=sideView==='grid';
+  let to=rows.findIndex(r=>{const b=r.getBoundingClientRect(); return tiles?e.clientY<b.top||e.clientY<b.bottom&&e.clientX<b.left+b.width/2:e.clientY<b.top+b.height/2;});
   if(to<0) to=rows.length;
   drag.to=to; clearDropMarks();
   if(to<rows.length) rows[to].classList.add('drop-before'); else rows[rows.length-1]?.classList.add('drop-after');
