@@ -165,8 +165,7 @@ async function paintDetails(f) {
   }));
 }
 function paintRating() {
-  const rating=items[current()?.name]?.rating;
-  const flag=items[current()?.name]?.flag;
+  const flag=items[current()?.name]?.flag, rating=flag?null:items[current()?.name]?.rating;
   $('ratings').querySelectorAll('button[data-rating]').forEach(b=>b.classList.toggle('selected',b.classList.contains('flag')?b.dataset.rating===flag:b.dataset.rating===rating));
 }
 let grid=false;
@@ -247,7 +246,7 @@ function jump(i) {
 // Each button has a 💬 checkbox. Off: ratings save and advance, flags toggle (on → advance).
 // On ("comment mode", default for Redo): the first press sets the value and stays until a
 // comment exists; pressing again with a new comment moves on, without one it unsets the value.
-// A rating replaces any flag (Redo, Broken, Trash); the comment stays.
+// Only one value at a time: a rating replaces any flag and a flag replaces any rating; the comment stays.
 let commentMode={redo:true};
 try {commentMode=JSON.parse(localStorage.getItem('commentMode'))||commentMode;} catch {}
 function act(value) {
@@ -262,7 +261,7 @@ function act(value) {
       on=!was||edited;
       next=on&&typed!=='';
     } else next=on||!flag;
-    if(flag) await save(item.rating||null,$('comment').value,on?value:null);
+    if(flag) await save(on?null:item.rating||null,$('comment').value,on?value:null);
     else await save(on||!commentMode[value]?value:null,$('comment').value,null);
     if(next) {index=(index+1)%files.length; paintLists(); paintCard();}
   }).then(()=>{if(next) $('comment').blur();});
