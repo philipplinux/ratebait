@@ -20,7 +20,7 @@ python3 server.py --root ~/Pictures --root ~/Music --port 8765
 ## Use
 
 - Pick a discovered folder (scans the roots up to 4 levels deep) or type/browse to any local folder. Roots: `--root` (repeatable), else `MEDIA_RATER_ROOTS` (colon-separated), else the current directory.
-- Numpad layout: **0** Neutral, **.** Reject, **1–3** Great · Love · MVP: rate and advance (old Good/Bad ratings load as Great/Reject); **← →** navigate; **C** comment; **Space** play/pause audio.
+- Numpad layout: **0** Neutral, **.** Reject, **1–3** Great · Love · MVP: rate and advance (old Good/Bad ratings load as Great/Reject); **← →** navigate; **C** comment (**Next →** beside Clear saves it and moves on); **Space** play/pause audio.
 - **4** Redo: request changes (focuses the comment, keeps the rating). **5** Broken: defective output, advance. **6** Trash: mark for deletion, advance. Press again to remove the flag. Each gets its own section in `REVIEW.md`; nothing is deleted automatically.
 - **⇥ (top right):** flips the buttons and comment into a right sidebar, buttons arranged like a numpad; remembered per browser.
 - **▦ G Grid (right of the comment, or under it in the sidebar; Space/G):** all files as a scrollable 3-column grid, 3 rows visible; click a tile to select it, double-click for fullscreen, ↑↓ move by row; tiles show the filename (date-run prefix dropped); ratings apply to the outlined tile. On an audio file, Space still plays/pauses; G opens the grid there.
