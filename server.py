@@ -11,7 +11,7 @@ imports embedded reviews for files it has no entry for.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
-and numpad-style keys (0 Neutral, . Reject, 1–3 Great…MVP) save and advance to the next file, wrapping at the end. Comments
+and numpad-style keys (0 Reject, . Neutral, 1–3 Pass…MVP) save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
 Flags sit beside the rating: Redo (4) asks for changes described in the comment,
 Broken (5) marks a defective file, Trash (6) marks it for deletion; each
@@ -40,8 +40,8 @@ from urllib.parse import parse_qs, urlsplit
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
-RATINGS = ["reject", "neutral", "great", "love", "mvp"]
-LEGACY = {"good": "great", "bad": "reject"}  # retired ratings, mapped when a folder is loaded
+RATINGS = ["reject", "neutral", "pass", "love", "mvp"]
+LEGACY = {"good": "pass", "great": "pass", "bad": "reject"}  # retired ratings, mapped when a folder is loaded
 FLAGS = ["redo", "broken", "trash", "custom7", "custom8", "custom9"]
 CUSTOM = FLAGS[3:]  # numpad 7-9 flags; their names come from the browser and live in state["labels"]
 STATE_FILE = ".review.json"
