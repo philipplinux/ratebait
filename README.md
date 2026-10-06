@@ -25,7 +25,7 @@ python3 server.py --root ~/Pictures --root ~/Music --port 8765
 - **💬 checkbox** (top right of every button): comment mode. On, the button works like Redo: it sets the value but stays until there is a comment, then pressing it again moves on (or press again without a comment to undo). Off, ratings and flags move on straight away. On for Redo by default; remembered per browser.
 - **⇥ (top right):** flips the buttons and comment into a right sidebar, buttons arranged like a numpad; remembered per browser.
 - **▦ G Grid (right of the comment, or under it in the sidebar; Space/G):** all files as a scrollable 3-column grid, 3 rows visible; click a tile to select it, double-click for fullscreen, ↑↓ move by row; tiles show the filename (date-run prefix dropped); ratings apply to the outlined tile. On an audio file, Space still plays/pauses; G opens the grid there.
-- **Sidebar:** each file shows type · resolution · size in grey. Drag rows to put files in your own order for A/B comparing; arrows, grid and progress bar follow it. The order is saved per folder in this browser; new files appear on top, and **Reset** returns to newest-first.
+- **Sidebar:** each file shows type · resolution · size in grey. Drag rows to put files in your own order for A/B comparing; arrows, grid and progress bar follow it. The order is saved per folder in this browser; new files appear at the bottom, and **Reset** returns to oldest-first (newest at the bottom).
 - **‹ flag (edge of the file list) / L:** hides the file list; the › flag on the left edge brings it back; remembered per browser.
 - **Live:** new folders and new files show up within 10 s, no reload needed.
 - **Click an image** for fullscreen: **Ctrl+wheel** zooms at the cursor, drag pans, click or Esc closes.
