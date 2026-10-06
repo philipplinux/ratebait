@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 philipplinux
 """RateBait. Run: python3 server.py [--root PATH] [--port 8765].
 
 Discovery roots: --root (repeatable), else $MEDIA_RATER_ROOTS (os.pathsep
@@ -23,6 +25,7 @@ Large icon rating buttons sit beneath the media, above the comment box.
 The page polls every 10 s for new folders and new files in the open folder.
 """
 import argparse
+import heapq
 from datetime import datetime
 import http.server
 import ipaddress
@@ -72,6 +75,113 @@ def resolve_dir(raw: str) -> Path:
     if not d.is_dir():
         raise ValueError(f"not a directory: {d}")
     return d
+
+
+def list_subdirs(raw: str) -> list[str]:
+    """Names of the subfolders of a folder, for the path field's suggestions."""
+    if not isinstance(raw, str) or not raw:
+        return []
+    parent = Path(raw).expanduser()
+    if not parent.is_dir():
+        return []
+    names = []
+    for p in parent.iterdir():
+        try:
+            if p.is_dir():
+                names.append(p.name)
+        except OSError:
+            pass
+    return sorted(names, key=str.lower)[:2000]
+
+
+# Folder search for the path field: every folder under the roots (or, once a client opts in, under
+# home as well), kept in memory and refreshed in the background. Hidden folders, build/dependency
+# folders and other mounts (network drives) are skipped so a scan takes about a second.
+DIR_SKIP = {"node_modules", "__pycache__", "venv", "site-packages", "target", "dist", "build"}
+DIR_INDEX: dict[str, list[str]] = {"roots": [], "home": []}
+DIR_INDEX_EVERY = 300
+HOME_WANTED = threading.Event()  # set by the first home-scope search
+DIR_REINDEX = threading.Event()
+
+
+def walk_dirs(roots) -> list[str]:
+    found, seen = [], set()
+    for root in roots:
+        root = str(root)
+        if any(root == s or root.startswith(s + "/") for s in seen):
+            continue
+        seen.add(root)
+        try:
+            dev = os.stat(root).st_dev
+        except OSError:
+            continue
+        stack = [root]
+        while stack:
+            d = stack.pop()
+            try:
+                with os.scandir(d) as it:
+                    for e in it:
+                        if e.name.startswith(".") or e.name in DIR_SKIP:
+                            continue
+                        try:
+                            if e.is_dir(follow_symlinks=False) and e.stat(follow_symlinks=False).st_dev == dev:
+                                found.append(e.path)
+                                stack.append(e.path)
+                        except OSError:
+                            pass
+            except OSError:
+                pass
+    return found
+
+
+def index_dirs_forever(roots):
+    roots = [str(r) for r in sorted(roots, key=lambda r: len(str(r)))]
+    while True:
+        DIR_INDEX["roots"] = walk_dirs(roots)
+        if HOME_WANTED.is_set():
+            DIR_INDEX["home"] = walk_dirs([str(Path.home())] + roots)
+        DIR_REINDEX.wait(DIR_INDEX_EVERY)
+        DIR_REINDEX.clear()
+
+
+def fuzzy(query: str, text: str):
+    """Score (lower is better) and matched positions, or None. Mirrors fuzzy() in index.html."""
+    q, t = query.lower(), text.lower()
+    at = t.find(q)
+    if at >= 0:
+        return (1000 + at if at else 0) + len(t) / 1000, list(range(at, at + len(q)))
+    hits, start, gaps = [], 0, 0
+    for c in q:
+        k = t.find(c, start)
+        if k < 0:
+            return None
+        gaps += k - start
+        hits.append(k)
+        start = k + 1
+    if gaps > 2 * len(q):
+        return None
+    return 2000 + gaps + len(t) / 1000, hits
+
+
+def find_dirs(query: str, scope: str = "roots", limit: int = 50) -> list[dict]:
+    if scope == "home" and not HOME_WANTED.is_set():
+        HOME_WANTED.set()
+        DIR_REINDEX.set()
+    if not query:
+        return []
+    home = str(Path.home())
+    ranked = []
+    for path in DIR_INDEX["home" if scope == "home" else "roots"]:
+        base = path[path.rfind("/") + 1:]
+        m = fuzzy(query, base)
+        if m:
+            ranked.append((m[0] + len(path) / 100, path, m[1]))
+    out = []
+    for score, path, hits in heapq.nsmallest(limit, ranked):
+        label = "~" + path[len(home):] if path.startswith(home + "/") else path
+        start = len(label) - (len(path) - path.rfind("/") - 1)
+        out.append({"path": label + "/", "hits": [h + start for h in hits]})
+    return out
 
 
 def media_kind(p: Path) -> str | None:
@@ -396,8 +506,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         elif url.path == "/api/dirs":
-            self.json_response(200, {"roots": [str(p) for p in self.server.roots],
+            self.json_response(200, {"roots": [str(p) for p in self.server.roots], "home": str(Path.home()),
                                      "dirs": discover_dirs(self.server.roots)})
+        elif url.path == "/api/find-dirs":
+            scope = query.get("scope", ["roots"])[0]
+            self.json_response(200, {"dirs": find_dirs(query.get("q", [""])[0], scope),
+                                     "indexed": len(DIR_INDEX["home" if scope == "home" else "roots"])})
+        elif url.path == "/api/subdirs":
+            self.json_response(200, {"names": list_subdirs(query.get("path", [""])[0])})
         elif url.path == "/api/meta":
             d = resolve_dir(query.get("dir", [""])[0])
             p = safe_media_path(d, query.get("name", [""])[0])
@@ -600,6 +716,7 @@ if __name__ == "__main__":
     args = configuration()
     server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
     server.roots = args.root
+    threading.Thread(target=index_dirs_forever, args=(args.root,), daemon=True).start()
     print(f"RateBait: http://{args.host}:{args.port}/", flush=True)
     try:
         server.serve_forever()
