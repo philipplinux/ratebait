@@ -11,8 +11,8 @@ Tiny local web app for rating AI-generated images and music fast: numpad keys to
 - **Folders:** pass `--root` per media folder, or set `MEDIA_RATER_ROOTS` once (e.g. in `~/.config/environment.d/`).
 
 ```bash
-git clone https://github.com/philipplinux/simple-media-rater
-cd simple-media-rater
+git clone https://github.com/philipplinux/ratebait
+cd ratebait
 python3 server.py                          # scans the current directory → http://127.0.0.1:8765/
 python3 server.py --root ~/Pictures --root ~/Music --port 8765
 ```
