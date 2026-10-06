@@ -4,12 +4,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Simple Media Rater</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#f7768e;--neutral:#8b95a7;--bad:#d77a61;--great:#9ece6a;--love:#f78fc6;--mvp:#e0af68;--redo:#7aa2f7;--broken:#ff9e64;--trash:#bb9af7}
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#f7768e;--neutral:#8b95a7;--great:#9ece6a;--love:#f78fc6;--mvp:#e0af68;--redo:#7aa2f7;--broken:#ff9e64;--trash:#bb9af7}
 *{box-sizing:border-box}body{margin:0;height:100vh;display:grid;grid-template: auto minmax(0,1fr)/300px minmax(0,1fr)}
 header{grid-column:1/-1;padding:20px 24px;background:#191e27;border-bottom:1px solid #303746}h1{font-size:20px;margin:0 0 14px}h1 span{font-size:12px;color:#929daf;font-weight:400;margin-left:14px}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button,input,select,textarea{font:inherit;border:1px solid #3d4657;border-radius:7px;background:#222936;color:inherit;padding:9px 12px}button{cursor:pointer}button:hover{border-color:#aab7ce}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #aab7ce}select{max-width:40%;min-width:210px}#path{flex:1;min-width:200px}#progress{font-size:13px;color:#b7c1d2}
 #ticks{display:flex;gap:4px;margin-top:18px;min-height:14px}#ticks button{flex:1;min-width:0;padding:0;height:14px;border:0;border-radius:3px;background:var(--unrated)}#ticks .current{outline:2px solid white;outline-offset:2px}
-[data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=bad]{--tone:var(--bad)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}[data-rating=mvp]{--tone:var(--mvp)}[data-rating=redo]{--tone:var(--redo)}[data-rating=broken]{--tone:var(--broken)}[data-rating=trash]{--tone:var(--trash)}#ticks button[data-rating]{background:var(--tone)}
+[data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}[data-rating=mvp]{--tone:var(--mvp)}[data-rating=redo]{--tone:var(--redo)}[data-rating=broken]{--tone:var(--broken)}[data-rating=trash]{--tone:var(--trash)}#ticks button[data-rating]{background:var(--tone)}
 aside{overflow:auto;background:#151a22;padding:12px;border-right:1px solid #303746}.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:5px;background:transparent;border-color:transparent;padding:8px}.row.current{background:#2a3343;border-color:#64758d}.thumb{width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0}.note{font-size:28px;text-align:center}.row-name{flex:1;overflow:hidden;text-overflow:ellipsis;font-size:12px}.badge{color:var(--tone,#a2aabb);font-size:11px}.comment-marker{font-size:12px}
 main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#banner{background:#294534;color:#b9efc8;padding:10px 14px;border-radius:7px}#media{flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;background:#0b0e13;border-radius:10px;overflow:hidden}#media>img{width:100%;height:100%;max-height:calc(100vh - 400px);object-fit:contain}.audio-card{display:flex;flex-direction:column;align-items:center;gap:20px;padding:24px;max-width:100%}.audio-card .symbol{font-size:90px;color:#ecc268}.audio-card audio{width:min(520px,100%)}.audio-card .audio-name{overflow-wrap:anywhere;text-align:center}#filename{font-weight:600;overflow-wrap:anywhere}#date{font-size:12px;color:#929daf;margin-top:4px}#ratings{display:flex;gap:8px;flex-wrap:wrap}#ratings button{color:var(--tone)}#ratings button.selected{background:var(--tone);color:#11161b;border-color:var(--tone)}textarea{display:block;width:100%;resize:vertical;min-height:72px}.comment-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px}.hint{color:#929daf;font-size:12px}#toast{position:fixed;bottom:24px;right:24px;max-width:80vw;background:#762f38;color:white;padding:16px;border-radius:8px;z-index:10}[hidden]{display:none!important}body.busy button:not(#ticks button),body.busy select{pointer-events:none;opacity:.65}
 #ratings{justify-content:center;gap:10px;padding:10px 0 14px;flex-shrink:0;flex-wrap:nowrap}
@@ -28,13 +28,13 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 <header><h1>Simple Media Rater <span>Pictures & music · Local files · Markdown notes</span></h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="browse">Browse…</button><button id="open">Open</button><span id="progress">0/0 rated</span></div><nav id="ticks" aria-label="Review progress"></nav></header>
 <aside id="sidebar" aria-label="Media files"></aside>
 <!-- Review order: media, ratings, comment, then filename/date. -->
-<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 0 Neutral · 1–3 Great→MVP · 5 Bad · 6 Reject · 7 Redo · 8 Broken · 9 Trash · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
+<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 0 Neutral · . Reject · 1–3 Great→MVP · 4 Redo · 5 Broken · 6 Trash · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
 <div id="viewer" hidden><img alt=""><div id="zoom-level"></div></div>
 <div id="toast" role="alert" hidden></div>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const ratings = ['reject','bad','neutral','great','love','mvp'];
+const ratings = ['reject','neutral','great','love','mvp'];
 const flags = ['redo','broken','trash'];
 let dir='', files=[], items={}, index=0, busy=false, toastTimer;
 const current = () => files[index];
@@ -155,10 +155,10 @@ function openFolder(raw) {
     history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
   });
 }
-// One row, keyed by the number shown: 0 Neutral, 1–3 better and better,
-// 5–9 worse and worse (4 is a buffer). Flags toggle; ratings save and advance.
-const buttons=[['0','neutral','−'],['1','great','★'],['2','love','♥'],['3','mvp','👑'],null,
-               ['5','bad','👎'],['6','reject','✕'],null,['7','redo','↻'],['8','broken','⚠'],['9','trash','🗑']];
+// One row laid out like a numpad: 0 Neutral and . Reject on the bottom row,
+// 1–3 better and better, 4–6 Redo/Broken/Trash. Flags toggle; ratings save and advance.
+const buttons=[['0','neutral','−'],['.','reject','✕'],null,['1','great','★'],['2','love','♥'],['3','mvp','👑'],null,
+               ['4','redo','↻'],['5','broken','⚠'],['6','trash','🗑']];
 const keyAction={};
 for(const entry of buttons) {
   if(!entry) {$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'})); continue;}
@@ -242,7 +242,9 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&typing) {e.target.blur(); return;}
   if(e.ctrlKey&&e.key==='Enter'&&e.target===$('comment')) {e.preventDefault(); transact(saveComment); return;}
   if(typing||busy||e.ctrlKey||e.metaKey||e.altKey) return;
-  if(keyAction[e.key]) {e.preventDefault(); keyAction[e.key]();}
+  // ',' is the numpad decimal key on some layouts.
+  const key=e.key===','?'.':e.key;
+  if(keyAction[key]) {e.preventDefault(); keyAction[key]();}
   else if(e.key==='ArrowLeft') {e.preventDefault(); jump(index-1);}
   else if(e.key==='ArrowRight') {e.preventDefault(); jump(index+1);}
   else if(e.key.toLowerCase()==='c') {e.preventDefault(); $('comment').focus();}
