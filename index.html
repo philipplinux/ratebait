@@ -171,7 +171,9 @@ function paintGrid() {
   const start=0;
   let g=$('media').querySelector('.grid');
   if(!g||g.dataset.key!==dir+'|'+files.length) {
-    g=document.createElement('div'); g.className='grid'; g.dataset.key=dir+'|'+files.length;
+    // Keep the scroll position when files are added to the same folder.
+    const same=g?.dataset.key.startsWith(dir+'|'), keep=same?[g,$('media'),document.querySelector('main')].map(e=>[e,e.scrollTop]):[], last=g?.dataset.index;
+    g=document.createElement('div'); if(same) g.dataset.index=last; g.className='grid'; g.dataset.key=dir+'|'+files.length;
     files.forEach((f,k)=>{
       const tile=document.createElement('button'); tile.className='tile'; tile.title=f.name;
       if(f.kind==='image') {const img=document.createElement('img'); img.loading='lazy'; img.src=mediaUrl(f); img.alt=f.name; tile.append(img);}
@@ -183,6 +185,7 @@ function paintGrid() {
       g.append(tile);
     });
     $('media').replaceChildren(g);
+    keep.forEach(([e,top],k)=>(k?e:g).scrollTop=top);
   }
   [...g.children].forEach((tile,k)=>{
     const item=items[files[start+k]?.name]||{}, r=item.flag||item.rating, badge=tile.querySelector('.tile-badge');
@@ -190,7 +193,9 @@ function paintGrid() {
     if(r) badge.dataset.rating=r; else delete badge.dataset.rating;
     badge.textContent=label(r); badge.hidden=!r;
   });
-  g.children[index-start]?.scrollIntoView({block:'nearest'});
+  // Scroll only when the selection moved, not on a background refresh.
+  if(g.dataset.index!==String(index)) g.children[index-start]?.scrollIntoView({block:'nearest'});
+  g.dataset.index=index;
 }
 function paintCard() {
   const old=$('media').querySelector('audio');
