@@ -34,6 +34,16 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 [![Buy me a beer?](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer%3F&emoji=%F0%9F%8D%BA&slug=philipplinux&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/philipplinux)
 
+## Why "RateBait"?
+
+No database, no memory service, no index to keep in sync. Every review leaves a trail of bait that the next person, script or LLM agent can pick up:
+
+- **`REVIEW.md`** in each folder: plain Markdown, grouped by rating, with comments and marks. Easy to read, grep and diff, and to paste into a prompt.
+- **Embedded data:** PNGs carry their own review in an iTXt chunk, next to the generation prompt and seed. Copy or move a file and its rating goes with it; RateBait reads it back in any folder.
+- **File names:** the name links a picture to its review entry, its run log and its notes, so plain search finds every place it is mentioned.
+
+Plain files and stable names link everything that matters, cheaply and reliably. Any tool that reads text can follow the trail.
+
 ## Setup
 
 Setting it up with an AI agent, or letting one act on your reviews? Point it at [AGENTS.md](AGENTS.md).
