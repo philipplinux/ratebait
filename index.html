@@ -17,7 +17,7 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 #ratings button:hover{background:linear-gradient(160deg,color-mix(in srgb,var(--tone) 35%,#273140),color-mix(in srgb,var(--tone) 15%,#17202c));border-color:var(--tone);transform:translateY(-3px);box-shadow:inset 0 1px 0 #ffffff30,0 9px 0 #080d15,0 12px 24px #0005}
 #ratings button.selected{background:var(--tone);color:#11161b}
 #ratings button:active{transform:translateY(4px);box-shadow:inset 0 1px 3px #0003,0 2px 0 #080d15}
-#ratings .flag-sep{width:1px;align-self:stretch;background:#3d4657;margin:0 6px}#ratings button.flag{min-width:120px;font-size:16px}
+#ratings .flag-sep{width:1px;align-self:stretch;background:#3d4657;margin:0 10px}#ratings button.flag{min-width:120px;font-size:16px}
 #ratings .rating-icon{font-size:27px;line-height:1;margin:0;filter:drop-shadow(0 2px 2px #0004)}
 #details{padding-top:4px;color:#b4bfce}#filename{font-size:13px}
 #media>img{cursor:zoom-in}#viewer{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:zoom-out;touch-action:none}#viewer img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none}#viewer.zoomed{cursor:grab}#viewer.dragging{cursor:grabbing}#zoom-level{position:fixed;bottom:16px;right:16px;z-index:21;background:#000a;color:#e7eaf0;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none}
@@ -155,6 +155,13 @@ function openFolder(raw) {
     history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
   });
 }
+for(const [flag,[symbol,label]] of Object.entries(flags)) {
+  const b=document.createElement('button'); b.dataset.rating=flag; b.className='flag';
+  const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
+  icon.textContent=symbol; b.append(icon,document.createTextNode(label));
+  b.onclick=()=>toggleFlag(flag); $('ratings').append(b);
+}
+$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'}));
 ratings.forEach((rating,i)=>{
   const b=document.createElement('button'); b.dataset.rating=rating;
   const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
@@ -162,13 +169,6 @@ ratings.forEach((rating,i)=>{
   b.append(icon,document.createTextNode(`${i+1} ${titleCase(rating)}`));
   b.onclick=()=>rate(rating); $('ratings').append(b);
 });
-$('ratings').append(Object.assign(document.createElement('span'),{className:'flag-sep'}));
-for(const [flag,[symbol,label]] of Object.entries(flags)) {
-  const b=document.createElement('button'); b.dataset.rating=flag; b.className='flag';
-  const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
-  icon.textContent=symbol; b.append(icon,document.createTextNode(label));
-  b.onclick=()=>toggleFlag(flag); $('ratings').append(b);
-}
 $('open').onclick=()=>openFolder($('path').value);
 $('browse').onclick=()=>transact(async()=>{
   await saveComment();
@@ -254,15 +254,38 @@ document.addEventListener('keydown',e=>{
     if(audio) {e.preventDefault(); if(audio.paused) audio.play().catch(e=>toast(e.message)); else audio.pause();}
   }
 });
+// Live refresh every 10 s while the tab is visible: new folders appear in the
+// dropdown, new files in the open folder, without touching the current card.
+async function refreshDirs() {
+  const {dirs}=await api('/api/dirs'), selected=$('folders').value;
+  $('folders').replaceChildren(Object.assign(document.createElement('option'),{value:'',textContent:'Choose a folder'}));
+  for(const d of dirs) {
+    const option=document.createElement('option'); option.value=d.path;
+    option.textContent=`${d.label} (${d.count})`; $('folders').append(option);
+  }
+  $('folders').value=selected;
+  return dirs;
+}
+async function refreshFiles() {
+  if(!dir||busy) return;
+  const result=await api('/api/list?'+new URLSearchParams({dir}));
+  if(busy||result.dir!==dir) return;
+  const names=f=>f.map(x=>x.name+x.mtime).join('/');
+  if(names(result.files)===names(files)) return;
+  const name=current()?.name;
+  files=result.files; items=result.items;
+  const i=files.findIndex(f=>f.name===name);
+  index=i<0?Math.min(index,Math.max(files.length-1,0)):i;
+  paintLists();
+  if(current()?.name!==name) paintCard();
+}
+setInterval(()=>{
+  if(document.hidden||document.activeElement===$('folders')) return;
+  refreshDirs().catch(()=>{}); refreshFiles().catch(()=>{});
+},10000);
 (async()=>{
   let dirs=[];
-  try {
-    const result=await api('/api/dirs'); dirs=result.dirs;
-    for(const d of dirs) {
-      const option=document.createElement('option'); option.value=d.path;
-      option.textContent=`${d.label} (${d.count})`; $('folders').append(option);
-    }
-  } catch(e) {toast(e.message);}
+  try {dirs=await refreshDirs();} catch(e) {toast(e.message);}
   const initial=new URLSearchParams(location.search).get('dir')||dirs[0]?.path;
   if(initial) await openFolder(initial);
 })();

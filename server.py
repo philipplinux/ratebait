@@ -16,6 +16,7 @@ Arrow keys navigate, C focuses comments, and Space toggles audio playback.
 Browse opens the system folder dialog (XDG desktop portal, falling back to Tk)
 and fills the path; click Open to review it. Cancel leaves the path unchanged.
 Large icon rating buttons sit beneath the media, above the comment box.
+The page polls every 10 s for new folders and new files in the open folder.
 """
 import argparse
 from datetime import datetime
