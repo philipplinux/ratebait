@@ -2,7 +2,7 @@
 
 Tiny local web app for rating generated images and music one file at a time. Python standard library only: no install, no build.
 
-![Simple Media Rater: grid view with the numpad sidebar](docs/screenshot.png)
+![Simple Media Rater: grid view with the rating buttons below](docs/screenshot.png)
 
 ## Setup
 
