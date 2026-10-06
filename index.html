@@ -188,11 +188,16 @@ function rate(rating) {
 // Redo stays on the file and focuses the comment for the change request; Broken and Trash advance.
 function toggleFlag(flag) {
   if(!current()) return;
+  let next=false;
   return transact(async()=>{
-    const on=items[current().name]?.flag!==flag;
+    // Redo with a comment (typed or saved) keeps the flag and moves on; without one it
+    // waits in the comment box, so: Redo → write → Redo again → next file.
+    const commented=flag==='redo'&&$('comment').value.trim()!=='';
+    const on=commented||items[current().name]?.flag!==flag;
     await save(items[current().name]?.rating||null,$('comment').value,on?flag:null);
-    if(on&&flag!=='redo') {index=(index+1)%files.length; paintLists(); paintCard();}
-  }).then(()=>{if(flag==='redo'&&items[current()?.name]?.flag==='redo') $('comment').focus();});
+    next=on&&(flag!=='redo'||commented);
+    if(next) {index=(index+1)%files.length; paintLists(); paintCard();}
+  }).then(()=>{if(next) $('comment').blur(); if(!next&&flag==='redo'&&items[current()?.name]?.flag==='redo') $('comment').focus();});
 }
 function openFolder(raw) {
   return transact(async()=>{
