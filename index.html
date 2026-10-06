@@ -295,7 +295,17 @@ function resetView() {
 function showInViewer(f) {
   const img=viewerImg();
   if(img.dataset.name===f.name) return;
-  img.dataset.name=f.name; img.onload=resetView; img.src=mediaUrl(f);
+  // Zoomed in: the next picture keeps the zoom and shows the same spot (relative to the image) at the screen centre.
+  if(view.scale>1&&img.naturalWidth) {
+    const s=view.fit*view.scale, u=(innerWidth/2-view.x)/(img.naturalWidth*s), v=(innerHeight/2-view.y)/(img.naturalHeight*s);
+    img.onload=()=>keepView(u,v);
+  } else img.onload=resetView;
+  img.dataset.name=f.name; img.src=mediaUrl(f);
+}
+function keepView(u,v) {
+  const img=viewerImg(), scale=view.scale;
+  resetView(); view.scale=scale;
+  const s=view.fit*scale; view.x=innerWidth/2-u*img.naturalWidth*s; view.y=innerHeight/2-v*img.naturalHeight*s; paintView();
 }
 function openViewer() {
   const f=current(); if(!f||f.kind!=='image') return;
@@ -304,7 +314,7 @@ function openViewer() {
 }
 function closeViewer() {
   if($('viewer').hidden) return;
-  $('viewer').hidden=true; view.drag=null;
+  $('viewer').hidden=true; view.drag=null; view.scale=1;
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
 }
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement) closeViewer(); else resetView();});
