@@ -189,6 +189,15 @@ def media_kind(p: Path) -> str | None:
     return "image" if suffix in IMAGE_EXT else "audio" if suffix in AUDIO_EXT else None
 
 
+def count_media(d: Path) -> int:
+    """Number of media files directly in a folder (for the sidebar's subfolder buttons)."""
+    try:
+        with os.scandir(d) as it:
+            return sum(1 for e in it if not e.name.startswith(".") and media_kind(Path(e.name)) and e.is_file())
+    except OSError:
+        return 0
+
+
 def list_media(d: Path) -> list[dict]:
     files = []
     for p in d.iterdir():
@@ -429,7 +438,7 @@ def discover_dirs(roots) -> list[dict]:
             d = Path(raw)
             depth = len(d.relative_to(root).parts)
             children[:] = [n for n in children if not n.startswith(".")
-                           and n not in {"__pycache__", "node_modules"}] if depth < 4 else []
+                           and n not in {"__pycache__", "node_modules"}] if depth < 6 else []
             files = list_media(d)
             if files:
                 path = str(d)
@@ -513,7 +522,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.json_response(200, {"dirs": find_dirs(query.get("q", [""])[0], scope),
                                      "indexed": len(DIR_INDEX["home" if scope == "home" else "roots"])})
         elif url.path == "/api/subdirs":
-            self.json_response(200, {"names": list_subdirs(query.get("path", [""])[0])})
+            raw = query.get("path", [""])[0]
+            names = list_subdirs(raw)
+            body = {"names": names}
+            if query.get("counts", [""])[0] == "1" and len(names) <= 200:
+                body["counts"] = {n: count_media(Path(raw).expanduser() / n) for n in names}
+            self.json_response(200, body)
         elif url.path == "/api/meta":
             d = resolve_dir(query.get("dir", [""])[0])
             p = safe_media_path(d, query.get("name", [""])[0])
