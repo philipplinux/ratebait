@@ -8,7 +8,7 @@ Ratings live in .review.json; each change rebuilds REVIEW.md in that folder.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
-and keys 1–5 save and advance to the next file, wrapping at the end. Comments
+and keys 1–6 save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
 Flags sit beside the rating: Redo (R) asks for changes described in the comment,
 Broken (X) marks a file as trash; both get their own REVIEW.md section.
@@ -35,7 +35,7 @@ from urllib.parse import parse_qs, urlsplit
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
-RATINGS = ["reject", "neutral", "good", "great", "love"]
+RATINGS = ["reject", "neutral", "good", "great", "love", "mvp"]
 FLAGS = ["redo", "broken"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
@@ -153,7 +153,7 @@ def write_report(d: Path, state: dict, files: list[dict]):
         groups[item.get("flag") or item.get("rating") or "unrated"].append((f, item))
     rated = len(files) - len(groups["unrated"])
     counts = " · ".join(f"{r} {len(groups[r])}" for r in sections)
-    titles = {"redo": "Redo / changes requested", "broken": "Broken / trash"}
+    titles = {"redo": "Redo / changes requested", "broken": "Broken / trash", "mvp": "MVP / best"}
     lines = ["# Media review", "", f"- Folder: `{d}`",
              f"- Updated: {state['updated']}",
              f"- Progress: {rated}/{len(files)} rated · {counts}", ""]
