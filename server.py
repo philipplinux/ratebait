@@ -85,7 +85,7 @@ def list_media(d: Path) -> list[dict]:
         if not p.name.startswith(".") and kind and p.is_file():
             stat = p.stat()
             files.append(dict(name=p.name, kind=kind, mtime=stat.st_mtime, size=stat.st_size))
-    return sorted(files, key=lambda f: (-f["mtime"], f["name"]))
+    return sorted(files, key=lambda f: (f["mtime"], f["name"]))
 
 
 def safe_media_path(d: Path, name: str) -> Path:

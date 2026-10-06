@@ -79,8 +79,8 @@ function paintLists() {
   $('ticks').replaceChildren(); $('sidebar').replaceChildren();
   if(loadOrder().length) {
     const bar=document.createElement('div'); bar.className='order-bar';
-    const reset=Object.assign(document.createElement('button'),{textContent:'Reset',title:'Back to newest-first order'});
-    reset.onclick=()=>{const name=current()?.name; saveOrder(null); files=arrange(files.slice().sort((a,b)=>b.mtime-a.mtime||a.name.localeCompare(b.name)));
+    const reset=Object.assign(document.createElement('button'),{textContent:'Reset',title:'Back to oldest-first order (new files at the bottom)'});
+    reset.onclick=()=>{const name=current()?.name; saveOrder(null); files=arrange(files.slice().sort((a,b)=>a.mtime-b.mtime||a.name.localeCompare(b.name)));
       index=Math.max(files.findIndex(f=>f.name===name),0); paintLists();};
     bar.append('Custom order (drag to sort)',reset); $('sidebar').append(bar);
   }
@@ -438,7 +438,7 @@ async function refreshDirs() {
   return dirs;
 }
 // Sidebar drag to reorder (pointer events: Firefox can't drag <button> natively). The order is per folder,
-// in this browser only; files not in it (new ones) stay on top in newest-first order.
+// in this browser only; files not in it (new ones) go to the bottom, oldest first.
 let drag=null, dragged=false;
 const orderKey=()=>'order:'+dir;
 function loadOrder() {try {return JSON.parse(localStorage.getItem(orderKey()))||[];} catch {return [];}}
@@ -446,7 +446,7 @@ function saveOrder(names) {try {names?localStorage.setItem(orderKey(),JSON.strin
 function arrange(list) {
   const pos=new Map(loadOrder().map((n,i)=>[n,i]));
   if(!pos.size) return list;
-  return [...list.filter(f=>!pos.has(f.name)),...list.filter(f=>pos.has(f.name)).sort((a,b)=>pos.get(a.name)-pos.get(b.name))];
+  return [...list.filter(f=>pos.has(f.name)).sort((a,b)=>pos.get(a.name)-pos.get(b.name)),...list.filter(f=>!pos.has(f.name))];
 }
 function clearDropMarks() {$('sidebar').querySelectorAll('.drop-before,.drop-after').forEach(r=>r.classList.remove('drop-before','drop-after'));}
 document.addEventListener('pointermove',e=>{
