@@ -261,10 +261,9 @@ function openFolder(raw) {
 }
 // One row laid out like a numpad: 0 Neutral and . Reject on the bottom row,
 // 1–3 better and better, 4–6 Redo/Broken/Trash. Flags toggle; ratings save and advance.
-// Line icons in the button color (no plain-text thumbs-up or crown glyph renders cleanly).
+// Line icons in the button color (no plain-text thumbs-up glyph renders cleanly).
 const thumbsUp='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>';
-const crown='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.56 3.27a.5.5 0 0 1 .88 0l2.95 5.6a1 1 0 0 0 1.52.29l4.27-3.66a.5.5 0 0 1 .8.52l-2.83 10.25a1 1 0 0 1-.96.73H5.81a1 1 0 0 1-.96-.73L2.02 6.02a.5.5 0 0 1 .8-.52l4.27 3.66a1 1 0 0 0 1.52-.29z"/><path d="M5 21h14"/></svg>';
-const buttons=[['0','neutral','−'],['.','reject','✕'],null,['1','great',thumbsUp],['2','love','♥'],['3','mvp',crown],null,
+const buttons=[['0','neutral','−'],['.','reject','✕'],null,['1','great',thumbsUp],['2','love','♥'],['3','mvp','♕'],null,
                ['4','redo','↻'],['5','broken','⚠'],['6','trash','🗑']];
 const keyAction={};
 // Button face: word, icon, then a footer with the comment toggle (ratings only) and the keycap.
