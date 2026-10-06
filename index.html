@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Media review</title>
+<title>Simple Media Rater</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#ef6464;--neutral:#8592a8;--good:#a5e6a6;--great:#3dbb80;--love:#ecc268}
 *{box-sizing:border-box}body{margin:0;height:100vh;display:grid;grid-template: auto minmax(0,1fr)/300px minmax(0,1fr)}
@@ -24,7 +24,7 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 </style>
 </head>
 <body>
-<header><h1>Media review <span>Pictures & music · Local files · Markdown notes</span></h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="browse">Browse…</button><button id="open">Open</button><span id="progress">0/0 rated</span></div><nav id="ticks" aria-label="Review progress"></nav></header>
+<header><h1>Simple Media Rater <span>Pictures & music · Local files · Markdown notes</span></h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="browse">Browse…</button><button id="open">Open</button><span id="progress">0/0 rated</span></div><nav id="ticks" aria-label="Review progress"></nav></header>
 <aside id="sidebar" aria-label="Media files"></aside>
 <!-- Review order: media, ratings, comment, then filename/date. -->
 <main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 1–5 Rate · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>

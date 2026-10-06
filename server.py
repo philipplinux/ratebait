@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Local media review. Run: python3 server.py [--root PATH] [--port 8765].
+"""Simple Media Rater. Run: python3 server.py [--root PATH] [--port 8765].
+
+Discovery roots: --root (repeatable), else $MEDIA_RATER_ROOTS (os.pathsep
+separated), else the current directory.
 
 Ratings live in .review.json; each change rebuilds REVIEW.md in that folder.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
@@ -8,8 +11,8 @@ Open the printed URL; pick a discovered folder or type its path. Rating clicks
 and keys 1–5 save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes both the rating and comment.
 Arrow keys navigate, C focuses comments, and Space toggles audio playback.
-Browse opens an optional native Tk folder popup and fills the path; click Open
-to review it. Cancel leaves the path unchanged. Tk needs a local desktop display.
+Browse opens the system folder dialog (XDG desktop portal, falling back to Tk)
+and fills the path; click Open to review it. Cancel leaves the path unchanged.
 Large icon rating buttons sit beneath the media, above the comment box.
 """
 import argparse
@@ -44,7 +47,8 @@ def configuration():
     if not ipaddress.ip_address(args.host).is_loopback or ":" in args.host:
         parser.error("--host must be an IPv4 loopback address")
     args.root = [Path(p).expanduser().resolve() for p in
-                 (args.root or ["~/Pictures/comfyui", "~/projects/music-ai/outputs"])]
+                 (args.root or os.environ.get("MEDIA_RATER_ROOTS", ".").split(os.pathsep))
+                 if p]
     return args
 
 
@@ -265,15 +269,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 initial = data.get("initial") or str(Path.home())
                 if not isinstance(initial, str):
                     raise ValueError("initial path must be a string")
-                # Tk must run on a main thread; isolate the modal GUI from HTTP workers.
+                # Modal GUIs run in a child process, away from HTTP worker threads.
                 result = subprocess.run(
-                    [sys.executable, "-c",
-                     "import sys, tkinter as tk; from tkinter import filedialog; "
-                     "root=tk.Tk(); root.withdraw(); root.attributes('-topmost', True); "
-                     "path=filedialog.askdirectory(parent=root, title='Choose media folder', "
-                     "initialdir=sys.argv[1], mustexist=True); root.destroy(); "
-                     "print(path if isinstance(path, str) else '')",
-                     str(Path(initial).expanduser())],
+                    [sys.executable, __file__, "--pick-folder", str(Path(initial).expanduser())],
                     capture_output=True, text=True)
                 if result.returncode:
                     raise OSError("Folder picker could not open: " + result.stderr.strip())
@@ -318,11 +316,60 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.json_response(500, {"error": str(e)})
 
 
+PORTAL_PICKER = r"""
+import os, sys
+from urllib.parse import unquote, urlsplit
+from gi.repository import Gio, GLib
+bus = Gio.bus_get_sync(Gio.BusType.SESSION)
+token = "smr%d" % os.getpid()
+sender = bus.get_unique_name()[1:].replace(".", "_")
+handle = "/org/freedesktop/portal/desktop/request/%s/%s" % (sender, token)
+loop, out = GLib.MainLoop(), []
+def done(_c, _s, _p, _i, _n, params, _d):
+    code, results = params.unpack()
+    if code == 0 and results.get("uris"):
+        out.append(unquote(urlsplit(results["uris"][0]).path))
+    loop.quit()
+bus.signal_subscribe("org.freedesktop.portal.Desktop", "org.freedesktop.portal.Request",
+                     "Response", handle, None, 0, done, None)
+opts = {"handle_token": GLib.Variant("s", token), "directory": GLib.Variant("b", True),
+        "modal": GLib.Variant("b", True),
+        "current_folder": GLib.Variant("ay", os.fsencode(sys.argv[1]) + b"\0")}
+bus.call_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+              "org.freedesktop.portal.FileChooser", "OpenFile",
+              GLib.Variant("(ssa{sv})", ("", "Choose media folder", opts)),
+              GLib.VariantType("(o)"), 0, -1, None)
+loop.run()
+print(out[0] if out else "")
+"""
+
+
+def pick_folder(initial: str) -> None:
+    """Print a folder chosen in the system dialog (XDG portal), else Tk's."""
+    portal = subprocess.run([sys.executable, "-c", PORTAL_PICKER, initial],
+                            capture_output=True, text=True)
+    if portal.returncode == 0:
+        print(portal.stdout.strip())
+        return
+    import tkinter as tk
+    from tkinter import filedialog
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    path = filedialog.askdirectory(parent=root, title="Choose media folder",
+                                   initialdir=initial, mustexist=True)
+    root.destroy()
+    print(path if isinstance(path, str) else "")
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--pick-folder"]:
+        pick_folder(sys.argv[2])
+        sys.exit()
     args = configuration()
     server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
     server.roots = args.root
-    print(f"Media review: http://{args.host}:{args.port}/", flush=True)
+    print(f"Simple Media Rater: http://{args.host}:{args.port}/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
