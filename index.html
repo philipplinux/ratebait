@@ -35,7 +35,7 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 'use strict';
 const $ = id => document.getElementById(id);
 const ratings = ['reject','neutral','good','great','love'];
-const flags = {redo:['↻','R Redo'], broken:['🗑','X Broken']};
+const flags = {broken:['🗑','X Broken'], redo:['↻','R Redo']};
 let dir='', files=[], items={}, index=0, busy=false, toastTimer;
 const current = () => files[index];
 const titleCase = s => s[0].toUpperCase()+s.slice(1);
