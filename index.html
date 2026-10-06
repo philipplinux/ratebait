@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Media review</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101319;color:#e7eaf0;--unrated:#424957;--reject:#ef6464;--neutral:#8592a8;--good:#a5e6a6;--great:#3dbb80;--love:#ecc268}
+*{box-sizing:border-box}body{margin:0;height:100vh;display:grid;grid-template: auto minmax(0,1fr)/300px minmax(0,1fr)}
+header{grid-column:1/-1;padding:20px 24px;background:#191e27;border-bottom:1px solid #303746}h1{font-size:20px;margin:0 0 14px}h1 span{font-size:12px;color:#929daf;font-weight:400;margin-left:14px}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button,input,select,textarea{font:inherit;border:1px solid #3d4657;border-radius:7px;background:#222936;color:inherit;padding:9px 12px}button{cursor:pointer}button:hover{border-color:#aab7ce}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #aab7ce}select{max-width:40%;min-width:210px}#path{flex:1;min-width:200px}#progress{font-size:13px;color:#b7c1d2}
+#ticks{display:flex;gap:4px;margin-top:18px;min-height:14px}#ticks button{flex:1;min-width:0;padding:0;height:14px;border:0;border-radius:3px;background:var(--unrated)}#ticks .current{outline:2px solid white;outline-offset:2px}
+[data-rating=reject]{--tone:var(--reject)}[data-rating=neutral]{--tone:var(--neutral)}[data-rating=good]{--tone:var(--good)}[data-rating=great]{--tone:var(--great)}[data-rating=love]{--tone:var(--love)}#ticks button[data-rating]{background:var(--tone)}
+aside{overflow:auto;background:#151a22;padding:12px;border-right:1px solid #303746}.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:5px;background:transparent;border-color:transparent;padding:8px}.row.current{background:#2a3343;border-color:#64758d}.thumb{width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0}.note{font-size:28px;text-align:center}.row-name{flex:1;overflow:hidden;text-overflow:ellipsis;font-size:12px}.badge{color:var(--tone,#a2aabb);font-size:11px}.comment-marker{font-size:12px}
+main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#banner{background:#294534;color:#b9efc8;padding:10px 14px;border-radius:7px}#media{flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;background:#0b0e13;border-radius:10px;overflow:hidden}#media>img{width:100%;height:100%;max-height:calc(100vh - 400px);object-fit:contain}.audio-card{display:flex;flex-direction:column;align-items:center;gap:20px;padding:24px;max-width:100%}.audio-card .symbol{font-size:90px;color:#ecc268}.audio-card audio{width:min(520px,100%)}.audio-card .audio-name{overflow-wrap:anywhere;text-align:center}#filename{font-weight:600;overflow-wrap:anywhere}#date{font-size:12px;color:#929daf;margin-top:4px}#ratings{display:flex;gap:8px;flex-wrap:wrap}#ratings button{color:var(--tone)}#ratings button.selected{background:var(--tone);color:#11161b;border-color:var(--tone)}textarea{display:block;width:100%;resize:vertical;min-height:72px}.comment-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px}.hint{color:#929daf;font-size:12px}#toast{position:fixed;bottom:24px;right:24px;max-width:80vw;background:#762f38;color:white;padding:16px;border-radius:8px;z-index:10}[hidden]{display:none!important}body.busy button:not(#ticks button),body.busy select{pointer-events:none;opacity:.65}
+#ratings{justify-content:center;gap:14px;padding:10px 0 14px;flex-shrink:0}
+#ratings button{display:flex;align-items:center;justify-content:center;gap:9px;min-width:136px;min-height:74px;padding:16px 22px;font-size:19px;font-weight:750;letter-spacing:.2px;border:1px solid color-mix(in srgb,var(--tone) 65%,#344052);border-radius:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--tone) 18%,#273140),#17202c);box-shadow:inset 0 1px 0 #ffffff20,0 5px 0 #080d15,0 9px 18px #0004;transition:transform .15s,box-shadow .15s,background .15s}
+#ratings button:hover{background:linear-gradient(160deg,color-mix(in srgb,var(--tone) 35%,#273140),color-mix(in srgb,var(--tone) 15%,#17202c));border-color:var(--tone);transform:translateY(-3px);box-shadow:inset 0 1px 0 #ffffff30,0 9px 0 #080d15,0 12px 24px #0005}
+#ratings button.selected{background:var(--tone);color:#11161b}
+#ratings button:active{transform:translateY(4px);box-shadow:inset 0 1px 3px #0003,0 2px 0 #080d15}
+#ratings .rating-icon{font-size:27px;line-height:1;margin:0;filter:drop-shadow(0 2px 2px #0004)}
+#details{padding-top:4px;color:#b4bfce}#filename{font-size:13px}
+#media>img{cursor:zoom-in}#viewer{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:zoom-out;touch-action:none}#viewer img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none}#viewer.zoomed{cursor:grab}#viewer.dragging{cursor:grabbing}#zoom-level{position:fixed;bottom:16px;right:16px;z-index:21;background:#000a;color:#e7eaf0;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none}
+@media(max-width:750px){body{grid-template-columns:180px minmax(0,1fr)}header,main{padding:14px}.row{flex-wrap:wrap}.badge{margin-left:auto}h1 span{display:none}select{max-width:100%}#media>img{max-height:45vh}}
+</style>
+</head>
+<body>
+<header><h1>Media review <span>Pictures & music · Local files · Markdown notes</span></h1><div class="controls"><select id="folders" aria-label="Discovered folders"><option value="">Choose a folder</option></select><input id="path" aria-label="Folder path" placeholder="/path/to/media"><button id="browse">Browse…</button><button id="open">Open</button><span id="progress">0/0 rated</span></div><nav id="ticks" aria-label="Review progress"></nav></header>
+<aside id="sidebar" aria-label="Media files"></aside>
+<!-- Review order: media, ratings, comment, then filename/date. -->
+<main><div id="banner" hidden>All rated ✓ (REVIEW.md written)</div><div id="media">Choose a folder to start reviewing</div><div id="ratings" hidden></div><section id="comments" hidden><div class="comment-head"><label for="comment">Comment <span class="hint">· saves on blur or Ctrl+Enter</span></label><button id="clear">Clear</button></div><textarea id="comment" placeholder="What works? What needs changing?"></textarea></section><section id="details" hidden><div id="filename"></div><div id="date"></div></section><div class="hint">← → Navigate · 1–5 Rate · Space Play/pause · C Comment · Esc Leave comment · Click image: fullscreen (Ctrl+wheel zoom, drag to pan, click to close)</div></main>
+<div id="viewer" hidden><img alt=""><div id="zoom-level"></div></div>
+<div id="toast" role="alert" hidden></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const ratings = ['reject','neutral','good','great','love'];
+let dir='', files=[], items={}, index=0, busy=false, toastTimer;
+const current = () => files[index];
+const titleCase = s => s[0].toUpperCase()+s.slice(1);
+const mediaUrl = f => '/media?'+new URLSearchParams({dir,name:f.name});
+function toast(message) {
+  $('toast').textContent=message; $('toast').hidden=false;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>$('toast').hidden=true,4000);
+}
+async function api(url,data) {
+  const response=await fetch(url,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const result=await response.json();
+  if(!response.ok) throw new Error(result.error||response.statusText);
+  return result;
+}
+async function transact(action) {
+  if(busy) return;
+  busy=true; document.body.classList.add('busy'); $('comment').readOnly=true;
+  try {await action();} catch(e) {toast(e.message);}
+  finally {busy=false; document.body.classList.remove('busy'); $('comment').readOnly=false;}
+}
+function paintLists() {
+  $('ticks').replaceChildren(); $('sidebar').replaceChildren();
+  let rated=0;
+  files.forEach((f,i)=>{
+    const item=items[f.name]||{}, rating=item.rating;
+    if(rating) rated++;
+    const tick=document.createElement('button');
+    tick.title=f.name+': '+(rating||'unrated'); tick.setAttribute('aria-label',tick.title);
+    if(rating) tick.dataset.rating=rating;
+    tick.classList.toggle('current',i===index); tick.onclick=()=>jump(i); $('ticks').append(tick);
+    const row=document.createElement('button');
+    row.className='row'+(i===index?' current':''); row.title=f.name; row.onclick=()=>jump(i);
+    const thumb=document.createElement(f.kind==='image'?'img':'span');
+    thumb.className='thumb'+(f.kind==='audio'?' note':'');
+    if(f.kind==='image') {thumb.loading='lazy'; thumb.src=mediaUrl(f); thumb.alt='';}
+    else thumb.textContent='♪';
+    const name=document.createElement('span'); name.className='row-name'; name.textContent=f.name;
+    const badge=document.createElement('span'); badge.className='badge';
+    if(rating) badge.dataset.rating=rating;
+    badge.textContent=rating?titleCase(rating):'—'; row.append(thumb,name,badge);
+    if(item.comment) {
+      const marker=document.createElement('span'); marker.className='comment-marker';
+      marker.textContent='💬'; marker.title=item.comment; row.append(marker);
+    }
+    $('sidebar').append(row);
+  });
+  $('progress').textContent=`${rated}/${files.length} rated`;
+  $('banner').hidden=!files.length||rated!==files.length;
+  $('sidebar').querySelector('.current')?.scrollIntoView({block:'nearest'});
+}
+function paintRating() {
+  const rating=items[current()?.name]?.rating;
+  $('ratings').querySelectorAll('button').forEach(b=>b.classList.toggle('selected',b.dataset.rating===rating));
+}
+function paintCard() {
+  const old=$('media').querySelector('audio');
+  if(old) {old.pause(); old.removeAttribute('src'); old.load();}
+  $('media').replaceChildren();
+  const f=current();
+  for(const id of ['details','ratings','comments']) $(id).hidden=!f;
+  if(!f||f.kind!=='image') closeViewer();
+  if(!f) {$('media').textContent='No media files in this folder'; return;}
+  if(f.kind==='image') {
+    const image=document.createElement('img'); image.src=mediaUrl(f); image.alt=f.name; image.title='Click for fullscreen';
+    image.onclick=()=>openViewer(); $('media').append(image);
+    if(!$('viewer').hidden) showInViewer(f);
+  } else {
+    const card=document.createElement('div'); card.className='audio-card';
+    const symbol=document.createElement('div'); symbol.className='symbol'; symbol.textContent='♪';
+    const name=document.createElement('div'); name.className='audio-name'; name.textContent=f.name;
+    const audio=document.createElement('audio'); audio.controls=true; audio.autoplay=true; audio.src=mediaUrl(f);
+    card.append(symbol,name,audio); $('media').append(card);
+  }
+  $('filename').textContent=f.name; $('date').textContent=new Date(f.mtime*1000).toLocaleString();
+  $('comment').value=items[f.name]?.comment||''; paintRating();
+}
+async function save(rating,comment) {
+  const result=await api('/api/review',{dir,name:current().name,rating,comment});
+  items=result.items; $('comment').value=items[current().name]?.comment||'';
+  paintLists(); paintRating();
+}
+async function saveComment() {
+  if(current()&&$('comment').value.trim()!==(items[current().name]?.comment||''))
+    await save(items[current().name]?.rating||null,$('comment').value);
+}
+function jump(i) {
+  if(!files.length) return;
+  return transact(async()=>{await saveComment(); index=(i+files.length)%files.length; paintLists(); paintCard();});
+}
+function rate(rating) {
+  if(!current()) return;
+  return transact(async()=>{
+    await save(rating,$('comment').value);
+    index=(index+1)%files.length;
+    paintLists(); paintCard();
+  });
+}
+function openFolder(raw) {
+  return transact(async()=>{
+    await saveComment();
+    const result=await api('/api/list?'+new URLSearchParams({dir:raw}));
+    dir=result.dir; files=result.files; items=result.items;
+    index=files.findIndex(f=>!items[f.name]?.rating); if(index<0) index=0;
+    $('path').value=dir; $('folders').value=dir;
+    history.replaceState(null,'','?'+new URLSearchParams({dir})); paintLists(); paintCard();
+  });
+}
+ratings.forEach((rating,i)=>{
+  const b=document.createElement('button'); b.dataset.rating=rating;
+  const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
+  icon.textContent=['✕','−','👍','★','♥'][i];
+  b.append(icon,document.createTextNode(`${i+1} ${titleCase(rating)}`));
+  b.onclick=()=>rate(rating); $('ratings').append(b);
+});
+$('open').onclick=()=>openFolder($('path').value);
+$('browse').onclick=()=>transact(async()=>{
+  await saveComment();
+  const result=await api('/api/pick-folder',{initial:$('path').value||dir});
+  if(result.path) $('path').value=result.path;
+});
+$('path').onkeydown=e=>{if(e.key==='Enter') openFolder($('path').value);};
+$('folders').onchange=()=>{if($('folders').value) openFolder($('folders').value);};
+$('comment').onblur=e=>{
+  // These controls save the draft themselves; do not swallow their click with a blur POST.
+  if(e.relatedTarget?.closest('button')||e.relatedTarget===$('folders')) return;
+  transact(saveComment);
+};
+$('clear').onclick=()=>transact(async()=>{if(current()) await save(null,'');});
+// Fullscreen viewer: click opens, Ctrl+wheel zooms at the cursor, drag pans, a click without drag closes.
+const view={fit:1,scale:1,x:0,y:0,drag:null};
+const viewerImg=()=>$('viewer').querySelector('img');
+function paintView() {
+  const img=viewerImg(), s=view.fit*view.scale;
+  img.style.transform=`translate(${view.x}px,${view.y}px) scale(${s})`;
+  $('viewer').classList.toggle('zoomed',view.scale>1);
+  $('zoom-level').textContent=`${Math.round(s*100)}% · Ctrl+wheel zoom · click to close`;
+}
+function resetView() {
+  const img=viewerImg(), w=innerWidth, h=innerHeight;
+  if(!img.naturalWidth) return;
+  view.fit=Math.min(w/img.naturalWidth,h/img.naturalHeight); view.scale=1;
+  view.x=(w-img.naturalWidth*view.fit)/2; view.y=(h-img.naturalHeight*view.fit)/2; paintView();
+}
+function showInViewer(f) {
+  const img=viewerImg();
+  if(img.dataset.name===f.name) return;
+  img.dataset.name=f.name; img.onload=resetView; img.src=mediaUrl(f);
+}
+function openViewer() {
+  const f=current(); if(!f||f.kind!=='image') return;
+  $('viewer').hidden=false; showInViewer(f); resetView();
+  $('viewer').requestFullscreen?.().catch(()=>{});
+}
+function closeViewer() {
+  if($('viewer').hidden) return;
+  $('viewer').hidden=true; view.drag=null;
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement) closeViewer(); else resetView();});
+addEventListener('resize',()=>{if(!$('viewer').hidden) resetView();});
+$('viewer').addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(!e.ctrlKey) {if(view.scale>1) {view.x-=e.deltaX; view.y-=e.deltaY; paintView();} return;}
+  const next=Math.min(Math.max(view.scale*Math.exp(-e.deltaY*0.002),1),Math.max(8,1/view.fit*4));
+  if(next===1) {resetView(); return;}
+  const k=next/view.scale; view.x=e.clientX-(e.clientX-view.x)*k; view.y=e.clientY-(e.clientY-view.y)*k;
+  view.scale=next; paintView();
+},{passive:false});
+$('viewer').addEventListener('pointerdown',e=>{
+  if(e.button!==0) return;
+  view.drag={x:e.clientX,y:e.clientY,ox:view.x,oy:view.y,moved:false};
+  $('viewer').setPointerCapture(e.pointerId);
+});
+$('viewer').addEventListener('pointermove',e=>{
+  const d=view.drag; if(!d) return;
+  if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>5) d.moved=true;
+  if(d.moved&&view.scale>1) {$('viewer').classList.add('dragging'); view.x=d.ox+e.clientX-d.x; view.y=d.oy+e.clientY-d.y; paintView();}
+});
+$('viewer').addEventListener('pointerup',()=>{
+  const d=view.drag; view.drag=null; $('viewer').classList.remove('dragging');
+  if(d&&!d.moved) closeViewer();
+});
+document.addEventListener('keydown',e=>{
+  if(!$('viewer').hidden&&e.key==='Escape') {closeViewer(); return;}
+  const typing=['TEXTAREA','INPUT','SELECT'].includes(e.target.tagName);
+  if(e.key==='Escape'&&typing) {e.target.blur(); return;}
+  if(e.ctrlKey&&e.key==='Enter'&&e.target===$('comment')) {e.preventDefault(); transact(saveComment); return;}
+  if(typing||busy||e.ctrlKey||e.metaKey||e.altKey) return;
+  if(/^[1-5]$/.test(e.key)) {e.preventDefault(); rate(ratings[Number(e.key)-1]);}
+  else if(e.key==='ArrowLeft') {e.preventDefault(); jump(index-1);}
+  else if(e.key==='ArrowRight') {e.preventDefault(); jump(index+1);}
+  else if(e.key.toLowerCase()==='c') {e.preventDefault(); $('comment').focus();}
+  else if(e.code==='Space') {
+    const audio=$('media').querySelector('audio');
+    if(audio) {e.preventDefault(); if(audio.paused) audio.play().catch(e=>toast(e.message)); else audio.pause();}
+  }
+});
+(async()=>{
+  let dirs=[];
+  try {
+    const result=await api('/api/dirs'); dirs=result.dirs;
+    for(const d of dirs) {
+      const option=document.createElement('option'); option.value=d.path;
+      option.textContent=`${d.label} (${d.count})`; $('folders').append(option);
+    }
+  } catch(e) {toast(e.message);}
+  const initial=new URLSearchParams(location.search).get('dir')||dirs[0]?.path;
+  if(initial) await openFolder(initial);
+})();
+</script>
+</body>
+</html>
