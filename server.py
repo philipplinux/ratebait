@@ -583,7 +583,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             route = urlsplit(self.path).path
-            if route not in {"/api/review", "/api/pick-folder"}:
+            if route not in {"/api/review", "/api/pick-folder", "/api/forget-label"}:
                 self.json_response(404, {"error": "unknown route"})
                 return
             # Browsers on other origins must not be able to mutate local files.
@@ -609,6 +609,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self.json_response(200, {"path": result.stdout.strip() or None})
                 return
             d = resolve_dir(data.get("dir"))
+            if route == "/api/forget-label":
+                # Drops a custom button name saved in this folder, so the button can be hidden again.
+                if data.get("label") not in CUSTOM:
+                    raise ValueError("invalid label")
+                with LOCK:
+                    state = load_state(d)
+                    if state.get("labels", {}).pop(data["label"], None) is not None:
+                        save_state(d, state)
+                        write_report(d, state, list_media(d))
+                self.json_response(200, {"labels": state.get("labels", {})})
+                return
             name = data.get("name")
             safe_media_path(d, name)
             rating = data.get("rating")
