@@ -20,7 +20,7 @@ python3 server.py --root ~/Pictures --root ~/Music --port 8765
 ## Use
 
 - Pick a discovered folder (scans the roots up to 4 levels deep) or type/browse to any local folder. Roots: `--root` (repeatable), else `MEDIA_RATER_ROOTS` (colon-separated), else the current directory.
-- **0** Neutral, **1–4** Good · Great · Love · MVP, **6** Reject: rate and advance and advance; **← →** navigate; **C** comment; **Space** play/pause audio.
+- **0** Neutral, **1–3** Great · Love · MVP, **5** Bad, **6** Reject: rate and advance (old Good ratings load as Great); **← →** navigate; **C** comment; **Space** play/pause audio.
 - **7** Redo: request changes (focuses the comment, keeps the rating). **8** Broken: defective output, advance. **9** Trash: mark for deletion, advance. Press again to remove the flag. Each gets its own section in `REVIEW.md`; nothing is deleted automatically.
 - **Live:** new folders and new files show up within 10 s, no reload needed.
 - **Click an image** for fullscreen: **Ctrl+wheel** zooms at the cursor, drag pans, click or Esc closes.

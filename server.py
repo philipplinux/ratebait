@@ -8,7 +8,7 @@ Ratings live in .review.json; each change rebuilds REVIEW.md in that folder.
 No dependencies. Only loopback hosts are accepted; arbitrary local folders
 may be opened. Modification time orders files, not filesystem birth time.
 Open the printed URL; pick a discovered folder or type its path. Rating clicks
-and keys (0 Neutral, 1–4 Good…MVP, 6 Reject) save and advance to the next file, wrapping at the end. Comments
+and keys (0 Neutral, 1–3 Great…MVP, 5 Bad, 6 Reject) save and advance to the next file, wrapping at the end. Comments
 save on blur or Ctrl+Enter. Clear removes the rating, flag and comment.
 Flags sit beside the rating: Redo (7) asks for changes described in the comment,
 Broken (8) marks a defective file, Trash (9) marks it for deletion; each
@@ -36,7 +36,8 @@ from urllib.parse import parse_qs, urlsplit
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".opus"}
-RATINGS = ["reject", "neutral", "good", "great", "love", "mvp"]
+RATINGS = ["reject", "bad", "neutral", "great", "love", "mvp"]
+LEGACY = {"good": "great"}  # retired ratings, mapped when a folder is loaded
 FLAGS = ["redo", "broken", "trash"]
 STATE_FILE = ".review.json"
 REPORT_FILE = "REVIEW.md"
@@ -99,6 +100,8 @@ def load_state(d: Path) -> dict:
         if not isinstance(state, dict) or not isinstance(state.get("items"), dict):
             raise ValueError("invalid state")
         for item in state["items"].values():
+            if isinstance(item, dict) and item.get("rating") in LEGACY:
+                item["rating"] = LEGACY[item["rating"]]
             if (not isinstance(item, dict) or item.get("rating") not in [None, *RATINGS]
                     or item.get("flag") not in [None, *FLAGS]
                     or not isinstance(item.get("comment"), str)):
