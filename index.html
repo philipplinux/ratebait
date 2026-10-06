@@ -18,6 +18,7 @@ main{padding:24px;overflow:auto;display:flex;flex-direction:column;gap:16px}#ban
 :is(#ratings,#grid-box) button.selected{background:var(--tone);color:#11161b}
 :is(#ratings,#grid-box) button:active{transform:translateY(4px);box-shadow:inset 0 1px 3px #0003,0 2px 0 #080d15}
 #ratings .flag-sep{width:1px;align-self:stretch;background:#3d4657;margin:0 10px}:is(#ratings,#grid-box) button.flag{font-size:15px}
+#ratings button{position:relative}#ratings .comment-mode{position:absolute;top:5px;right:5px;width:22px;height:22px;display:grid;place-items:center;font-size:12px;border:1px solid #4a5468;border-radius:6px;background:#11161bcc;opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s}#ratings .comment-mode:hover{opacity:.9}#ratings .comment-mode.on{opacity:1;filter:none;border-color:#fff;background:var(--tone)}#ratings button.selected .comment-mode.on{background:#11161b}
 :is(#ratings,#grid-box) .rating-icon{font-size:27px;line-height:1;margin:0;filter:drop-shadow(0 2px 2px #0004)}
 #details{padding-top:4px;color:#b4bfce}#filename{font-size:13px}
 #media>img{cursor:zoom-in}#viewer{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:zoom-out;touch-action:none}#viewer img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none}#viewer.zoomed{cursor:grab}#viewer.dragging{cursor:grabbing}#zoom-level{position:fixed;bottom:16px;right:16px;z-index:21;background:#000a;color:#e7eaf0;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none}
@@ -175,31 +176,35 @@ function jump(i) {
   if(!files.length) return;
   return transact(async()=>{await saveComment(); index=(i+files.length)%files.length; paintLists(); paintCard();});
 }
-function rate(rating) {
+// Each button has a 💬 checkbox. Off: ratings save and advance, flags toggle (on → advance).
+// On ("comment mode", default for Redo): the first press sets the value and stays until a
+// comment exists; pressing again with a new comment moves on, without one it unsets the value.
+// A rating replaces any flag (Redo, Broken, Trash); the comment stays.
+let commentMode={redo:true};
+try {commentMode=JSON.parse(localStorage.getItem('commentMode'))||commentMode;} catch {}
+function act(value) {
   if(!current()) return;
-  return transact(async()=>{
-    // A rating replaces any flag (Redo, Broken, Trash); the comment stays.
-    await save(rating,$('comment').value,null);
-    index=(index+1)%files.length;
-    paintLists(); paintCard();
-  });
-}
-// Redo stays on the file until it has a comment; Broken and Trash advance.
-function toggleFlag(flag) {
-  if(!current()) return;
+  const flag=flags.includes(value);
   let next=false;
   return transact(async()=>{
-    // Redo: without a comment it stays (press C to write one); with one it moves on.
-    // Pressing Redo on a Redo file removes the flag, unless a new comment was just typed
-    // (Redo → write → Redo again → next file).
-    const was=items[current().name]?.flag===flag, typed=$('comment').value.trim();
-    const edited=typed!==(items[current().name]?.comment||'');
-    const commented=flag==='redo'&&typed!==''&&(!was||edited);
-    const on=commented||!was;
-    await save(items[current().name]?.rating||null,$('comment').value,on?flag:null);
-    next=on&&(flag!=='redo'||commented);
+    const item=items[current().name]||{}, typed=$('comment').value.trim();
+    const was=flag?item.flag===value:item.rating===value, edited=typed!==(item.comment||'');
+    let on=!was;
+    if(commentMode[value]) {
+      on=!was||edited;
+      next=on&&typed!=='';
+    } else next=on||!flag;
+    if(flag) await save(item.rating||null,$('comment').value,on?value:null);
+    else await save(on||!commentMode[value]?value:null,$('comment').value,null);
     if(next) {index=(index+1)%files.length; paintLists(); paintCard();}
   }).then(()=>{if(next) $('comment').blur();});
+}
+function setCommentMode(value,on) {
+  commentMode[value]=on;
+  try {localStorage.setItem('commentMode',JSON.stringify(commentMode));} catch {}
+  const box=document.querySelector(`#ratings button[data-rating="${value}"] .comment-mode`);
+  box.classList.toggle('on',on); box.setAttribute('aria-checked',on);
+  box.title=on?'Comment mode on: stays until there is a comment':'Comment mode off: saves and moves on';
 }
 function openFolder(raw) {
   return transact(async()=>{
@@ -222,7 +227,10 @@ for(const entry of buttons) {
   const b=document.createElement('button'); b.dataset.rating=value; b.dataset.key=key; if(flag) b.className='flag';
   const icon=document.createElement('span'); icon.className='rating-icon'; icon.setAttribute('aria-hidden','true');
   icon.textContent=symbol; b.append(icon,document.createTextNode(`${key} ${value==='mvp'?'MVP':titleCase(value)}`));
-  keyAction[key]=b.onclick=()=>flag?toggleFlag(value):rate(value); $('ratings').append(b);
+  const box=document.createElement('span'); box.className='comment-mode'; box.textContent='💬'; box.setAttribute('role','checkbox');
+  box.onclick=e=>{e.stopPropagation(); e.preventDefault(); setCommentMode(value,!commentMode[value]);};
+  b.append(box); keyAction[key]=b.onclick=()=>act(value); $('ratings').append(b);
+  setCommentMode(value,!!commentMode[value]);
 }
 function setLayout(side) {
   document.body.classList.toggle('side',side);
