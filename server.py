@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Simple Media Rater. Run: python3 server.py [--root PATH] [--port 8765].
+"""RateBait. Run: python3 server.py [--root PATH] [--port 8765].
 
 Discovery roots: --root (repeatable), else $MEDIA_RATER_ROOTS (os.pathsep
 separated), else the current directory.
@@ -551,7 +551,7 @@ if __name__ == "__main__":
     args = configuration()
     server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
     server.roots = args.root
-    print(f"Simple Media Rater: http://{args.host}:{args.port}/", flush=True)
+    print(f"RateBait: http://{args.host}:{args.port}/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
