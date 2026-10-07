@@ -3149,6 +3149,21 @@ function fitDetails() {
     d = $('details');
   document.body.style.setProperty('--bar-h', h ? h + 'px' : 'none');
   document.body.style.setProperty('--det-h', d.scrollHeight + 'px'); // side layout: keeps the details row from being squeezed by the spacer rows
+  // Bottom layout, expanded beside the buttons: the box grows upward over the picture (negative top margin = the extra
+  // height), so the bar row keeps its height and the buttons beside it stay put.
+  d.style.marginTop = '';
+  const b = document.body.classList;
+  if (b.contains('details-full') && !b.contains('side')) {
+    b.remove('details-full');
+    const closed = d.offsetHeight,
+      // only when the box sits beside the buttons; in its own row below them the page just grows
+      beside =
+        d.getBoundingClientRect().top <
+        $('ratings').getBoundingClientRect().bottom;
+    b.add('details-full');
+    if (beside && d.offsetHeight > closed)
+      d.style.marginTop = closed - d.offsetHeight + 'px';
+  }
   // Cut off: the box itself, or the prompt clamped to a few lines inside it.
   const p = d.querySelector('dd.prompt');
   d.classList.toggle(

@@ -2093,6 +2093,11 @@ body:not(.side) main:has(> #comment-view:not([hidden])) #details {
 body.details-full:not(.side) #details {
   max-height: 50vh;
   overflow-y: auto;
+  align-self: end;
+  z-index: 7;
+}
+body.details-full:not(.side) #details[style*='margin-top'] {
+  box-shadow: 0 -8px 24px #000a;
 }
 body:not(.side) #details.more::after {
   content: 'more ▾';
