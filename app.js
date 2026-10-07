@@ -2808,29 +2808,6 @@ function initSettings() {
 
   setShowDetails(stored('showDetails') !== '0');
 
-  // Key hint bar: small by default, click toggles a bigger size (kept per browser).
-  {
-    const h = document.querySelector('main>.hint');
-    h.title = 'Click to resize';
-    const setBig = (on) => {
-      h.classList.toggle('big', on);
-      store('hintBig', on ? '1' : '0');
-    };
-    const setVisible = (on) => {
-      h.hidden = !on;
-      $('set-keybind-note').checked = on;
-      store('keybindNote', on ? '1' : '0');
-    };
-    $('set-keybind-note').onchange = (e) => setVisible(e.target.checked);
-    $('close-keybind-note').onclick = (e) => {
-      e.stopPropagation();
-      setVisible(false);
-    };
-    setVisible(stored('keybindNote') !== '0');
-    h.onclick = () => setBig(!h.classList.contains('big'));
-    setBig(stored('hintBig') === '1');
-  }
-
   $('settings').onclick = () => setMenu($('settings-menu').hidden);
 
   document.addEventListener(

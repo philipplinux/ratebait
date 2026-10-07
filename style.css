@@ -503,7 +503,7 @@ body.side-grid .row.drop-after {
   padding: 2px 8px;
 }
 main {
-  padding: 24px;
+  padding: 24px 24px 8px;
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -1449,50 +1449,6 @@ body:not(.side) #genmeta {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-main > .hint {
-  position: fixed;
-  left: var(--list);
-  right: 0;
-  bottom: 0;
-  z-index: 4;
-  text-align: center;
-  padding: 3px 36px 3px 16px;
-  min-height: 28px;
-  background: #0d1117cc;
-  backdrop-filter: blur(8px);
-  border-top: 1px solid #303746;
-  font-size: 7.5px;
-  color: #9aa5b6;
-  cursor: pointer;
-  user-select: none;
-}
-main > .hint.big {
-  font-size: 12.5px;
-  padding: 6px 36px 6px 16px;
-}
-body.list-off main > .hint {
-  left: 0;
-}
-#close-keybind-note {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  font-size: 16px;
-  line-height: 1;
-  background: transparent;
-  border: 0;
-  color: inherit;
-}
-main:has(> #keybind-note[hidden]) {
-  padding-bottom: 8px;
-}
-main {
-  padding-bottom: 40px;
-}
 body:not(.side) #media {
   min-height: 0;
 }
@@ -1509,7 +1465,6 @@ body:not(.side) main:has(#banner[hidden]) {
 @media (max-width: 1880px) {
   body:not(.side) main {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 24%);
-    padding-bottom: 52px;
   }
   body:not(.side) main,
   body:not(.side) main:has(#banner[hidden]) {
@@ -1545,7 +1500,6 @@ body:not(.side) main:has(#banner[hidden]) {
 @media (min-width: 1881px) {
   body.customs:not(.side) main {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 24%);
-    padding-bottom: 52px;
   }
   body.customs:not(.side) main,
   body.customs:not(.side) main:has(#banner[hidden]) {
@@ -1936,7 +1890,6 @@ body.side :is(.tools-sep, #comment-tool) {
 body:not(.side) main {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   row-gap: 10px;
-  padding-bottom: 30px;
 }
 body:not(.side) #bar {
   grid-area: 3/1/4/-1;
@@ -2059,14 +2012,6 @@ body.comment-open:not(.side) #marks-panel {
 }
 /* Comment: a floating bar centred over the bottom of the media. */
 /* Tighter bottom layout: smaller gaps, a thin full-width details box, bar contents centred vertically. */
-body:not(.side) main:has(> .hint.big:not([hidden])) {
-  padding-bottom: 56px;
-}
-@media (max-width: 1000px) {
-  body:not(.side) main {
-    padding-bottom: 40px;
-  }
-}
 body:not(.side) #bar {
   align-items: center;
 }

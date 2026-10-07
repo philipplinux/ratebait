@@ -26,8 +26,6 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 **Layout and settings:** ◫ switches to the right sidebar (numpad keys, docked Marks, comment box pops in over the picture); ⚙ Sizes: left sidebar 50–100 %, file list pictures 50–200 %, right sidebar 50–100 %, grid; Hint bars on/off; ▸ Buttons: colour, icon and title per button, then Reset.
 
-The bottom keybind note has a small **×** to hide it. Restore it with **⚙ → View → Bottom keybind note**; visibility is saved per browser, separately from pen/pin/zoom hint bars. Clicking the note itself still toggles its size.
-
 ![Layout and settings demo](docs/layout.gif)
 
 **Compare resolutions:** fullscreen keeps the zoom and spot when you switch files, so a 4K upscale and its 960×540 source can be checked side by side, one key apart.
