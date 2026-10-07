@@ -24,6 +24,7 @@ and fills the path; click Open to review it. Cancel leaves the path unchanged.
 Large icon rating buttons sit beneath the media, above the comment box.
 The page polls every 10 s for new folders and new files in the open folder.
 """
+
 import argparse
 import heapq
 from contextlib import contextmanager
@@ -65,9 +66,11 @@ def configuration():
     args = parser.parse_args()
     if not ipaddress.ip_address(args.host).is_loopback or ":" in args.host:
         parser.error("--host must be an IPv4 loopback address")
-    args.root = [Path(p).expanduser().resolve() for p in
-                 (args.root or os.environ.get("MEDIA_RATER_ROOTS", ".").split(os.pathsep))
-                 if p]
+    args.root = [
+        Path(p).expanduser().resolve()
+        for p in (args.root or os.environ.get("MEDIA_RATER_ROOTS", ".").split(os.pathsep))
+        if p
+    ]
     return args
 
 
@@ -175,13 +178,13 @@ def find_dirs(query: str, scope: str = "roots", limit: int = 50) -> list[dict]:
     home = str(Path.home())
     ranked = []
     for path in DIR_INDEX["home" if scope == "home" else "roots"]:
-        base = path[path.rfind("/") + 1:]
+        base = path[path.rfind("/") + 1 :]
         m = fuzzy(query, base)
         if m:
             ranked.append((m[0] + len(path) / 100, path, m[1]))
     out = []
     for _, path, hits in heapq.nsmallest(limit, ranked):
-        label = "~" + path[len(home):] if path.startswith(home + "/") else path
+        label = "~" + path[len(home) :] if path.startswith(home + "/") else path
         start = len(label) - (len(path) - path.rfind("/") - 1)
         out.append({"path": label + "/", "hits": [h + start for h in hits]})
     return out
@@ -212,8 +215,7 @@ def list_media(d: Path) -> list[dict]:
 
 
 def safe_media_path(d: Path, name: str) -> Path:
-    if (not isinstance(name, str) or not name or name != Path(name).name
-            or name.startswith(".") or "\x00" in name):
+    if not isinstance(name, str) or not name or name != Path(name).name or name.startswith(".") or "\x00" in name:
         raise ValueError("invalid media name")
     p = d / name
     if not p.is_file() or media_kind(p) is None:
@@ -229,21 +231,36 @@ def clean_marks(item: dict) -> dict:
     unit = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1
     out = {}
     for pin in pins:
-        if not (isinstance(pin, dict) and unit(pin.get("x")) and unit(pin.get("y"))
-                and isinstance(pin.get("note", ""), str) and len(pin.get("note", "")) <= 2000):
+        if not (
+            isinstance(pin, dict)
+            and unit(pin.get("x"))
+            and unit(pin.get("y"))
+            and isinstance(pin.get("note", ""), str)
+            and len(pin.get("note", "")) <= 2000
+        ):
             raise ValueError("invalid pin")
     for stroke in strokes:
         pts = stroke.get("pts") if isinstance(stroke, dict) else None
-        if not (isinstance(pts, list) and 1 <= len(pts) <= 20000
-                and all(isinstance(q, list) and len(q) == 2 and unit(q[0]) and unit(q[1]) for q in pts)
-                and re.fullmatch(r"#[0-9a-fA-F]{6}", str(stroke.get("color", "")))
-                and isinstance(stroke.get("note", ""), str) and len(stroke.get("note", "")) <= 2000):
+        if not (
+            isinstance(pts, list)
+            and 1 <= len(pts) <= 20000
+            and all(isinstance(q, list) and len(q) == 2 and unit(q[0]) and unit(q[1]) for q in pts)
+            and re.fullmatch(r"#[0-9a-fA-F]{6}", str(stroke.get("color", "")))
+            and isinstance(stroke.get("note", ""), str)
+            and len(stroke.get("note", "")) <= 2000
+        ):
             raise ValueError("invalid stroke")
     if pins:
         out["pins"] = [dict(x=round(q["x"], 4), y=round(q["y"], 4), note=q.get("note", "").strip()) for q in pins]
     if strokes:
-        out["strokes"] = [dict(pts=[[round(x, 4), round(y, 4)] for x, y in q["pts"]], color=q["color"],
-                               **({"note": q["note"].strip()} if q.get("note", "").strip() else {})) for q in strokes]
+        out["strokes"] = [
+            dict(
+                pts=[[round(x, 4), round(y, 4)] for x, y in q["pts"]],
+                color=q["color"],
+                **({"note": q["note"].strip()} if q.get("note", "").strip() else {}),
+            )
+            for q in strokes
+        ]
     return out
 
 
@@ -257,9 +274,12 @@ def load_state(d: Path) -> dict:
         for item in state["items"].values():
             if isinstance(item, dict) and item.get("rating") in LEGACY:
                 item["rating"] = LEGACY[item["rating"]]
-            if (not isinstance(item, dict) or item.get("rating") not in [None, *RATINGS]
-                    or item.get("flag") not in [None, *FLAGS]
-                    or not isinstance(item.get("comment"), str)):
+            if (
+                not isinstance(item, dict)
+                or item.get("rating") not in [None, *RATINGS]
+                or item.get("flag") not in [None, *FLAGS]
+                or not isinstance(item.get("comment"), str)
+            ):
                 raise ValueError("invalid review item")
             item.update(clean_marks(item))
         return state
@@ -294,7 +314,7 @@ def read_embedded(p: Path) -> dict | None:
                 f.seek(offset + 8)
                 data = f.read(length)
                 if data.startswith(EMBED_KEY + b"\0\0\0\0\0"):
-                    found = json.loads(data[len(EMBED_KEY) + 5:])
+                    found = json.loads(data[len(EMBED_KEY) + 5 :])
     return found
 
 
@@ -315,8 +335,11 @@ def embed_review(p: Path, item: dict | None):
                 target.write(png_chunk(b"IEND", b""))
                 break
             source.seek(offset + 8)
-            if (kind == b"iTXt" and length >= len(EMBED_KEY) + 1
-                    and source.read(len(EMBED_KEY) + 1) == EMBED_KEY + b"\0"):
+            if (
+                kind == b"iTXt"
+                and length >= len(EMBED_KEY) + 1
+                and source.read(len(EMBED_KEY) + 1) == EMBED_KEY + b"\0"
+            ):
                 continue
             source.seek(offset)
             remaining = length + 12
@@ -356,14 +379,22 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
             NO_EMBED.add(key)
             continue
         item["rating"] = LEGACY.get(item.get("rating"), item.get("rating"))
-        if (item.get("rating") in [None, *RATINGS] and item.get("flag") in [None, *FLAGS]
-                and isinstance(item.get("comment", ""), str)):
+        if (
+            item.get("rating") in [None, *RATINGS]
+            and item.get("flag") in [None, *FLAGS]
+            and isinstance(item.get("comment", ""), str)
+        ):
             try:
                 marks = clean_marks(item)
             except ValueError:
                 marks = {}
-            state["items"][f["name"]] = dict(rating=item.get("rating"), flag=item.get("flag"),
-                                             comment=item.get("comment", ""), updated=item.get("updated"), **marks)
+            state["items"][f["name"]] = dict(
+                rating=item.get("rating"),
+                flag=item.get("flag"),
+                comment=item.get("comment", ""),
+                updated=item.get("updated"),
+                **marks,
+            )
             added = True
     return added
 
@@ -435,8 +466,9 @@ def media_meta(p: Path) -> list:
 @contextmanager
 def replacement_file(p: Path):
     # Exclusive creation prevents collisions and following pre-existing symlinks.
-    with tempfile.NamedTemporaryFile(mode="wb", dir=p.parent, prefix=f".{p.name}.",
-                                     suffix=".tmp", delete=False) as target:
+    with tempfile.NamedTemporaryFile(
+        mode="wb", dir=p.parent, prefix=f".{p.name}.", suffix=".tmp", delete=False
+    ) as target:
         tmp = Path(target.name)
         try:
             yield target
@@ -464,15 +496,17 @@ def discover_dirs(roots) -> list[dict]:
         for raw, children, _ in os.walk(root):
             d = Path(raw)
             depth = len(d.relative_to(root).parts)
-            children[:] = [n for n in children if not n.startswith(".")
-                           and n not in {"__pycache__", "node_modules"}] if depth < 6 else []
+            children[:] = (
+                [n for n in children if not n.startswith(".") and n not in {"__pycache__", "node_modules"}]
+                if depth < 6
+                else []
+            )
             files = list_media(d)
             if files:
                 path = str(d)
                 home = str(Path.home())
-                label = "~" + path[len(home):] if path == home or path.startswith(home + "/") else path
-                found[path] = dict(path=path, label=label, count=len(files),
-                                   newest=max(f["mtime"] for f in files))
+                label = "~" + path[len(home) :] if path == home or path.startswith(home + "/") else path
+                found[path] = dict(path=path, label=label, count=len(files), newest=max(f["mtime"] for f in files))
     return sorted(found.values(), key=lambda f: (-f["newest"], f["path"]))
 
 
@@ -487,10 +521,20 @@ def write_report(d: Path, state: dict, files: list[dict]):
     sections = [s for s in sections if s not in CUSTOM or s in labels or groups[s]]
     rated = len(files) - len(groups["unrated"])
     counts = " · ".join(f"{labels.get(r, r)} {len(groups[r])}" for r in sections)
-    titles = {"redo": "Redo / changes requested", "broken": "Broken", "trash": "Trash / marked for deletion", "mvp": "MVP / best"}
-    lines = ["# Media review", "", f"- Folder: `{d}`",
-             f"- Updated: {state['updated']}",
-             f"- Progress: {rated}/{len(files)} rated · {counts}", ""]
+    titles = {
+        "redo": "Redo / changes requested",
+        "broken": "Broken",
+        "trash": "Trash / marked for deletion",
+        "mvp": "MVP / best",
+    }
+    lines = [
+        "# Media review",
+        "",
+        f"- Folder: `{d}`",
+        f"- Updated: {state['updated']}",
+        f"- Progress: {rated}/{len(files)} rated · {counts}",
+        "",
+    ]
     for rating in sections:
         lines.append(f"## {labels.get(rating) or titles.get(rating, rating.title())}")
         if not groups[rating]:
@@ -544,12 +588,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         elif url.path == "/api/dirs":
-            self.json_response(200, {"roots": [str(p) for p in self.server.roots], "home": str(Path.home()),
-                                     "dirs": discover_dirs(self.server.roots)})
+            self.json_response(
+                200,
+                {
+                    "roots": [str(p) for p in self.server.roots],
+                    "home": str(Path.home()),
+                    "dirs": discover_dirs(self.server.roots),
+                },
+            )
         elif url.path == "/api/find-dirs":
             scope = query.get("scope", ["roots"])[0]
-            self.json_response(200, {"dirs": find_dirs(query.get("q", [""])[0], scope),
-                                     "indexed": len(DIR_INDEX["home" if scope == "home" else "roots"])})
+            self.json_response(
+                200,
+                {
+                    "dirs": find_dirs(query.get("q", [""])[0], scope),
+                    "indexed": len(DIR_INDEX["home" if scope == "home" else "roots"]),
+                },
+            )
         elif url.path == "/api/subdirs":
             raw = query.get("path", [""])[0]
             names = list_subdirs(raw)
@@ -585,8 +640,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         state.update(dir=str(d), updated=datetime.now().astimezone().isoformat(timespec="seconds"))
                         save_state(d, state)
                         write_report(d, state, files)
-                self.json_response(200, {"dir": str(d), "files": files, "items": state["items"],
-                                         "labels": state.get("labels", {})})
+                self.json_response(
+                    200, {"dir": str(d), "files": files, "items": state["items"], "labels": state.get("labels", {})}
+                )
             else:
                 self.stream_media(safe_media_path(d, query.get("name", [""])[0]))
         else:
@@ -616,8 +672,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     return
                 status = 206
             self.send_response(status)
-            content_type = "audio/flac" if p.suffix.lower() == ".flac" else (
-                mimetypes.guess_type(p.name)[0] or "application/octet-stream")
+            content_type = (
+                "audio/flac"
+                if p.suffix.lower() == ".flac"
+                else (mimetypes.guess_type(p.name)[0] or "application/octet-stream")
+            )
             self.send_header("Content-Type", content_type)
             self.send_header("Accept-Ranges", "bytes")
             self.send_header("Content-Length", str(end - start + 1))
@@ -656,7 +715,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 # Modal GUIs run in a child process, away from HTTP worker threads.
                 result = subprocess.run(
                     [sys.executable, __file__, "--pick-folder", str(Path(initial).expanduser())],
-                    capture_output=True, text=True)
+                    capture_output=True,
+                    text=True,
+                )
                 if result.returncode:
                     raise OSError("Folder picker could not open: " + result.stderr.strip())
                 self.json_response(200, {"path": result.stdout.strip() or None})
@@ -687,8 +748,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             comment = comment.strip()
             marks = clean_marks(data)
             labels = data.get("labels") or {}
-            if (not isinstance(labels, dict) or not set(labels) <= set(CUSTOM)
-                    or not all(isinstance(v, str) and len(v) <= 40 for v in labels.values())):
+            if (
+                not isinstance(labels, dict)
+                or not set(labels) <= set(CUSTOM)
+                or not all(isinstance(v, str) and len(v) <= 40 for v in labels.values())
+            ):
                 raise ValueError("invalid labels")
             labels = {k: v.strip() for k, v in labels.items() if v.strip()}
             with LOCK:
@@ -759,18 +823,17 @@ print(out[0] if out else "")
 
 def pick_folder(initial: str) -> None:
     """Print a folder chosen in the system dialog (XDG portal), else Tk's."""
-    portal = subprocess.run([sys.executable, "-c", PORTAL_PICKER, initial],
-                            capture_output=True, text=True)
+    portal = subprocess.run([sys.executable, "-c", PORTAL_PICKER, initial], capture_output=True, text=True)
     if portal.returncode == 0:
         print(portal.stdout.strip())
         return
     import tkinter as tk
     from tkinter import filedialog
+
     root = tk.Tk()
     root.withdraw()
     root.attributes("-topmost", True)
-    path = filedialog.askdirectory(parent=root, title="Choose media folder",
-                                   initialdir=initial, mustexist=True)
+    path = filedialog.askdirectory(parent=root, title="Choose media folder", initialdir=initial, mustexist=True)
     root.destroy()
     print(path if isinstance(path, str) else "")
 

@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
 """Run: python3 test_assets.py. Exercises browser asset delivery and route isolation."""
+
 from http.server import ThreadingHTTPServer
 from threading import Thread
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
 from ratebait import Handler
-
 
 
 if __name__ == "__main__":
@@ -27,10 +27,18 @@ if __name__ == "__main__":
                         assert response.headers.get_content_type() == mime
                         assert response.headers.get_content_charset() == "utf-8"
             for path in (
-                "/ratebait.py", "/../ratebait.py", "/.git/config", "/missing.css",
-                "/js/unknown.js", "/js/", "/js/../ratebait.py",
-                "/js/../app.js", "/js/%2e%2e/ratebait.py",
-                "/js/state.js/../../ratebait.py", "/test_assets.py", "/AGENTS.md",
+                "/ratebait.py",
+                "/../ratebait.py",
+                "/.git/config",
+                "/missing.css",
+                "/js/unknown.js",
+                "/js/",
+                "/js/../ratebait.py",
+                "/js/../app.js",
+                "/js/%2e%2e/ratebait.py",
+                "/js/state.js/../../ratebait.py",
+                "/test_assets.py",
+                "/AGENTS.md",
             ):
                 try:
                     urlopen(base + path)

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
 """Run: python3 test_search.py. Check folder matching, visibility and fresh child listings."""
+
 from http.server import ThreadingHTTPServer
 import json
 from pathlib import Path
