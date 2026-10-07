@@ -567,7 +567,7 @@ main {
   gap: 8px;
   flex-wrap: wrap;
 }
-:is(#ratings, #grid-box) button.selected {
+#ratings button.selected {
   background: var(--tone);
   color: #11161b;
   border-color: var(--tone);
@@ -608,7 +608,7 @@ body.busy select {
   flex-shrink: 0;
   flex-wrap: nowrap;
 }
-:is(#ratings, #grid-box) button {
+#ratings button {
   color: var(--tone);
   display: flex;
   flex-direction: column;
@@ -640,7 +640,7 @@ body.busy select {
     box-shadow 0.15s,
     background 0.15s;
 }
-:is(#ratings, #grid-box) button:hover {
+#ratings button:hover {
   background: linear-gradient(
     160deg,
     color-mix(in srgb, var(--tone) 35%, #273140),
@@ -653,11 +653,11 @@ body.busy select {
     0 9px 0 #080d15,
     0 12px 24px #0005;
 }
-:is(#ratings, #grid-box) button.selected {
+#ratings button.selected {
   background: var(--tone);
   color: #11161b;
 }
-:is(#ratings, #grid-box) button:active {
+#ratings button:active {
   transform: translateY(4px);
   box-shadow:
     inset 0 1px 3px #0003,
@@ -669,7 +669,7 @@ body.busy select {
   background: #3d4657;
   margin: 0 10px;
 }
-:is(#ratings, #grid-box) button.flag {
+#ratings button.flag {
   font-size: 15px;
 }
 #ratings button {
@@ -704,7 +704,7 @@ body.busy select {
 #ratings button.selected .comment-mode.on {
   background: #11161b;
 }
-:is(#ratings, #grid-box) .rating-icon {
+#ratings .rating-icon {
   font-size: 27px;
   line-height: 1;
   margin: 0;
@@ -922,9 +922,6 @@ body:not(.side) #ratings {
   gap: 8px;
   justify-content: center;
 }
-body:not(.side) #grid-box {
-  grid-area: 3/4;
-}
 body:not(.side) #comments {
   grid-area: 3/3;
   display: flex;
@@ -938,7 +935,7 @@ body:not(.side) #comments textarea {
 body:not(.side) #ratings .flag-sep {
   margin: 0 2px;
 }
-body:not(.side) :is(#ratings, #grid-box) button {
+body:not(.side) #ratings button {
   font-size: 14px;
   padding: 10px 4px;
 }
@@ -946,7 +943,7 @@ body:not(.side) #ratings button {
   flex: 0 0 74px;
   min-width: 74px;
 }
-body:not(.side) :is(#ratings, #comments, #grid-box) {
+body:not(.side) :is(#ratings, #comments) {
   align-self: start;
 }
 body:not(.side) #comments textarea {
@@ -986,16 +983,13 @@ body.side #ratings {
 body.side #comments {
   grid-area: 3/2;
 }
-body.side #grid-box {
-  grid-area: 4/2;
-}
 body.side #details {
   grid-area: 5/2;
 }
 body.side #ratings .flag-sep {
   display: none;
 }
-body.side :is(#ratings, #grid-box) button {
+body.side #ratings button {
   max-width: none;
 }
 body.side [data-key='4'] {
@@ -1177,9 +1171,6 @@ body.side .top #fs-btn {
 }
 #grid-toggle .keycap {
   margin-left: 5px;
-}
-#grid-box {
-  display: none;
 }
 #grid-toggle {
   --tone: #a2aabb;
@@ -1486,9 +1477,6 @@ body:not(.side) main:has(#banner[hidden]) {
   body:not(.side) #comments {
     grid-area: 3/2;
   }
-  body:not(.side) #grid-box {
-    grid-area: 3/3;
-  }
   body:not(.side) #details {
     grid-area: 4/1/5/-1;
     grid-template-columns: minmax(200px, max-content) minmax(0, 1fr);
@@ -1521,9 +1509,6 @@ body:not(.side) main:has(#banner[hidden]) {
   body.customs:not(.side) #comments {
     grid-area: 3/2;
   }
-  body.customs:not(.side) #grid-box {
-    grid-area: 3/3;
-  }
   body.customs:not(.side) #details {
     grid-area: 4/1/5/-1;
     grid-template-columns: minmax(200px, max-content) minmax(0, 1fr);
@@ -1554,9 +1539,6 @@ body:not(.side) main:has(#banner[hidden]) {
   }
   body:not(.side) #comments {
     grid-area: 4/2;
-  }
-  body:not(.side) #grid-box {
-    grid-area: 4/3;
   }
 }
 @media (max-width: 1000px) {
@@ -1623,7 +1605,7 @@ body:not(.side) main:has(#banner[hidden]) {
   border-radius: 5px;
   box-shadow: 0 1px 0 #0008;
 }
-:is(#ratings, #grid-box) button.selected .keycap {
+#ratings button.selected .keycap {
   color: #11161b;
   background: #ffffffb0;
   border-color: #11161b80;
@@ -1877,9 +1859,6 @@ body.side #marks-bar #next {
 }
 body.side #comments {
   grid-area: 4/2;
-}
-body.side #grid-box {
-  grid-area: 5/2;
 }
 body.side #details {
   grid-area: 6/2;
@@ -2587,9 +2566,6 @@ body.side #marks-bar {
 body.side #comments {
   grid-area: 5/2;
 }
-body.side #grid-box {
-  grid-area: 6/2;
-}
 body.side #details {
   grid-area: 7/2;
   max-height: 180px;
@@ -2623,7 +2599,7 @@ body.side #comment-view:not([hidden]) {
   grid-area: 5/2;
   margin-bottom: 10px;
 }
-body.side :is(#ratings, #marks-bar, #comment-view, #grid-box, #details),
+body.side :is(#ratings, #marks-bar, #comment-view, #details),
 body.side.marks-dock #marks-panel {
   zoom: var(--rs-scale, 1);
 }
