@@ -213,9 +213,10 @@ function saveMarks(marks) {
     if (state.dir !== dir || current()?.name !== name)
       throw new Error('The selected file changed; marks were not saved.');
     const item = state.items[name] || {};
+    // In multi-select the comment box holds the shared draft, not this file's comment.
     await save(
       item.rating || null,
-      $('comment').value,
+      multiOn() ? item.comment || '' : $('comment').value,
       item.flag || null,
       marks,
     );
@@ -428,20 +429,28 @@ async function applyPicks(value) {
       .filter((v) => state.customNames[v])
       .map((v) => [v, state.customNames[v]]),
   );
-  for (const name of names) {
-    const it = state.items[name] || {};
-    state.items = (
-      await api('/api/review', {
-        dir: state.dir,
-        name,
-        rating: value ? (flag ? null : value) : it.rating || null,
-        flag: value ? (flag ? value : null) : it.flag || null,
-        comment: note || it.comment || '',
-        pins: it.pins || [],
-        strokes: it.strokes || [],
-        labels,
-      })
-    ).items;
+  // A failed save stops the loop; the files saved so far still show (finally), the selection stays for a retry.
+  try {
+    for (const name of names) {
+      const it = state.items[name] || {};
+      state.items = (
+        await api('/api/review', {
+          dir: state.dir,
+          name,
+          rating: value ? (flag ? null : value) : it.rating || null,
+          flag: value ? (flag ? value : null) : it.flag || null,
+          comment: note || it.comment || '',
+          pins: it.pins || [],
+          strokes: it.strokes || [],
+          labels,
+        })
+      ).items;
+    }
+  } finally {
+    paintLists();
+    paintRating();
+    paintMarks();
+    paintPinList();
   }
   if (value) {
     popRating(value, { comment: note });
@@ -454,10 +463,6 @@ async function applyPicks(value) {
     popRating(null);
     toast(`Comment → ${names.length} files`);
   }
-  paintLists();
-  paintRating();
-  paintMarks();
-  paintPinList();
 }
 
 function act(value) {
@@ -757,18 +762,19 @@ async function paintDetails(f) {
     probe.src = mediaUrl(f);
   }
   const key = mediaUrl(f);
+  let rows = metaCache[key];
   try {
-    metaCache[key] ??= (
+    rows ??= metaCache[key] = (
       await api(
         '/api/meta?' + new URLSearchParams({ dir: state.dir, name: f.name }),
       )
     ).rows;
   } catch {
-    metaCache[key] = [];
+    rows = []; // not cached: the next visit asks again
   }
   if (current() !== f) return;
   $('genmeta').replaceChildren(
-    ...metaCache[key].flatMap(([label, value]) => {
+    ...rows.flatMap(([label, value]) => {
       const dt = document.createElement('dt'),
         dd = document.createElement('dd');
       dt.textContent = label;
@@ -2505,9 +2511,16 @@ function initSidebar() {
   };
   document.addEventListener('pointerup', () => endDrag(true));
   document.addEventListener('pointercancel', () => endDrag(false));
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && drag?.active) endDrag(false);
-  });
+  // Esc only cancels the drag; it does not also clear the selection.
+  addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key !== 'Escape' || !drag?.active) return;
+      e.stopPropagation();
+      endDrag(false);
+    },
+    true,
+  );
 }
 
 // ── marks ──
@@ -2957,15 +2970,17 @@ function popRing(id, toggle, buttons, radius, centre) {
   const w = document.createElement('div'),
     away = (e) => {
       if (w.contains(e.target)) return;
-      e.stopPropagation(); // the click only closes the ring, it does not draw or pin
+      e.stopPropagation(); // the click only closes the ring, it does not draw, pin or press a button
+      eatClick = true;
       close();
     },
     key = (e) => {
-      if (e.key === 'Escape' || e.key.toLowerCase() === toggle) {
+      if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+      if (e.repeat || e.key === 'Escape' || e.key.toLowerCase() === toggle) {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
-      close();
+      if (!e.repeat) close();
     },
     close = () => {
       w.remove();
@@ -3033,6 +3048,7 @@ function colourWheel() {
 
 // `: every visible rating and flag button in a ring, for rating with the mouse.
 function ratingWheel() {
+  if (!current()) return;
   popRing(
     'rating-wheel',
     '`',
@@ -3356,9 +3372,18 @@ function setReport(on) {
     .forEach((b) => b.classList.toggle('on', reportOn));
   if (reportOn) paintReport();
 }
+let reportToken = 0;
 async function paintReport() {
-  const r = await fetch('/api/report?dir=' + encodeURIComponent(state.dir)),
+  // Only the newest request paints: quick ratings or a folder switch can finish out of order.
+  const token = ++reportToken;
+  let md;
+  try {
+    const r = await fetch('/api/report?dir=' + encodeURIComponent(state.dir));
     md = r.ok ? await r.text() : 'No REVIEW.md yet: rate a file first.';
+  } catch {
+    md = 'Could not load REVIEW.md.';
+  }
+  if (token !== reportToken) return;
   $('report-body').innerHTML = mdToHtml(md);
   placeReport();
 }
@@ -3892,10 +3917,7 @@ async function openFolder(raw) {
   return transact(async () => {
     await saveComment();
     const result = await api('/api/list?' + new URLSearchParams({ dir: raw }));
-    if (result.dir !== state.dir) {
-      state.picked.clear();
-      paintPicks();
-    }
+    if (result.dir !== state.dir) clearPicks();
     state.dir = result.dir;
     folderPick = -1;
     state.files = arrange(sortFiles(result.files));
@@ -4364,6 +4386,8 @@ function initKeyboard() {
     const typing =
       ['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName) ||
       e.target.isContentEditable;
+    // Open settings keep the keys: nothing rates or moves behind them (Esc and F1 close them above).
+    if (!$('settings-menu').hidden && !typing) return;
     if (e.key === 'Escape' && typing) {
       escTypedAt = performance.now();
       e.target.blur();
@@ -4423,7 +4447,13 @@ function initKeyboard() {
       clearPicks();
       return;
     }
-    if (e.ctrlKey && e.key.toLowerCase() === 'z' && !typing && !state.busy) {
+    if (
+      e.ctrlKey &&
+      e.key.toLowerCase() === 'z' &&
+      !typing &&
+      !state.busy &&
+      folderPick < 0
+    ) {
       e.preventDefault();
       undoStroke();
       return;
@@ -4493,6 +4523,15 @@ function initKeyboard() {
     }
     // ',' is the numpad decimal key on some layouts.
     const key = e.key === ',' ? '.' : e.key;
+    // A folder tile is selected and the file is not shown as selected: keys that change the file do nothing.
+    if (
+      folderPick >= 0 &&
+      (keyAction[key] ||
+        ['Delete', 'c', 'z', 'h', 'a', 'd', 'r', '`'].includes(
+          e.key.length === 1 ? e.key.toLowerCase() : e.key,
+        ))
+    )
+      return;
     if (
       keyAction[key] &&
       !document.querySelector(`#ratings button[data-key="${key}"]`).hidden
