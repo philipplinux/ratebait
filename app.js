@@ -2025,11 +2025,15 @@ function tally(counts) {
   return box;
 }
 
-// Rolls up when a tick would be narrower than 8 CSS px, so the rule follows window size and zoom alike.
+// Rolls up when a tick would be narrower than 8 CSS px, so the rule follows window size and zoom alike,
+// or always with the "always rolled up" setting.
 function fitTicks() {
   const t = $('ticks'),
     n = state.files.length;
-  t.classList.toggle('rollup', n > 0 && (t.clientWidth - 4 * (n - 1)) / n < 8);
+  t.classList.toggle(
+    'rollup',
+    n > 0 && ($('set-rollup').checked || (t.clientWidth - 4 * (n - 1)) / n < 8),
+  );
   // Still too wide as a rollup: drop the names, icon and count only.
   const box = t.querySelector('.tally');
   t.classList.remove('short');
@@ -2927,6 +2931,13 @@ function setHints(on) {
   }
 }
 
+// Settings switch: the progress bar always shows one chip per rating instead of a tile per file.
+function setRollup(on) {
+  $('set-rollup').checked = on;
+  store('rollup', on ? '1' : '0');
+  fitTicks();
+}
+
 // Settings switch: fullscreen shows the comment box whenever the file has a comment (off: only on C).
 function setCommentFloat(on) {
   document.body.classList.toggle('comment-float', on);
@@ -3255,6 +3266,8 @@ function initSettings() {
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
   setHints(stored('hints') !== '0');
+  $('set-rollup').onchange = (e) => setRollup(e.target.checked);
+  setRollup(stored('rollup') === '1');
   $('set-comment-float').onchange = (e) => setCommentFloat(e.target.checked);
   setCommentFloat(stored('commentFloat') !== '0');
 
