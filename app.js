@@ -1591,12 +1591,11 @@ function paintLists() {
     b.onclick = () => setSort(key);
     sorter.append(b);
   }
-  views.append(sorter);
-  $('sidebar').append(views);
+  views.append(sorter, scrollHint('to-start', '▲', 'Back to the first file'));
   // Discovered-folder list (F) and fuzzy folder search sit above the open folder; keep typing focus across repaints.
   const sec = document.createElement('div');
   sec.className = 'dir-section';
-  $('sidebar').append(sec);
+  $('sidebar').append(sec, views);
   sec.append(foldersEl, pathBoxEl);
   if (pathTyping) {
     $('path').focus();
@@ -1621,7 +1620,14 @@ function paintLists() {
       title: 'Pick a folder (B or O)',
     });
     browse.onclick = () => $('browse').click();
-    bar.append(path, browse);
+    const wipe = Object.assign(document.createElement('button'), {
+      textContent: '🧹',
+      title: 'Remove all ratings, flags, comments and marks in this folder',
+      disabled: !Object.values(state.items).some(hasReview),
+    });
+    wipe.setAttribute('aria-label', wipe.title);
+    wipe.onclick = clearFolder;
+    bar.append(path, browse, wipe);
     sec.append(bar);
     const nav = document.createElement('div');
     nav.className = 'folder-nav';
@@ -1667,7 +1673,7 @@ function paintLists() {
   let rated = 0;
   const list = document.createElement('div');
   list.className = 'files';
-  $('sidebar').append(list);
+  $('sidebar').append(list, scrollHint('to-end', '▼', 'To the last file'));
   state.files.forEach((f, i) => {
     const item = state.items[f.name] || {},
       rating = item.flag || item.rating;
@@ -1786,6 +1792,74 @@ function paintScrollHints() {
   );
 }
 
+// ▲ under the List/Grid bar and ▼ at the bottom: shown while there is more to scroll, click to jump to that end.
+function scrollHint(cls, arrow, title) {
+  const box = document.createElement('div');
+  box.className = 'scroll-hint ' + cls;
+  const b = Object.assign(document.createElement('button'), {
+    type: 'button',
+    textContent: arrow,
+    title,
+  });
+  b.setAttribute('aria-label', title);
+  b.onclick = () =>
+    $('sidebar').scrollTo({
+      top: cls === 'to-start' ? 0 : $('sidebar').scrollHeight,
+      behavior: 'smooth',
+    });
+  box.append(b);
+  return box;
+}
+
+const hasReview = (item) =>
+  !!(
+    item.rating ||
+    item.flag ||
+    item.comment ||
+    item.pins?.length ||
+    item.strokes?.length
+  );
+
+// 🧹 beside Browse…: clears every review in the open folder (also the copies embedded in PNGs), after a confirmation.
+function clearFolder() {
+  const names = Object.keys(state.items).filter((n) =>
+    hasReview(state.items[n]),
+  );
+  if (
+    !names.length ||
+    !confirm(
+      `Remove all ratings, flags, comments, pins and strokes from ${names.length} file${names.length > 1 ? 's' : ''} in ${tilde(state.dir)}?\n\nThis cannot be undone.`,
+    )
+  )
+    return;
+  transact(async () => {
+    try {
+      for (const name of names) {
+        const result = await api('/api/review', {
+          dir: state.dir,
+          name,
+          rating: null,
+          flag: null,
+          comment: '',
+          pins: [],
+          strokes: [],
+        });
+        state.items = result.items;
+      }
+    } finally {
+      // Repaint what was cleared even when a later file fails.
+      if (!multiOn())
+        $('comment').value = state.items[current()?.name]?.comment || '';
+      paintCommentTool();
+      paintLists();
+      paintRating();
+      paintMarks();
+      paintPinList();
+      if (!$('viewer').hidden) paintPeek();
+    }
+  });
+}
+
 // Sidebar look: 'list' (thumbnail, name, details) or 'grid' (thumbnails only, 3 per row). Kept per browser.
 let sideView = 'list';
 
@@ -1800,12 +1874,7 @@ function setList(on) {
   document.body.classList.toggle('list-off', !on);
   if (!on && !state.grid) clearPicks();
   $('set-list').checked = on;
-  $('list-flag').querySelector('.arr').textContent = on ? '‹' : '›';
-  $('list-flag').title = (on ? 'Hide' : 'Show') + ' file list (L)';
-  $('list-flag').setAttribute(
-    'aria-label',
-    (on ? 'Hide' : 'Show') + ' file list',
-  );
+  $('list-btn').setAttribute('aria-pressed', on);
   store('list', on ? '1' : '0');
   if (!$('viewer').hidden) resetView();
 }
@@ -1890,7 +1959,7 @@ function initSidebar() {
 
   $('set-list').onchange = (e) => setList(e.target.checked);
 
-  $('list-flag').onclick = () =>
+  $('list-btn').onclick = () =>
     setList(document.body.classList.contains('list-off'));
 
   setList(stored('list') !== '0');
@@ -2452,6 +2521,15 @@ function setSideScale(pct) {
   store('sideScale', pct);
 }
 
+// Left sidebar size (50–100%): narrows the file list column and scales everything in it, folder controls too.
+function setLsScale(pct) {
+  pct = Math.min(100, Math.max(50, +pct || 100));
+  $('set-ls-width').value = pct;
+  $('ls-width-out').value = pct + '%';
+  document.body.style.setProperty('--ls-scale', pct / 100);
+  store('lsScale', pct);
+}
+
 // Right sidebar size (50–100%): narrows the column and scales its buttons and text with it.
 function setRsScale(pct) {
   pct = Math.min(100, Math.max(50, +pct || 100));
@@ -2565,6 +2643,10 @@ function initSettings() {
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
   setHints(stored('hints') !== '0');
+
+  $('set-ls-width').oninput = (e) => setLsScale(e.target.value);
+
+  setLsScale(stored('lsScale') || 100);
 
   $('set-side-scale').oninput = (e) => setSideScale(e.target.value);
 
