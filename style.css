@@ -3085,24 +3085,30 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 .rate-pop .pop-new {
   animation: pop-new 0.75s ease-out forwards;
+  filter: drop-shadow(0 0 6px #000);
 }
+/* The old icon appears left of centre and dims; the new one slides in from the right over it to the centre. */
 @keyframes pop-old {
-  0%,
-  20% {
+  0% {
+    opacity: 0;
+    translate: -34px 0;
+    scale: 0.85;
+  }
+  12% {
     opacity: 1;
-    translate: 0;
   }
   45%,
   100% {
-    opacity: 0;
-    translate: -50px 0;
+    opacity: 0.3;
+    translate: -34px 0;
+    scale: 0.85;
   }
 }
 @keyframes pop-new {
   0%,
-  20% {
+  15% {
     opacity: 0;
-    translate: 60px 0;
+    translate: 70px 0;
   }
   45%,
   100% {
