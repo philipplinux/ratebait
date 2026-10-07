@@ -2905,6 +2905,7 @@ function setLayout(side) {
   store('layout', side ? 'side' : 'bottom');
   if (!$('viewer').hidden) resetView();
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
+  if (detailsObserver) fitDetails();
 }
 
 function setPeek(on) {
@@ -3230,6 +3231,7 @@ function fitDetails() {
     if (beside && d.offsetHeight > closed)
       d.style.marginTop = closed - d.offsetHeight + 'px';
   }
+  placeMarksPanel(); // docking depends on the details height
   // Cut off: the box itself, or the prompt clamped to a few lines inside it.
   const p = d.querySelector('dd.prompt');
   d.classList.toggle(
