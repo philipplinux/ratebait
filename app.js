@@ -777,7 +777,9 @@ function paintGrid() {
         .replace(/^\d{8}-r\d+-/, '');
       const badge = document.createElement('span');
       badge.className = 'tile-badge';
-      tile.append(name, badge);
+      const marks = document.createElement('span');
+      marks.className = 'tile-marks';
+      tile.append(name, badge, marks);
       tile.onclick = (e) => {
         if (e.shiftKey) {
           pickRange(start + k, e.ctrlKey || e.metaKey);
@@ -805,6 +807,19 @@ function paintGrid() {
       badge = tile.querySelector('.tile-badge');
     tile.classList.toggle('current', start + k === state.index);
     paintIcon(badge, r);
+    // Same markers as the list: 💬 comment, 📍 pins or strokes.
+    const marks = tile.querySelector('.tile-marks');
+    marks.textContent =
+      (item.comment ? '💬' : '') +
+      (item.pins?.length || item.strokes?.length ? '📍' : '');
+    marks.title = [
+      item.comment,
+      item.pins?.length || item.strokes?.length
+        ? `${item.pins?.length || 0} pins · ${item.strokes?.length || 0} strokes`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
   });
   // Scroll only when the selection moved, not on a background refresh.
   if (g.dataset.index !== String(state.index))

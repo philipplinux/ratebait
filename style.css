@@ -1330,6 +1330,18 @@ body:not(.side) #ratings .keycap {
   font-size: 12px;
   font-weight: 600;
 }
+.tile .tile-marks {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #000b;
+  font-size: 12px;
+}
+.tile .tile-marks:empty {
+  display: none;
+}
 .tile .tile-badge svg {
   width: 14px;
   height: 14px;
