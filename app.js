@@ -2034,15 +2034,19 @@ function paintLists() {
 // Shadow under the sticky List/Grid bar (top) and a fade + arrow at the bottom of the sidebar, only while there is more to scroll that way.
 function paintScrollHints() {
   const s = $('sidebar');
-  s.classList.toggle('more-up', s.scrollTop > 2);
-  // The head copy shows once the sticky block has stuck (its top is -12px), and its height is taken back
+  // The head copy shows once the sticky block has stuck, and its height is taken back
   // with a negative margin so the list below doesn't jump.
   const sec = s.querySelector('.dir-section'),
-    views = s.querySelector('.side-views');
-  const away =
-    !!sec &&
-    sec.getBoundingClientRect().bottom <=
-      s.getBoundingClientRect().top + s.clientTop - 12;
+    views = s.querySelector('.side-views'),
+    stuckAt = s.getBoundingClientRect().top + s.clientTop;
+  // Shadow and ▲ only once files actually slide under the stuck block, not while it still scrolls along.
+  s.classList.toggle(
+    'more-up',
+    s.scrollTop > 2 &&
+      !!views &&
+      views.getBoundingClientRect().top <= stuckAt + 0.5,
+  );
+  const away = !!sec && sec.getBoundingClientRect().bottom <= stuckAt;
   s.classList.toggle('dir-away', away);
   const mini = away && views?.querySelector('.dir-head.away');
   if (views)
