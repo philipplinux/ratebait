@@ -221,7 +221,10 @@ async function saveComment() {
 function jump(i) {
   if (!state.files.length) return;
   return transact(async () => {
+    const pop = lastPop;
     await saveComment();
+    // Comment saved on the way out (e.g. Redo + comment, Enter): its pop swipes off like a rating that moves on.
+    if (lastPop !== pop) lastPop.classList.add('swipe');
     state.index = (i + state.files.length) % state.files.length;
     paintLists();
     paintCard();
