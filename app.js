@@ -2773,7 +2773,130 @@ function setRsScale(pct) {
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
 }
 
+// ⚙ Keyboard: a UK keyboard (main block, navigation keys, numpad) with every bound key coloured by what it does.
+// Rows of "label:width:height" in key units; _ is a gap, a leading ~ marks a numpad key (bound like its main-row twin).
+const kbRows = [
+  'Esc _ F1 F2 F3 F4 _:0.5 F5 F6 F7 F8 _:0.5 F9 F10 F11 F12 _:0.5 PrtSc ScrLk Pause _:0.5 _:4',
+  '` 1 2 3 4 5 6 7 8 9 0 - = Back:2 _:0.5 Ins Home PgUp _:0.5 Num ~/ ~* ~-',
+  'Tab:1.75 Q W E R T Y U I O P [ ] Enter:1.25:2 _:0.5 Del End PgDn _:0.5 ~7 ~8 ~9 ~+:1:2',
+  "Caps:1.75 A S D F G H J K L ; ' # _:5.25 ~4 ~5 ~6",
+  'Shift:1.25 \\ Z X C V B N M , . / Shift:2.75 _:1.5 ↑ _:1.5 ~1 ~2 ~3 ~Enter:1:2',
+  'Ctrl:1.25 Win:1.25 Alt:1.25 Space:6.25 AltGr:1.25 Win:1.25 Menu:1.25 Ctrl:1.25 _:0.5 ← ↓ → _:0.5 ~0:2 ~.',
+];
+const kbMove = ['Previous', 'Next'];
+function keyBinds() {
+  const rate = (v) => ['rate', nameOf(v), v];
+  return {
+    Esc: ['mark', 'Leave (the comment or tool; closes fullscreen)'],
+    F1: ['view', 'Settings'],
+    0: rate('reject'),
+    '.': rate('neutral'),
+    ',': rate('neutral'),
+    1: rate('pass'),
+    2: rate('love'),
+    3: rate('mvp'),
+    4: rate('redo'),
+    5: rate('broken'),
+    6: rate('trash'),
+    7: rate('custom7'),
+    8: rate('custom8'),
+    9: rate('custom9'),
+    '-': ['view', 'Zoom − (grid: more tiles)'],
+    '=': ['view', 'Zoom + (grid: fewer tiles)'],
+    '+': ['view', 'Zoom + (grid: fewer tiles)'],
+    W: ['move', kbMove[0]],
+    S: ['move', kbMove[1]],
+    '←': ['move', kbMove[0]],
+    '→': ['move', kbMove[1]],
+    '↑': ['move', 'Previous (grid: row up)'],
+    '↓': ['move', 'Next (grid: row down)'],
+    PgUp: ['move', '−10 (grid: a page)'],
+    PgDn: ['move', '+10 (grid: a page)'],
+    Home: ['move', 'First'],
+    End: ['move', 'Last'],
+    A: ['mark', 'Pin'],
+    D: ['mark', 'Draw'],
+    C: ['mark', 'Comment'],
+    R: ['mark', 'Colour (pen and pins)'],
+    Z: ['mark', 'Undo (the newest pin or stroke)'],
+    H: ['mark', 'Hide marks'],
+    Del: ['mark', 'Clear all (marks and rating)'],
+    Enter: ['view', 'Fullscreen (Shift: next file)'],
+    G: ['view', 'Grid'],
+    Space: ['view', 'Grid (plays or pauses audio)'],
+    L: ['view', 'File list'],
+    F: ['folder', 'Folders (pick a discovered one)'],
+    B: ['folder', 'Browse (folder dialog)'],
+    O: ['folder', 'Browse (folder dialog)'],
+    Tab: ['folder', 'Accept (path field suggestion)'],
+  };
+}
+const kbCombos = [
+  ['Shift+Enter', 'Save the comment and go to the next file'],
+  ['Shift+arrows', 'Move the picture while zoomed (also drag or wheel)'],
+  ['Ctrl+wheel', 'Zoom at the cursor'],
+  ['Ctrl+Space', 'Reset zoom'],
+  ['Ctrl+Z', 'Undo the newest pin or stroke'],
+  ['Shift+drag', 'Pen: straight line'],
+  ['Ctrl+Shift+drag', 'Pen: circle'],
+  ['Right-click', 'Turn the pin or draw tool off'],
+  ['Tab / ↑ ↓', 'Path field: take or pick a suggestion'],
+];
+
+function paintKeyboard() {
+  const binds = keyBinds(),
+    board = $('kb-board');
+  board.replaceChildren();
+  kbRows.forEach((row, r) => {
+    let x = 1;
+    for (const tok of row.split(' ')) {
+      const [label, w = 1, h = 1] = tok.split(':'),
+        span = Math.round(w * 4);
+      if (label !== '_') {
+        const name = label.replace(/^~(.)/, '$1'),
+          b = binds[name],
+          k = document.createElement('div');
+        k.className = 'kb-key' + (b ? ' kb-' + b[0] : '');
+        k.style.gridColumn = `${x} / span ${span}`;
+        k.style.gridRow = `${r + 1} / span ${h}`;
+        k.append(
+          Object.assign(document.createElement('b'), { textContent: name }),
+        );
+        if (b) {
+          if (b[2]) {
+            const i = document.createElement('i');
+            paintIcon(i, b[2]);
+            k.append(i);
+          }
+          k.append(
+            Object.assign(document.createElement('small'), {
+              textContent: b[1].split(' (')[0], // short caption; the title has it all
+            }),
+          );
+          k.title = `${name}: ${b[1]}`;
+        }
+        board.append(k);
+      }
+      x += span;
+    }
+  });
+  $('kb-combos').replaceChildren(
+    ...kbCombos.map(([k, text]) => {
+      const li = document.createElement('li');
+      li.append(
+        Object.assign(document.createElement('kbd'), {
+          className: 'keycap',
+          textContent: k,
+        }),
+        Object.assign(document.createElement('span'), { textContent: text }),
+      );
+      return li;
+    }),
+  );
+}
+
 function setMenu(open) {
+  if (open) paintKeyboard();
   $('settings-menu').hidden = !open;
   $('settings').setAttribute('aria-expanded', open);
 }
@@ -2863,6 +2986,7 @@ function initSettings() {
   detailsObserver = new ResizeObserver(fitDetails);
 
   $('set-side').onchange = (e) => setLayout(e.target.checked);
+  $('set-close').onclick = () => setMenu(false);
 
   $('layout-btn').onclick = () =>
     setLayout(!document.body.classList.contains('side'));

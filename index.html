@@ -92,82 +92,98 @@
             aria-controls="settings-menu"
             ><span class="gear" aria-hidden="true">⚙</span
             ><kbd class="keycap">F1</kbd></button
-          ><div id="settings-menu" hidden
-            ><div class="set-head first">View</div
-            ><label class="set-row"
-              ><input type="checkbox" id="set-list" /> File list
-              <kbd class="keycap">L</kbd></label
-            ><label class="set-row"
-              ><input type="checkbox" id="set-details" /> File details and
-              generation info</label
-            ><label class="set-row"
-              ><input type="checkbox" id="set-hints" /> Hint bars (pen, pin,
-              zoom)</label
-            ><label class="set-row"
-              ><input type="checkbox" id="set-comment-float" /> Fullscreen
-              always shows a saved comment</label
-            ><label class="set-row"
-              ><input type="checkbox" id="set-side" /> Controls in a right
-              sidebar</label
-            ><label class="set-row"
-              ><input type="checkbox" id="set-peek" /> Thumbnails beside
-              fullscreen</label
-            ><div class="set-head">Sizes</div
-            ><label class="set-row side-scale"
-              >Left sidebar
-              <input
-                type="range"
-                id="set-ls-width"
-                min="50"
-                max="100"
-                step="5" /><output id="ls-width-out"></output></label
-            ><label class="set-row side-scale"
-              >File list pictures
-              <input
-                type="range"
-                id="set-side-scale"
-                min="50"
-                max="200"
-                step="5" /><output id="side-scale-out"></output></label
-            ><label class="set-row side-scale"
-              >Right sidebar
-              <input
-                type="range"
-                id="set-rs-width"
-                min="50"
-                max="100"
-                step="5" /><output id="rs-width-out"></output></label
-            ><div class="set-row grid-size"
-              ><span class="gs-label">Grid</span>
-              <input
-                type="number"
-                id="grid-cols"
-                min="1"
-                max="10"
-                aria-label="Grid columns"
-                title="Columns"
-              />
-              ×
-              <input
-                type="number"
-                id="grid-rows"
-                min="1"
-                max="10"
-                aria-label="Grid rows"
-                title="Rows"
-              /><span class="grid-presets"
-                ><button data-grid="2x1">2×1</button
-                ><button data-grid="3x3" title="Default">3×3</button
-                ><button data-grid="10x10">10×10</button></span
+          ><div id="settings-menu" hidden role="dialog" aria-label="Settings"
+            ><div class="set-top"
+              ><h2>Settings</h2
+              ><button type="button" id="set-close" title="Close (Esc or F1)"
+                >×</button
               ></div
-            ><div class="set-head">Folder search</div
-            ><label class="set-row"
-              ><input type="checkbox" id="set-home" /> Search all of home</label
-            ><p class="set-hint">Off: only folders below the start folder.</p
-            ><details class="set-btns"
-              ><summary class="set-head">Buttons</summary
+            ><section class="set-card"
+              ><h3>Layout</h3
+              ><label class="set-row"
+                ><input type="checkbox" id="set-list" /> File list
+                <kbd class="keycap">L</kbd></label
+              ><label class="set-row"
+                ><input type="checkbox" id="set-side" /> Rating buttons in a
+                right sidebar</label
+              ><label class="set-row"
+                ><input type="checkbox" id="set-details" /> File details and
+                generation info</label
+              ></section
+            ><section class="set-card"
+              ><h3>Fullscreen and hints</h3
+              ><label class="set-row"
+                ><input type="checkbox" id="set-peek" /> Previous / next
+                thumbnails in fullscreen</label
+              ><label class="set-row"
+                ><input type="checkbox" id="set-comment-float" /> Show a saved
+                comment in fullscreen</label
+              ><label class="set-row"
+                ><input type="checkbox" id="set-hints" /> Key hints while
+                drawing, pinning or zoomed</label
+              ></section
+            ><section class="set-card"
+              ><h3>Sizes</h3
+              ><label class="set-row side-scale"
+                >File list width
+                <input
+                  type="range"
+                  id="set-ls-width"
+                  min="50"
+                  max="100"
+                  step="5" /><output id="ls-width-out"></output></label
+              ><label class="set-row side-scale"
+                >File list thumbnails
+                <input
+                  type="range"
+                  id="set-side-scale"
+                  min="50"
+                  max="200"
+                  step="5" /><output id="side-scale-out"></output></label
+              ><label class="set-row side-scale"
+                >Right sidebar
+                <input
+                  type="range"
+                  id="set-rs-width"
+                  min="50"
+                  max="100"
+                  step="5" /><output id="rs-width-out"></output></label
+              ><div class="set-row grid-size"
+                ><span class="gs-label">Grid</span>
+                <input
+                  type="number"
+                  id="grid-cols"
+                  min="1"
+                  max="10"
+                  aria-label="Grid columns"
+                  title="Columns"
+                />
+                ×
+                <input
+                  type="number"
+                  id="grid-rows"
+                  min="1"
+                  max="10"
+                  aria-label="Grid rows"
+                  title="Rows"
+                /><span class="grid-presets"
+                  ><button data-grid="2x1">2×1</button
+                  ><button data-grid="3x3" title="Default">3×3</button
+                  ><button data-grid="10x10">10×10</button></span
+                ></div
+              ></section
+            ><section class="set-card"
+              ><h3>Folder search</h3
+              ><label class="set-row"
+                ><input type="checkbox" id="set-home" /> Path field searches
+                all of home</label
+              ><p class="set-hint">Off: only folders below the start folders.</p
+              ></section
+            ><section class="set-card set-btns"
+              ><h3>Rating buttons</h3
               ><p class="set-hint"
-                >Colour, icon and title per button. 7–9 show once named.</p
+                >Colour, icon and title for each button. Name 7–9 to add your
+                own buttons.</p
               ><div id="btn-rows"></div
               ><label class="set-row btn-row" data-v="custom7"
                 ><kbd class="keycap">7</kbd
@@ -213,129 +229,24 @@
                 ></label
               ><button type="button" id="btn-reset" class="set-reset"
                 >Reset colours, icons and titles</button
-              ></details
-            ><details class="set-keys"
-              ><summary class="set-head">Keybinds</summary
-              ><div class="kb-groups"
-                ><section
-                  ><h4>Rate</h4
-                  ><ul
-                    ><li><kbd class="keycap">0</kbd><span>Reject</span></li
-                    ><li><kbd class="keycap">.</kbd><span>Neutral</span></li
-                    ><li
-                      ><kbd class="keycap">1 2 3</kbd
-                      ><span>Pass, Love, MVP</span></li
-                    ><li
-                      ><kbd class="keycap">4 5 6</kbd
-                      ><span>Redo, Broken, Trash</span></li
-                    ><li
-                      ><kbd class="keycap">7 8 9</kbd
-                      ><span>Custom buttons</span></li
-                    ></ul
-                  ></section
-                ><section
-                  ><h4>Move</h4
-                  ><ul
-                    ><li
-                      ><kbd class="keycap">← →</kbd
-                      ><span>Previous / next</span></li
-                    ><li
-                      ><kbd class="keycap">W S</kbd
-                      ><span>Previous / next</span></li
-                    ><li
-                      ><kbd class="keycap">↑ ↓</kbd
-                      ><span>Previous / next (grid: rows)</span></li
-                    ><li
-                      ><kbd class="keycap">PgUp PgDn</kbd
-                      ><span>±10 (grid: page)</span></li
-                    ><li
-                      ><kbd class="keycap">Home End</kbd
-                      ><span>First / last</span></li
-                    ><li
-                      ><kbd class="keycap">Shift+Enter</kbd
-                      ><span>Next</span></li
-                    ></ul
-                  ></section
-                ><section
-                  ><h4>Mark</h4
-                  ><ul
-                    ><li><kbd class="keycap">C</kbd><span>Comment</span></li
-                    ><li><kbd class="keycap">A</kbd><span>Pin</span></li
-                    ><li><kbd class="keycap">D</kbd><span>Draw</span></li
-                    ><li
-                      ><kbd class="keycap">Z</kbd
-                      ><span>Undo pin or stroke</span></li
-                    ><li><kbd class="keycap">H</kbd><span>Hide marks</span></li
-                    ><li><kbd class="keycap">Del</kbd><span>Clear all</span></li
-                    ><li
-                      ><kbd class="keycap">Esc</kbd
-                      ><span
-                        >Leave comment or tool (in fullscreen: close)</span
-                      ></li
-                    ><li
-                      ><kbd class="keycap">Right-click</kbd
-                      ><span>Turn pin or draw tool off</span></li
-                    ></ul
-                  ></section
-                ><section
-                  ><h4>Pen (D)</h4
-                  ><ul
-                    ><li
-                      ><kbd class="keycap">Shift</kbd
-                      ><span>Draw a straight line</span></li
-                    ><li
-                      ><kbd class="keycap">Ctrl+Shift</kbd
-                      ><span>Draw a circle</span></li
-                    ><li
-                      ><kbd class="keycap">R</kbd><span>Pen and pin colour</span></li
-                    ></ul
-                  ></section
-                ><section
-                  ><h4>View</h4
-                  ><ul
-                    ><li
-                      ><kbd class="keycap">Enter</kbd
-                      ><span
-                        >Fullscreen (or click the image; click to close)</span
-                      ></li
-                    ><li
-                      ><kbd class="keycap">Space G</kbd
-                      ><span>Grid open / close (Space plays audio)</span></li
-                    ><li
-                      ><kbd class="keycap">+ −</kbd
-                      ><span>Zoom (grid: tile size), also Ctrl+wheel</span></li
-                    ><li
-                      ><kbd class="keycap">Shift+arrows</kbd
-                      ><span>Move while zoomed, also drag or wheel</span></li
-                    ><li
-                      ><kbd class="keycap">Ctrl+Space</kbd
-                      ><span>Reset zoom</span></li
-                    ><li><kbd class="keycap">L</kbd><span>File list</span></li
-                    ><li
-                      ><kbd class="keycap">F1</kbd><span>Settings</span></li
-                    ></ul
-                  ></section
-                ><section
-                  ><h4>Folders</h4
-                  ><ul
-                    ><li
-                      ><kbd class="keycap">F</kbd
-                      ><span>Pick a discovered folder</span></li
-                    ><li
-                      ><kbd class="keycap">B O</kbd
-                      ><span>Browse for a folder</span></li
-                    ><li
-                      ><kbd class="keycap">Tab →</kbd
-                      ><span
-                        >Path field: take the suggestion, ↑ ↓ pick</span
-                      ></li
-                    ></ul
-                  ></section
-                ></div
-              ></details
-            ></div
+              ></section
+            ><section class="set-card set-keys"
+              ><h3>Keyboard</h3
+              ><p class="set-hint"
+                >Keys light up by what they do; hover one for details. Top-row
+                digits work like the numpad.</p
+              ><p class="kb-legend"
+                ><span class="kb-rate">Rate</span
+                ><span class="kb-move">Move</span
+                ><span class="kb-mark">Marks</span
+                ><span class="kb-view">View</span
+                ><span class="kb-folder">Folders</span></p
+              ><div id="kb-board"></div
+              ><ul id="kb-combos"></ul
+            ></section
           ></div
-        ><button
+        ></div
+      ><button
           id="layout-btn"
           title="Sidebar layout: rating keys on the right / below the picture"
           aria-label="Sidebar layout"

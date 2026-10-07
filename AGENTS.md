@@ -105,7 +105,7 @@ curl -s http://127.0.0.1:8765/api/review -H 'Content-Type: application/json' -d 
 - Keep it dependency-free: standard-library Python, plain HTML/CSS and one plain `app.js`, no build step.
 - Keep the AGPL-3.0-or-later header in each source file.
 - Restart `ratebait.py` after changing it; frontend changes only need a browser reload.
-- Update `README.md` when keys or behaviour change. The ⚙ Keybinds list in `index.html` is the in-app reference.
+- Update `README.md` when keys or behaviour change. The ⚙ Keyboard map (`keyBinds` and `kbCombos` in `app.js`) is the in-app reference.
 - Run the tests in `tests/` from the repo root (`for t in assets search review writes; do python3 -m tests.test_$t; done`): asset delivery and route isolation, folder search, review saves over HTTP, and atomic writes. Exercise frontend changes in the browser too.
 - Shared review state lives in `state` at the top of `app.js`. Register DOM handlers in the `init*()` functions, not at top level. Preserve startup order and existing storage keys.
 - `index.html` keeps the whitespace between inline elements as written; don't run a formatter over it.
