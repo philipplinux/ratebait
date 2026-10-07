@@ -1338,6 +1338,9 @@ body:not(.side) #ratings .keycap {
 .tile.current {
   border-color: #fff;
 }
+.grid.folder-on .tile.current:not(.folder-tile) {
+  border-color: transparent;
+}
 .folder-tile {
   background: #151a22;
   color: #929daf;

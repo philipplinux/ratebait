@@ -233,6 +233,7 @@ async function saveComment() {
 
 function jump(i) {
   if (!state.files.length) return;
+  folderPick = -1;
   const dir = state.dir,
     name = state.files[(i + state.files.length) % state.files.length].name;
   return transact(async () => {
@@ -805,6 +806,7 @@ function paintGrid() {
     if (same) g.dataset.index = last;
     g.className = 'grid';
     g.dataset.key = key;
+    if (!same) folderPick = -1;
     // Folder tiles first: up one folder, like ↑ Up in the sidebar.
     if (state.dir !== '/') {
       const parent = state.dir.replace(/\/[^/]+\/?$/, '') || '/',
@@ -907,6 +909,7 @@ function paintGrid() {
   if (g.dataset.index !== String(state.index))
     tiles[state.index]?.scrollIntoView({ block: 'nearest' });
   g.dataset.index = state.index;
+  paintFolderPick();
 }
 
 function paintCard(preserveDrafts = false) {
@@ -1424,6 +1427,31 @@ function zoomSingle(f, px = 0, py = 0) {
   single.y = py - (py - single.y) * k;
   single.scale = s;
   paintSingle();
+}
+
+// Grid: the folder tiles (↑ Up, subfolders) come before the files and the arrows walk through both.
+// folderPick is the selected folder tile, -1 while a file is selected.
+let folderPick = -1;
+function gridStep(n) {
+  const nf = $('media').querySelectorAll('.folder-tile').length,
+    last = nf + state.files.length - 1,
+    pos = folderPick >= 0 ? folderPick : nf + state.index,
+    to =
+      n < 0 && pos === 0
+        ? last
+        : n > 0 && pos === last
+          ? 0
+          : Math.min(Math.max(pos + n, 0), last);
+  if (to >= nf) return jump(to - nf);
+  folderPick = to;
+  paintFolderPick();
+}
+function paintFolderPick() {
+  const g = $('media').querySelector('.grid'),
+    tiles = g?.querySelectorAll('.folder-tile') || [];
+  tiles.forEach((t, k) => t.classList.toggle('current', k === folderPick));
+  g?.classList.toggle('folder-on', folderPick >= 0);
+  tiles[folderPick]?.scrollIntoView({ block: 'nearest' });
 }
 
 // Grid: +1 steps to fewer, bigger tiles (zoom in), -1 to more, smaller ones: 2×1, 2×2, 3×3 … 10×10 (same as the ⚙ grid size).
@@ -4366,6 +4394,13 @@ function initKeyboard() {
     }
     if (typing || state.busy || e.ctrlKey || e.metaKey || e.altKey) return;
     // Enter: fullscreen. A focused list row or grid tile selects that file first; other buttons keep their own Enter.
+    if (e.key === 'Enter' && state.grid && folderPick >= 0) {
+      e.preventDefault();
+      $('media').querySelectorAll('.folder-tile')[folderPick]?.click();
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey && e.target.closest?.('.folder-tile'))
+      return; // a focused folder tile opens with its own Enter
     if (
       e.key === 'Enter' &&
       !e.shiftKey &&
@@ -4391,6 +4426,29 @@ function initKeyboard() {
         zoomView(view.scale * f, innerWidth / 2, innerHeight / 2);
       else if (!state.grid) zoomSingle(f);
       else stepGrid(e.key === '-' ? -1 : 1);
+    } else if (
+      state.grid &&
+      [
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'PageUp',
+        'PageDown',
+      ].includes(e.key)
+    ) {
+      e.preventDefault();
+      const page = e.key.startsWith('Page') ? gridSize.cols * gridSize.rows : 0;
+      gridStep(
+        {
+          ArrowLeft: -1,
+          ArrowRight: 1,
+          ArrowUp: -gridSize.cols,
+          ArrowDown: gridSize.cols,
+          PageUp: -page,
+          PageDown: page,
+        }[e.key],
+      );
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       jump(state.index - 1);
