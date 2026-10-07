@@ -189,7 +189,7 @@ async function save(
     tag = now.flag || now.rating,
     newComment = !!now.comment && now.comment !== (item.comment || '');
   if (tag && (tag !== (item.flag || item.rating) || newComment))
-    popRating(tag, now);
+    popRating(tag, now, item.flag || item.rating);
   else if (newComment) popRating(null);
   paintLists();
   paintRating();
@@ -954,13 +954,23 @@ function peekIndex(d) {
 // with small comment / pin / pen badges on its upper-right edge for what the file carries.
 // r=null (comment saved on an unrated file): just the comment bubble, smaller.
 // When the rating moves on to the next file, the caller adds .swipe and the icon slides off to the left instead.
+// Replacing another rating or flag (prev): the old icon shows first and the new one slides in over it.
 let lastPop = null;
-function popRating(r, item = {}) {
+function popRating(r, item = {}, prev = null) {
   const fs = !$('viewer').hidden,
     m = (fs ? $('viewer') : $('media')).getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'rate-pop' + (r ? '' : ' comment-pop');
-  if (r) {
+  if (r && prev && prev !== r) {
+    const icon = (cls, v) => {
+      const s = document.createElement('span');
+      s.className = cls;
+      paintIcon(s, v);
+      return s;
+    };
+    el.dataset.rating = r;
+    el.append(icon('pop-old', prev), icon('pop-new', r));
+  } else if (r) {
     paintIcon(el, r);
     el.hidden = false;
   } else el.textContent = '💬';

@@ -3074,6 +3074,42 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   font-size: 17px;
   font-style: normal;
 }
+.rate-pop .pop-old,
+.rate-pop .pop-new {
+  grid-area: 1 / 1;
+  display: grid;
+  color: var(--tone);
+}
+.rate-pop .pop-old {
+  animation: pop-old 0.75s ease-in-out forwards;
+}
+.rate-pop .pop-new {
+  animation: pop-new 0.75s ease-out forwards;
+}
+@keyframes pop-old {
+  0%,
+  20% {
+    opacity: 1;
+    translate: 0;
+  }
+  45%,
+  100% {
+    opacity: 0;
+    translate: -50px 0;
+  }
+}
+@keyframes pop-new {
+  0%,
+  20% {
+    opacity: 0;
+    translate: 60px 0;
+  }
+  45%,
+  100% {
+    opacity: 1;
+    translate: 0;
+  }
+}
 @keyframes rate-pop {
   0% {
     opacity: 0;
@@ -3136,8 +3172,12 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 @media (prefers-reduced-motion: reduce) {
   .slide-next,
-  .slide-prev {
+  .slide-prev,
+  .rate-pop .pop-new {
     animation: none;
+  }
+  .rate-pop .pop-old {
+    display: none;
   }
   .rate-pop,
   .rate-pop.swipe {
