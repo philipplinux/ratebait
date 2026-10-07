@@ -3506,3 +3506,103 @@ body.side main:has(> #banner[hidden]) > #media {
 body.side main {
   padding-top: 8px;
 }
+
+/* Folder controls fold under a head row with the folder name and the Report button. */
+.dir-head {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.dir-head button {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.dir-fold {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-weight: 600;
+}
+.dir-fold::before {
+  content: '▾ ';
+}
+body.dir-folded .dir-fold::before {
+  content: '▸ ';
+}
+body.dir-folded .dir-section > :not(.dir-head) {
+  display: none !important; /* #folders and #path-box set display by id */
+}
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.report-btn .keycap {
+  position: static;
+}
+.report-btn.on {
+  border-color: #3d6dff;
+  background: #1c2b4d;
+}
+/* Report view: REVIEW.md over the picture area (placed by placeReport). */
+#report {
+  position: fixed;
+  z-index: 8;
+  overflow-y: auto;
+  padding: 20px 28px;
+  background: #151a22;
+  border: 1px solid #303746;
+  border-radius: 10px;
+  color: #d5dbe6;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#report[hidden] {
+  display: none;
+}
+#report-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  width: 30px;
+  height: 30px;
+}
+#report h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+#report h2 {
+  margin: 20px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #303746;
+  font-size: 16px;
+}
+#report ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+#report ul ul {
+  color: #a8b2c4;
+  font-size: 13px;
+}
+#report code {
+  font-size: 12px;
+  color: #c9d3e6;
+}
+#report a {
+  color: #8fb0ff;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.side-views > .dir-head.away {
+  flex-basis: 100%;
+  margin: 0 0 4px;
+}
+#sidebar:not(.dir-away) .dir-head.away {
+  display: none;
+}

@@ -1805,7 +1805,36 @@ function paintLists() {
   const sec = document.createElement('div');
   sec.className = 'dir-section';
   $('sidebar').append(sec, views);
-  sec.append(foldersEl, pathBoxEl);
+  // Head row: folder name folds the browse controls away (V shows the folder's REVIEW.md in the picture area).
+  // A copy rides in the sticky List/Grid block once the section has scrolled away; it scrolls back up, unfolded.
+  const [head, mini] = [false, true].map((away) => {
+    const row = document.createElement('div');
+    row.className = 'dir-head' + (away ? ' away' : '');
+    const fold = Object.assign(document.createElement('button'), {
+      className: 'dir-fold',
+      textContent: tilde(state.dir).split('/').pop() || 'Folders',
+      title: away
+        ? 'Back to the folder controls'
+        : 'Show / hide the folder controls',
+    });
+    fold.onclick = () => {
+      const on = !away && !document.body.classList.contains('dir-folded');
+      document.body.classList.toggle('dir-folded', on);
+      store('dirFolded', on ? '1' : null);
+      if (away) $('sidebar').scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const report = Object.assign(document.createElement('button'), {
+      className: 'report-btn' + (reportOn ? ' on' : ''),
+      innerHTML: '📄 Report <kbd class="keycap">V</kbd>',
+      title: "This folder's REVIEW.md (V)",
+      disabled: !state.dir,
+    });
+    report.onclick = () => setReport(!reportOn);
+    row.append(fold, report);
+    return row;
+  });
+  views.prepend(mini);
+  sec.append(head, foldersEl, pathBoxEl);
   if (pathTyping) {
     $('path').focus();
     $('path').setSelectionRange(...pathTyping);
@@ -1989,6 +2018,7 @@ function paintLists() {
     list.append(row);
   });
   $('progress').textContent = `${rated}/${state.files.length} rated`;
+  if (reportOn) paintReport();
   $('ticks').append(tally(counts));
   fitTicks();
   $('banner').hidden = !state.files.length || rated !== state.files.length;
@@ -2004,6 +2034,10 @@ function paintLists() {
 function paintScrollHints() {
   const s = $('sidebar');
   s.classList.toggle('more-up', s.scrollTop > 2);
+  s.classList.toggle(
+    'dir-away',
+    s.scrollTop > (s.querySelector('.dir-section')?.offsetHeight || 0),
+  );
   s.classList.toggle(
     'more-down',
     s.scrollTop + s.clientHeight < s.scrollHeight - 2,
@@ -3006,6 +3040,61 @@ const kbRows = [
   'Ctrl:1.25 Win:1.25 Alt:1.25 Space:6.25 AltGr:1.25 Win:1.25 Menu:1.25 Ctrl:1.25 _:0.5 ← ↓ → _:0.5 ~0:2 ~.',
 ];
 const kbMove = ['Previous', 'Next'];
+// Report view: the folder's REVIEW.md over the picture area; file names jump to the file.
+let reportOn = false;
+function setReport(on) {
+  reportOn = on && !!state.dir;
+  $('report').hidden = !reportOn;
+  document
+    .querySelectorAll('.report-btn')
+    .forEach((b) => b.classList.toggle('on', reportOn));
+  if (reportOn) paintReport();
+}
+async function paintReport() {
+  const r = await fetch('/api/report?dir=' + encodeURIComponent(state.dir)),
+    md = r.ok ? await r.text() : 'No REVIEW.md yet: rate a file first.';
+  $('report-body').innerHTML = mdToHtml(md);
+  placeReport();
+}
+function placeReport() {
+  if (!reportOn) return;
+  const m = $('media').getBoundingClientRect();
+  Object.assign($('report').style, {
+    top: m.top + 'px',
+    left: m.left + 'px',
+    width: m.width + 'px',
+    height: m.height + 'px',
+  });
+}
+// Just what REVIEW.md uses: # headings, nested - lists, `code`.
+function mdToHtml(md) {
+  const esc = (s) =>
+      s.replace(
+        /[&<>"]/g,
+        (c) => `&${{ '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot' }[c]};`,
+      ),
+    names = new Set(state.files.map((f) => esc(f.name))),
+    inline = (s) =>
+      esc(s).replace(/`([^`]+)`/g, (_, c) =>
+        names.has(c)
+          ? `<a href="#" data-name="${c}">${c}</a>`
+          : `<code>${c}</code>`,
+      );
+  let html = '',
+    depth = 0;
+  for (const line of md.split('\n')) {
+    const li = line.match(/^( *)- (.*)/),
+      d = li ? (li[1].length >> 1) + 1 : 0,
+      h = line.match(/^(#{1,3}) (.*)/);
+    for (; depth > d; depth--) html += '</ul>';
+    for (; depth < d; depth++) html += '<ul>';
+    if (li) html += '<li>' + inline(li[2]);
+    else if (h) html += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`;
+    else if (line.trim()) html += '<p>' + inline(line) + '</p>';
+  }
+  return html + '</ul>'.repeat(depth);
+}
+
 function keyBinds() {
   const rate = (v) => ['rate', nameOf(v), v];
   return {
@@ -3048,6 +3137,7 @@ function keyBinds() {
     Space: ['view', 'Grid (plays or pauses audio)'],
     L: ['view', 'File list'],
     X: ['view', 'Bar side (rating buttons right / below)'],
+    V: ['view', "Report (this folder's REVIEW.md)"],
     F: ['folder', 'Folders (pick a discovered one)'],
     B: ['folder', 'Browse (folder dialog)'],
     O: ['folder', 'Browse (folder dialog)'],
@@ -3283,6 +3373,18 @@ function initSettings() {
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
   setHints(stored('hints') !== '0');
+  document.body.classList.toggle('dir-folded', stored('dirFolded') === '1');
+  new ResizeObserver(placeReport).observe($('media'));
+  addEventListener('resize', placeReport);
+  $('report-close').onclick = () => setReport(false);
+  $('report-body').onclick = (e) => {
+    const a = e.target.closest('a[data-name]');
+    if (!a) return;
+    e.preventDefault();
+    const i = state.files.findIndex((f) => f.name === a.dataset.name);
+    setReport(false);
+    if (i >= 0) jump(i);
+  };
   $('set-rollup').onchange = (e) => setRollup(e.target.checked);
   setRollup(stored('rollup') === '1');
   $('set-comment-float').onchange = (e) => setCommentFloat(e.target.checked);
@@ -3843,6 +3945,10 @@ function initKeyboard() {
       closeViewer();
       return;
     }
+    if (e.key === 'Escape' && reportOn) {
+      setReport(false);
+      return;
+    }
     if (e.key === 'Escape' && !$('settings-menu').hidden) {
       setMenu(false);
       $('settings').focus();
@@ -4052,6 +4158,9 @@ function initKeyboard() {
     } else if (e.key.toLowerCase() === 'l') {
       e.preventDefault();
       setList(document.body.classList.contains('list-off'));
+    } else if (e.key.toLowerCase() === 'v') {
+      e.preventDefault();
+      setReport(!reportOn);
     } else if (e.key.toLowerCase() === 'x') {
       e.preventDefault();
       setLayout(!document.body.classList.contains('side'));

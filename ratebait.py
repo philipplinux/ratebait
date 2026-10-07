@@ -634,6 +634,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             except (OSError, ValueError):
                 rows = []
             self.json_response(200, {"rows": rows})
+        elif url.path == "/api/report":
+            p = resolve_dir(query.get("dir", [""])[0]) / REPORT_FILE
+            if not p.is_file():
+                self.json_response(404, {"error": "no report yet"})
+                return
+            body = p.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/markdown; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         elif url.path in {"/api/list", "/media"}:
             d = resolve_dir(query.get("dir", [""])[0])
             if url.path == "/api/list":
