@@ -3012,7 +3012,10 @@ function keyBinds() {
       'mark',
       'Line (hold while drawing; with Ctrl: circle, with Alt: cross)',
     ],
-    Ctrl: ['mark', 'Box (hold while drawing; with Shift: circle)'],
+    Ctrl: [
+      'mark',
+      'Box · Zoom* (hold while drawing: box, with Shift: circle; *with the mouse wheel: zoom at the cursor)',
+    ],
     Alt: ['mark', 'Arrow (hold while drawing; with Shift: cross)'],
   };
 }
