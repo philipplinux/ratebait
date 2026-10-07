@@ -547,14 +547,6 @@ textarea {
   resize: vertical;
   min-height: 72px;
 }
-.comment-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
 .hint {
   color: #929daf;
   font-size: 12px;
@@ -920,9 +912,6 @@ body:not(.side) #comments textarea {
   flex: 1;
   min-height: 0;
   resize: none;
-}
-body:not(.side) .comment-head {
-  margin-bottom: 6px;
 }
 body:not(.side) #ratings {
   gap: 8px;
@@ -1426,19 +1415,6 @@ body.list-off #list-flag .keycap {
 }
 #next {
   margin-left: auto;
-}
-.comment-head button {
-  white-space: nowrap;
-  padding: 7px 10px;
-}
-body:not(.side) .comment-head .hint {
-  display: block;
-  font-size: 11px;
-  margin-top: 2px;
-  white-space: nowrap;
-}
-body:not(.side) .comment-head .hint .blur {
-  display: none;
 }
 body:not(.side) #details {
   grid-area: 3/1;

@@ -21,8 +21,6 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
-const ratings = ['reject', 'neutral', 'pass', 'love', 'mvp'];
-
 const flags = ['redo', 'broken', 'trash', 'custom7', 'custom8', 'custom9'];
 
 const customs = flags.slice(3);

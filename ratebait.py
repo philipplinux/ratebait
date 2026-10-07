@@ -180,7 +180,7 @@ def find_dirs(query: str, scope: str = "roots", limit: int = 50) -> list[dict]:
         if m:
             ranked.append((m[0] + len(path) / 100, path, m[1]))
     out = []
-    for score, path, hits in heapq.nsmallest(limit, ranked):
+    for _, path, hits in heapq.nsmallest(limit, ranked):
         label = "~" + path[len(home):] if path.startswith(home + "/") else path
         start = len(label) - (len(path) - path.rfind("/") - 1)
         out.append({"path": label + "/", "hits": [h + start for h in hits]})
