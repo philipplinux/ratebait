@@ -1484,9 +1484,12 @@ function stepGrid(dir) {
 // Ctrl+wheel anywhere on the page zooms the picture or steps the grid, like + and -, instead of zooming the browser.
 // Fullscreen has its own handler. Elsewhere (sidebar, settings, comment) Ctrl+wheel does nothing.
 let wheelSum = 0,
-  wheelAt = 0;
+  wheelAt = 0,
+  wheelStepAt = 0;
 // Touchpads send many small deltas: one step per 100px of scrolling; a pause or a turn starts over.
+// After a step the wheel rests for 350ms, so a fast spin or touchpad momentum does not run through the folder.
 function wheelStep(e, step) {
+  if (e.timeStamp - wheelStepAt < 350) return;
   const dy = wheelPx(e, e.deltaY);
   if (e.timeStamp - wheelAt > 400 || Math.sign(dy) !== Math.sign(wheelSum))
     wheelSum = 0;
@@ -1495,6 +1498,7 @@ function wheelStep(e, step) {
   if (Math.abs(wheelSum) < 100) return;
   step(wheelSum > 0 ? 1 : -1);
   wheelSum = 0;
+  wheelStepAt = e.timeStamp;
 }
 
 // Shift+arrows pan a zoomed picture (single view or fullscreen) by a tenth of the screen; plain arrows still change pictures.
