@@ -217,6 +217,23 @@ export function initSettings() {
         localStorage.setItem('hintBig', on ? '1' : '0');
       } catch {}
     };
+    const setVisible = (on) => {
+      h.hidden = !on;
+      $('set-keybind-note').checked = on;
+      try {
+        localStorage.setItem('keybindNote', on ? '1' : '0');
+      } catch {}
+    };
+    $('set-keybind-note').onchange = (e) => setVisible(e.target.checked);
+    $('close-keybind-note').onclick = (e) => {
+      e.stopPropagation();
+      setVisible(false);
+    };
+    try {
+      setVisible(localStorage.getItem('keybindNote') !== '0');
+    } catch {
+      setVisible(true);
+    }
     h.onclick = () => setBig(!h.classList.contains('big'));
     try {
       setBig(localStorage.getItem('hintBig') === '1');

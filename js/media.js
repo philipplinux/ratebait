@@ -92,12 +92,16 @@ async function paintDetails(f) {
 
 const label = (r) => (r ? nameOf(r) : '');
 
-// Rebuilds the tiles only when the folder changes; otherwise just moves the outline and badges.
+// Rebuilds the tiles when the folder, file order or media versions change; otherwise just moves the outline and badges.
 function paintGrid() {
-  const start = 0;
+  const start = 0,
+    key =
+      state.dir +
+      '|' +
+      JSON.stringify(state.files.map(({ name, mtime, size }) => [name, mtime, size]));
   let g = $('media').querySelector('.grid');
-  if (!g || g.dataset.key !== state.dir + '|' + state.files.length) {
-    // Keep the scroll position when files are added to the same folder.
+  if (!g || g.dataset.key !== key) {
+    // Keep the scroll position when files change in the same folder.
     const same = g?.dataset.key.startsWith(state.dir + '|'),
       keep = same
         ? [g, $('media'), document.querySelector('main')].map((e) => [
@@ -109,7 +113,7 @@ function paintGrid() {
     g = document.createElement('div');
     if (same) g.dataset.index = last;
     g.className = 'grid';
-    g.dataset.key = state.dir + '|' + state.files.length;
+    g.dataset.key = key;
     state.files.forEach((f, k) => {
       const tile = document.createElement('button');
       tile.className = 'tile' + (state.picked.has(f.name) ? ' picked' : '');

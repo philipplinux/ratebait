@@ -57,9 +57,11 @@ const tilde = (p) =>
     : p;
 
 function setHomeSearch(on) {
+  const nextBase = on || !serverRoot ? '~' : tilde(serverRoot);
+  if (homeSearch !== on || pathBase !== nextBase) clearPathHints();
   homeSearch = on;
   $('set-home').checked = on;
-  pathBase = on || !serverRoot ? '~' : tilde(serverRoot);
+  pathBase = nextBase;
   try {
     localStorage.setItem('homeSearch', on ? '1' : '0');
   } catch {}
@@ -98,19 +100,30 @@ function askSearchOnce() {
 // ↑↓ move, Enter opens the highlighted one (or the typed path when none is highlighted), Esc closes.
 let pathHints = [],
   pathPick = -1,
-  pathTimer = 0;
+  pathTimer = 0,
+  pathGeneration = 0;
+
+function clearPathHints() {
+  clearTimeout(pathTimer);
+  pathGeneration++;
+  showPathHints([], -1);
+}
 
 async function suggestPaths() {
+  clearPathHints();
   const input = $('path'),
-    typed = input.value;
-  if (!typed) return showPathHints([], -1);
+    typed = input.value,
+    generation = pathGeneration,
+    scope = homeSearch,
+    base = pathBase;
+  if (!typed || document.activeElement !== input) return;
   let items = [];
   if (!typed.includes('/')) {
     // A bare name searches every folder under the start folder, or under home when opted in (ranked on the server).
     const { dirs } = await api(
       '/api/find-dirs?q=' +
         encodeURIComponent(typed) +
-        (homeSearch ? '&scope=home' : ''),
+        (scope ? '&scope=home' : ''),
     ).catch(() => ({ dirs: [] }));
     // Long paths lose their start, not the folder name that matched.
     items = dirs.map((d, k) => {
@@ -139,7 +152,13 @@ async function suggestPaths() {
       hits,
     }));
   }
-  if (input.value !== typed) return;
+  if (
+    generation !== pathGeneration ||
+    document.activeElement !== input ||
+    input.value !== typed ||
+    homeSearch !== scope ||
+    pathBase !== base
+  ) return;
   // Skip folders the sidebar already shows: the open one, its parent and its subfolders.
   const strip = (p) => tilde(p.replace(/\/+$/, '') || '/'),
     shown = new Set(
@@ -308,12 +327,12 @@ export function initFolders() {
     if (e.key === 'Enter') {
       const item = pathHints[pathPick];
       if (item) $('path').value = item.path;
-      showPathHints([], -1);
+      clearPathHints();
       $('path').value = basePath($('path').value);
       openFolder($('path').value);
-    } else if (e.key === 'Escape' && open) {
-      e.stopPropagation();
-      showPathHints([], -1);
+    } else if (e.key === 'Escape') {
+      if (open) e.stopPropagation();
+      clearPathHints();
     } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && open) {
       e.preventDefault();
       e.stopPropagation();
@@ -334,7 +353,7 @@ export function initFolders() {
   };
 
   $('path').oninput = () => {
-    clearTimeout(pathTimer);
+    clearPathHints();
     pathTimer = setTimeout(suggestPaths, 80);
   };
 
@@ -346,8 +365,7 @@ export function initFolders() {
   };
 
   $('path').onblur = () => {
-    clearTimeout(pathTimer);
-    showPathHints([], -1);
+    clearPathHints();
     if ($('path').value === pathBase + '/') $('path').value = '';
   };
 

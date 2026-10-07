@@ -26,6 +26,7 @@ The page polls every 10 s for new folders and new files in the open folder.
 """
 import argparse
 import heapq
+from contextlib import contextmanager
 from datetime import datetime
 import http.server
 import ipaddress
@@ -36,6 +37,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import zlib
@@ -271,7 +273,7 @@ def load_state(d: Path) -> dict:
                     or item.get("flag") not in [None, *FLAGS]
                     or not isinstance(item.get("comment"), str)):
                 raise ValueError("invalid review item")
-            clean_marks(item)
+            item.update(clean_marks(item))
         return state
     except FileNotFoundError:
         return {"version": 1, "items": {}}
@@ -309,27 +311,38 @@ def read_embedded(p: Path) -> dict | None:
 
 
 def embed_review(p: Path, item: dict | None):
-    # Rewrites only the tail: our chunk sits right before IEND, so pixels and other metadata stay untouched.
-    # The mtime is restored, because it orders the file list.
+    # Preserve pixels and unrelated chunks; publish only a complete replacement.
     stat = p.stat()
-    with p.open("r+b") as f:
-        ours = iend = None
-        for offset, kind, length in png_chunks(f):
+    with p.open("r+b") as source, replacement_file(p) as target:
+        target.write(source.read(8))
+        source.seek(0)
+        for offset, kind, length in png_chunks(source):
             if kind == b"IEND":
-                iend = offset
+                source.seek(offset)
+                if source.read(12) != png_chunk(b"IEND", b""):
+                    raise ValueError(f"invalid IEND chunk: {p.name}")
+                if item:
+                    text = json.dumps(item, ensure_ascii=False).encode()
+                    target.write(png_chunk(b"iTXt", EMBED_KEY + b"\0\0\0\0\0" + text))
+                target.write(png_chunk(b"IEND", b""))
                 break
-            f.seek(offset + 8)
-            ours = offset if kind == b"iTXt" and f.read(len(EMBED_KEY) + 1) == EMBED_KEY + b"\0" else None
-        if iend is None:
+            source.seek(offset + 8)
+            if (kind == b"iTXt" and length >= len(EMBED_KEY) + 1
+                    and source.read(len(EMBED_KEY) + 1) == EMBED_KEY + b"\0"):
+                continue
+            source.seek(offset)
+            remaining = length + 12
+            while remaining:
+                chunk = source.read(min(65536, remaining))
+                if not chunk:
+                    raise ValueError(f"truncated PNG chunk: {p.name}")
+                target.write(chunk)
+                remaining -= len(chunk)
+        else:
             raise ValueError(f"no IEND chunk: {p.name}")
-        tail = b""
-        if item:
-            text = json.dumps(item, ensure_ascii=False).encode()
-            tail = png_chunk(b"iTXt", EMBED_KEY + b"\0\0\0\0\0" + text)
-        f.seek(ours if ours is not None else iend)
-        f.write(tail + png_chunk(b"IEND", b""))
-        f.truncate()
-    os.utime(p, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+        target.flush()
+        os.fchmod(target.fileno(), stat.st_mode & 0o7777)
+        os.utime(target.name, ns=(stat.st_atime_ns, stat.st_mtime_ns))
 
 
 def png_chunk(kind: bytes, data: bytes) -> bytes:
@@ -431,10 +444,23 @@ def media_meta(p: Path) -> list:
     return rows
 
 
+@contextmanager
+def replacement_file(p: Path):
+    # Exclusive creation prevents collisions and following pre-existing symlinks.
+    with tempfile.NamedTemporaryFile(mode="wb", dir=p.parent, prefix=f".{p.name}.",
+                                     suffix=".tmp", delete=False) as target:
+        tmp = Path(target.name)
+        try:
+            yield target
+            target.close()
+            os.replace(tmp, p)
+        finally:
+            tmp.unlink(missing_ok=True)
+
+
 def atomic_write(p: Path, text: str):
-    tmp = p.with_name(p.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, p)
+    with replacement_file(p) as target:
+        target.write(text.encode("utf-8"))
 
 
 def save_state(d: Path, state: dict):
@@ -682,7 +708,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 state_path = d / STATE_FILE
                 previous = state_path.read_text(encoding="utf-8") if state_path.exists() else None
                 now = datetime.now().astimezone().isoformat(timespec="seconds")
-                if rating is None and flag is None and not comment and not marks:
+                cleared = rating is None and flag is None and not comment and not marks
+                # An explicit empty PNG entry prevents stale embedded data from being reimported.
+                if cleared and Path(name).suffix.lower() != ".png":
                     state["items"].pop(name, None)
                 else:
                     state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now, **marks)
@@ -701,7 +729,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     raise
                 if Path(name).suffix.lower() == ".png":
                     try:
-                        embed_review(d / name, state["items"].get(name))
+                        embed_review(d / name, None if cleared else state["items"].get(name))
                     except (OSError, ValueError) as e:
                         print(f"embed skipped: {e}", file=sys.stderr, flush=True)
                 self.json_response(200, {"ok": True, "items": state["items"]})

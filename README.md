@@ -24,6 +24,8 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 **Layout and settings:** ◫ switches to the right sidebar (numpad keys, docked Marks, comment box pops in over the picture); ⚙ Sizes: right sidebar 50–100 %, file list pictures, grid; Hint bars on/off; ▸ Buttons: colour, icon and title per button, then Reset.
 
+The bottom keybind note has a small **×** to hide it. Restore it with **⚙ → View → Bottom keybind note**; visibility is saved per browser, separately from pen/pin/zoom hint bars. Clicking the note itself still toggles its size.
+
 ![Layout and settings demo](docs/layout.gif)
 
 **Compare resolutions:** fullscreen keeps the zoom and spot when you switch files, so a 4K upscale and its 960×540 source can be checked side by side, one key apart.
@@ -154,6 +156,12 @@ Run `python3 test_search.py` to check recursive and child fuzzy matching, matche
 
   </details>
 - PNG files also carry their review in an embedded iTXt chunk (pixels and other metadata untouched, mtime kept). Copy a rated PNG into another folder and the rater picks up its rating there, so favourites can be promoted and demoted in a collection folder.
+- File safety (local refactor): JSON, reports, and PNG updates use exclusively created sibling temporary files followed by atomic replacement. PNG replacement preserves pixels, unrelated metadata chunks, permissions, and modification time; failed writes leave the original PNG intact. This requires write permission on the containing folder and temporary space for a full PNG copy. Embedding errors are still logged separately from a successful JSON/report save.
+- Run `python3 test_writes.py` for disposable-file regressions covering temporary-name collisions, failed/partial writes, PNG metadata preservation, and clearing embedded reviews.
+- Cleared PNGs retain an explicit empty entry in `.review.json`, so stale embedded reviews cannot return if metadata clearing fails. This folder's JSON remains authoritative; copying the PNG elsewhere can still carry old metadata if embedding failed.
+- Loaded pins/strokes are normalized before reports are generated. Run `python3 test_review.py` for real-HTTP regressions covering failed PNG clearing and a loaded pin without an optional note.
+
+Local refactor correctness fixes: grid tiles rebuild when ordered filenames or media versions change, keeping clicks and badges aligned after sorting/reordering. Folder autocomplete discards obsolete responses on input changes, dismissal, and scope changes; old highlighted suggestions cannot replace a newly typed path.
 
 Images: PNG, JPG, WebP, GIF. Audio: MP3, FLAC, WAV, OGG, M4A, Opus. Listens on IPv4 loopback only; cross-origin POSTs are rejected. **Browse…** (**B** or **O**) opens the system folder dialog via the XDG desktop portal (needs PyGObject), falling back to Tk.
 

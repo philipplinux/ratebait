@@ -1493,7 +1493,8 @@ main > .hint {
   bottom: 0;
   z-index: 4;
   text-align: center;
-  padding: 3px 16px;
+  padding: 3px 36px 3px 16px;
+  min-height: 28px;
   background: #0d1117cc;
   backdrop-filter: blur(8px);
   border-top: 1px solid #303746;
@@ -1504,10 +1505,27 @@ main > .hint {
 }
 main > .hint.big {
   font-size: 12.5px;
-  padding: 6px 16px;
+  padding: 6px 36px 6px 16px;
 }
 body.list-off main > .hint {
   left: 0;
+}
+#close-keybind-note {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  color: inherit;
+}
+main:has(> #keybind-note[hidden]) {
+  padding-bottom: 8px;
 }
 main {
   padding-bottom: 40px;
@@ -2096,7 +2114,7 @@ body:not(.side) main {
   row-gap: 10px;
   padding-bottom: 30px;
 }
-body:not(.side) main:has(> .hint.big) {
+body:not(.side) main:has(> .hint.big:not([hidden])) {
   padding-bottom: 56px;
 }
 @media (max-width: 1000px) {
