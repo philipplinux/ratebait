@@ -684,10 +684,19 @@ body.busy select {
   min-width: 0;
   max-width: 150px;
 }
-#ratings .rating-control[hidden] { display: none; }
-#ratings .rating-control > button { width: 100%; }
-body:not(.side) #ratings .rating-control { flex: 0 0 74px; min-width: 74px; }
-body.side #ratings .rating-control { max-width: none; }
+#ratings .rating-control[hidden] {
+  display: none;
+}
+#ratings .rating-control > button {
+  width: 100%;
+}
+body:not(.side) #ratings .rating-control {
+  flex: 0 0 74px;
+  min-width: 74px;
+}
+body.side #ratings .rating-control {
+  max-width: none;
+}
 #ratings .rating-control > .rating-foot {
   position: absolute;
   bottom: 13px;
@@ -698,9 +707,13 @@ body.side #ratings .rating-control { max-width: none; }
 #ratings .rating-control > .rating-foot .comment-mode {
   pointer-events: auto;
 }
-body:not(.side) #ratings .rating-control > .rating-foot { bottom: 9px; }
+body:not(.side) #ratings .rating-control > .rating-foot {
+  bottom: 9px;
+}
 @media (max-height: 900px), (max-width: 1400px) {
-  body:not(.side) #ratings .rating-control > .rating-foot { bottom: 6px; }
+  body:not(.side) #ratings .rating-control > .rating-foot {
+    bottom: 6px;
+  }
 }
 #ratings .comment-mode {
   width: 22px;
@@ -735,7 +748,10 @@ body:not(.side) #ratings .rating-control > .rating-foot { bottom: 9px; }
 #ratings input.comment-mode::before {
   content: '💬';
 }
-#ratings input.comment-mode:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+#ratings input.comment-mode:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
 #ratings .rating-icon {
   font-size: 27px;
   line-height: 1;
@@ -1938,6 +1954,34 @@ body:not(.side) #marks-bar :is(#next, #clear) {
 }
 body:not(.side) #marks-bar #next {
   margin-left: 0;
+}
+/* Once the tools no longer fit beside the ratings (380 + gaps + separator + 216 = 617px), they take their own
+   row with Next and Clear all beside them, and those two shrink. */
+@media (max-width: 1880px) {
+  body:not(.side) #bar {
+    container-type: inline-size;
+  }
+}
+@container (max-width: 616px) {
+  body:not(.side) .tools-sep {
+    display: none;
+  }
+  body:not(.side) #marks-bar {
+    flex: 1 1 100%;
+    grid-template-columns: repeat(6, 31px) repeat(2, minmax(0, max-content));
+    justify-content: center;
+  }
+  body:not(.side) #marks-bar :is(#next, #clear) {
+    grid-column: auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@container (max-width: 440px) {
+  body:not(.side) #marks-bar :is(#next, #clear) .keycap {
+    display: none;
+  }
 }
 #comment-tool.has::after {
   content: '';
@@ -3472,9 +3516,6 @@ body.marks-dock.comment-float.has-comment:not(.side):not(.comment-open)
   body.marks-dock:not(.side) #bar {
     grid-area: 3/1;
   }
-  body.marks-dock:not(.side) #ratings {
-    min-width: min(400px, 100%);
-  }
   body.marks-dock:not(.side) #marks-panel {
     grid-area: 3/2/5/3;
   }
@@ -3644,7 +3685,10 @@ body.dir-folded .dir-section > :not(.dir-head) {
   color: inherit;
   font: inherit;
 }
-#comment-view .cv-head, #comment-view .cv-text { display: block; }
+#comment-view .cv-head,
+#comment-view .cv-text {
+  display: block;
+}
 #details-toggle {
   justify-self: start;
   grid-column: 1 / -1;
