@@ -1042,6 +1042,8 @@ function openViewer() {
     .catch(() => {});
 }
 
+let escTypedAt = 0; // see the fullscreenchange handler
+
 function closeViewer() {
   if ($('viewer').hidden) return;
   $('viewer').hidden = true;
@@ -1266,9 +1268,21 @@ function initMedia() {
     };
   }
 
+  // The browser leaves fullscreen on Esc and pages cannot stop it (Firefox has no Keyboard Lock).
+  // Esc while typing only closes the comment; the viewer stays as a window-sized overlay.
   document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) closeViewer();
-    else resetView();
+    if (document.fullscreenElement) return resetView();
+    const a = document.activeElement;
+    if (
+      !$('viewer').hidden &&
+      (['TEXTAREA', 'INPUT'].includes(a?.tagName) ||
+        performance.now() - escTypedAt < 500)
+    ) {
+      a?.blur();
+      setCommentOpen(false);
+      return;
+    }
+    closeViewer();
   });
 
   addEventListener('resize', () => {
@@ -3212,6 +3226,7 @@ function initKeyboard() {
       ['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName) ||
       e.target.isContentEditable;
     if (e.key === 'Escape' && typing) {
+      escTypedAt = performance.now();
       e.target.blur();
       if (e.target.id === 'comment') setCommentOpen(false);
       return;
