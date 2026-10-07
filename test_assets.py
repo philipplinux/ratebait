@@ -20,14 +20,6 @@ if __name__ == "__main__":
                 ("/", "text/html"),
                 ("/style.css", "text/css"),
                 ("/app.js", "text/javascript"),
-                ("/js/state.js", "text/javascript"),
-                ("/js/media.js", "text/javascript"),
-                ("/js/review.js", "text/javascript"),
-                ("/js/settings.js", "text/javascript"),
-                ("/js/folders.js", "text/javascript"),
-                ("/js/marks.js", "text/javascript"),
-                ("/js/keyboard.js", "text/javascript"),
-                ("/js/sidebar.js", "text/javascript"),
             ]
             for path, mime in assets:
                 for query in ("", "?reload=1"):

@@ -69,29 +69,14 @@ python3 ratebait.py --root ~/Pictures --root ~/Music --port 8765
 
 This checkout is the local fork at `~/projects/ratebait-refactor`, now on cleanup-only branch `refactor/frontend-cleanup`, based on `~/projects/ratebait`. The original checkout and its running service are unchanged; this fork has not been published to GitHub.
 
-- `index.html`: formatted document, controls and inline image/SVG assets; loads `app.js` as a native module.
+- `index.html`: formatted document, controls and inline image/SVG assets; loads `app.js` with `defer`.
 - `style.css`: formatted stylesheet; existing selectors and cascade order retained.
-- `app.js`: 19-line bootstrap for the feature modules in `js/`.
-- `ratebait.py`: server; `FRONTEND_ASSETS` explicitly allowlists frontend routes and module MIME types. No general directory serving.
+- `app.js`: the whole frontend as one plain script, in sections (state, review, media, sidebar, marks, settings, folders, keyboard). The `init*()` calls at the end run in that order, then folder discovery starts.
+- `ratebait.py`: server; `FRONTEND_ASSETS` allowlists the three frontend routes. No general directory serving.
 
-Run this fork separately: `python3 ~/projects/ratebait-refactor/ratebait.py --root ~/Pictures --port 8877`, then open <http://127.0.0.1:8877/>. Run `python3 test_assets.py` from this checkout to check asset MIME types and private-route isolation. No bundler, dependencies or build step were added.
+Run this fork separately: `python3 ~/projects/ratebait-refactor/ratebait.py --root ~/Pictures --port 8877`, then open <http://127.0.0.1:8877/>. Run `python3 test_assets.py` from this checkout to check asset MIME types and private-route isolation. No bundler, dependencies or build step.
 
-### Frontend code map
-
-| Module | Responsibility |
-|---|---|
-| `js/state.js` | Shared review state, DOM lookup, API requests, transaction/key queue |
-| `js/review.js` | Ratings, flags, comments, multi-select and review saves |
-| `js/media.js` | Image/audio rendering, grid, preloading, fullscreen and zoom |
-| `js/sidebar.js` | File/folder list rendering, sorting, custom ordering and drag handlers |
-| `js/settings.js` | Layout, visibility, sizing and custom button controls |
-| `js/folders.js` | Autocomplete, folder picker/navigation, initial load and live refresh |
-| `js/marks.js` | Pin/drawing overlays, notes, tool modes and undo |
-| `js/keyboard.js` | Keyboard shortcuts |
-
-`app.js` initializes state, review, media, sidebar, marks, settings, folders and keyboard in that order, then starts folder discovery. Module evaluation defines state/functions; DOM setup and cross-feature calls belong in the explicit initialization functions or event handlers. Existing rendering/review/marks dependencies still have function-level import cycles; do not add top-level calls that depend on another module's initialized DOM references.
-
-Keep modules native and imports explicit. Adding a browser module requires adding its exact route to `FRONTEND_ASSETS` and asset-delivery coverage to `test_assets.py`. No global compatibility layer, framework, bundler or application package manifest is needed. HTML formatting preserves inline whitespace; CSS source order is intentional.
+HTML formatting preserves inline whitespace; CSS source order is intentional.
 
 Cleanup verification used disposable media: matching bottom/right-sidebar layout measurements and colors; rating/comment saves; pin and stroke persistence/undo; multi-select rating; Redo comment advancement; audio playback; grid/fullscreen/zoom reset; F/L shortcuts; settings restoration across reload; folder completion/navigation; sorting and drag reordering. API regression scripts also passed.
 

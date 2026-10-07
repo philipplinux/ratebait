@@ -54,19 +54,7 @@ REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
 EMBED_KEY = b"simple-media-rater"
 NO_EMBED = set()  # (path, mtime_ns, size) of PNGs already found without an embedded review
-FRONTEND_ASSETS = {
-    "/": "text/html",
-    "/style.css": "text/css",
-    "/app.js": "text/javascript",
-    "/js/state.js": "text/javascript",
-    "/js/media.js": "text/javascript",
-    "/js/review.js": "text/javascript",
-    "/js/settings.js": "text/javascript",
-    "/js/folders.js": "text/javascript",
-    "/js/marks.js": "text/javascript",
-    "/js/keyboard.js": "text/javascript",
-    "/js/sidebar.js": "text/javascript",
-}
+FRONTEND_ASSETS = {"/": "text/html", "/style.css": "text/css", "/app.js": "text/javascript"}
 
 
 def configuration():
