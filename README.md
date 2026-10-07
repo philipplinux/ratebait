@@ -65,32 +65,6 @@ python3 ratebait.py --root ~/Pictures --root ~/Music --port 8765
 
 ![12 of the included 4K sample wallpapers](docs/sample-wallpapers.jpg)
 
-## Local refactor fork (2026-10-06)
-
-This checkout is the local fork at `~/projects/ratebait-refactor`, now on cleanup-only branch `refactor/frontend-cleanup`, based on `~/projects/ratebait`. The original checkout and its running service are unchanged; this fork has not been published to GitHub.
-
-- `index.html`: formatted document, controls and inline image/SVG assets; loads `app.js` with `defer`.
-- `style.css`: formatted stylesheet; existing selectors and cascade order retained.
-- `app.js`: the whole frontend as one plain script, in sections (state, review, media, sidebar, marks, settings, folders, keyboard). The `init*()` calls at the end run in that order, then folder discovery starts.
-- `ratebait.py`: server; `FRONTEND_ASSETS` allowlists the three frontend routes. No general directory serving.
-
-Run this fork separately: `python3 ~/projects/ratebait-refactor/ratebait.py --root ~/Pictures --port 8877`, then open <http://127.0.0.1:8877/>. Run `python3 test_assets.py` from this checkout to check asset MIME types and private-route isolation. No bundler, dependencies or build step.
-
-HTML formatting preserves inline whitespace; CSS source order is intentional.
-
-Cleanup verification used disposable media: matching bottom/right-sidebar layout measurements and colors; rating/comment saves; pin and stroke persistence/undo; multi-select rating; Redo comment advancement; audio playback; grid/fullscreen/zoom reset; F/L shortcuts; settings restoration across reload; folder completion/navigation; sorting and drag reordering. API regression scripts also passed.
-
-### Folder dropdown versus autocomplete
-
-**F** opens the native discovered-folder dropdown (`/api/dirs`), which lists media-containing folders under the configured roots. It does not use the app's fuzzy scorer. **L** toggles the file list, not the dropdown.
-
-The path field is a separate autocomplete control with two modes: bare names search the recursive server index (`/api/find-dirs`, optionally all of home); paths containing `/` ask `/api/subdirs?match=1&path=...&q=...` to match immediate child folders. Both use the same Python `fuzzy()` scorer.
-
-The JavaScript fuzzy scorer and child-folder cache were removed after the asset split. Recursive root/home indexes remain in Python; immediate-child matching reads the filesystem per debounced query (80 ms), so newly created child folders appear without leaving the field. The bottom autocomplete and top discovered-folder dropdown remain available.
-
-Run `python3 test_search.py` to check recursive and child fuzzy matching, matched-character positions, hidden-folder visibility, fresh child listings and the sidebar's existing names/counts API.
-
-
 ## Use
 
 - Pick a discovered folder (**F** opens the list in the header; scans the roots up to 6 levels deep) or **Browse…** (also **B**/**O**) to any local folder. The top of the sidebar has a fuzzy folder search (a bare name searches every folder below the start folder, or all of home with **Search all of home** in ⚙; a path with `/` completes level by level; **Tab**/**→** take, **↑↓** pick, **Enter** opens; folders already shown below are left out), then the open folder with Browse…, then **↑ Up** and its subfolders with item counts. Hidden, `node_modules`-style and network-mounted folders are skipped and the list refreshes every 5 minutes. Roots: `--root` (repeatable), else `MEDIA_RATER_ROOTS` (colon-separated), else the current directory.
@@ -141,12 +115,7 @@ Run `python3 test_search.py` to check recursive and child fuzzy matching, matche
 
   </details>
 - PNG files also carry their review in an embedded iTXt chunk (pixels and other metadata untouched, mtime kept). Copy a rated PNG into another folder and the rater picks up its rating there, so favourites can be promoted and demoted in a collection folder.
-- File safety (local refactor): JSON, reports, and PNG updates use exclusively created sibling temporary files followed by atomic replacement. PNG replacement preserves pixels, unrelated metadata chunks, permissions, and modification time; failed writes leave the original PNG intact. This requires write permission on the containing folder and temporary space for a full PNG copy. Embedding errors are still logged separately from a successful JSON/report save.
-- Run `python3 test_writes.py` for disposable-file regressions covering temporary-name collisions, failed/partial writes, PNG metadata preservation, and clearing embedded reviews.
-- Cleared PNGs retain an explicit empty entry in `.review.json`, so stale embedded reviews cannot return if metadata clearing fails. This folder's JSON remains authoritative; copying the PNG elsewhere can still carry old metadata if embedding failed.
-- Loaded pins/strokes are normalized before reports are generated. Run `python3 test_review.py` for real-HTTP regressions covering failed PNG clearing and a loaded pin without an optional note.
-
-Local refactor correctness fixes: grid tiles rebuild when ordered filenames or media versions change, keeping clicks and badges aligned after sorting/reordering. Folder autocomplete discards obsolete responses on input changes, dismissal, and scope changes; old highlighted suggestions cannot replace a newly typed path.
+- Saves are atomic: `.review.json`, `REVIEW.md` and PNGs are written to a temporary file and then swapped in, so a failed write leaves the old file intact.
 
 Images: PNG, JPG, WebP, GIF. Audio: MP3, FLAC, WAV, OGG, M4A, Opus. Listens on IPv4 loopback only; cross-origin POSTs are rejected. **Browse…** (**B** or **O**) opens the system folder dialog via the XDG desktop portal (needs PyGObject), falling back to Tk.
 
