@@ -1003,23 +1003,22 @@ function peekIndex(d) {
 // with small comment / pin / pen badges on its upper-right edge for what the file carries.
 // r=null (comment saved on an unrated file): just the comment bubble, smaller.
 // When the rating moves on to the next file, the caller adds .swipe and the icon slides off to the left instead.
-// Replacing another rating or flag (prev): the old icon shows first and the new one slides in over it.
+// Replacing another rating or flag (prev): the old icon shows first, well left of centre; a moment later the new
+// one pops up in the centre, slides left over it (the old one fades under it) and fades out.
 let lastPop = null;
 function popRating(r, item = {}, prev = null) {
   const fs = !$('viewer').hidden,
     m = (fs ? $('viewer') : $('media')).getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'rate-pop' + (r ? '' : ' comment-pop');
+  let ghost = null;
   if (r && prev && prev !== r) {
-    const icon = (cls, v) => {
-      const s = document.createElement('span');
-      s.className = cls;
-      paintIcon(s, v);
-      return s;
-    };
-    el.dataset.rating = r;
-    el.append(icon('pop-old', prev), icon('pop-new', r));
-  } else if (r) {
+    ghost = document.createElement('div');
+    ghost.className = 'rate-pop ghost';
+    paintIcon(ghost, prev);
+    el.classList.add('over');
+  }
+  if (r) {
     paintIcon(el, r);
     el.hidden = false;
   } else el.textContent = '💬';
@@ -1045,11 +1044,14 @@ function popRating(r, item = {}, prev = null) {
     left: m.left + m.width / 2 + 'px',
     top: m.top + m.height / 2 + 'px',
   });
-  (fs ? $('viewer') : document.body).append(el);
+  for (const p of ghost ? [ghost, el] : [el]) {
+    if (p === ghost) p.style.cssText = el.style.cssText;
+    (fs ? $('viewer') : document.body).append(p);
+    p.addEventListener('animationend', (e) => {
+      if (e.target === p) p.remove();
+    });
+  }
   lastPop = el;
-  el.addEventListener('animationend', (e) => {
-    if (e.target === el) el.remove();
-  });
 }
 
 // Rating icon (same as on the rating button) in the rating's colour; hidden when unrated.
