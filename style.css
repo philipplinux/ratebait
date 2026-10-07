@@ -3165,10 +3165,7 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 /* translate, not transform: zoom and pan keep their inline transform while the picture slides. */
 .slide-next {
-  animation: slide-in 0.16s ease-out;
-}
-.slide-prev {
-  animation: slide-in-back 0.16s ease-out;
+  animation: slide-in 0.26s ease-out;
 }
 @keyframes slide-in {
   from {
@@ -3176,15 +3173,8 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
     opacity: 0.5;
   }
 }
-@keyframes slide-in-back {
-  from {
-    translate: -48px 0;
-    opacity: 0.5;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .slide-next,
-  .slide-prev {
+  .slide-next {
     animation: none;
   }
   .rate-pop.ghost {

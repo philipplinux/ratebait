@@ -224,8 +224,10 @@ function jump(i) {
     const pop = lastPop;
     await saveComment();
     // Comment saved on the way out (e.g. Redo + comment, Enter): its pop swipes off like a rating that moves on.
-    if (lastPop !== pop) lastPop.classList.add('swipe');
+    const rated = lastPop !== pop;
+    if (rated) lastPop.classList.add('swipe');
     state.index = (i + state.files.length) % state.files.length;
+    slideTo = rated ? slideKey() : null;
     paintLists();
     paintCard();
   });
@@ -425,6 +427,7 @@ function act(value) {
     if (next) {
       lastPop?.classList.add('swipe');
       state.index = (state.index + 1) % state.files.length;
+      slideTo = slideKey();
       paintLists();
       paintCard();
     }
@@ -926,18 +929,19 @@ const view = { fit: 1, scale: 1, x: 0, y: 0, w: 0, h: 0, token: 0, drag: null };
 
 const viewerImg = () => $('viewer').querySelector('img');
 
-// A newly shown picture slides in briefly: from the right after moving forward, from the left after moving back.
+// After a rating moves on to the next file, its picture slides in briefly from the right; manual navigation doesn't.
 // Tracked per place (single view, fullscreen), since both repaint on their own once their picture has loaded.
 const slid = {};
+let slideTo = null;
+const slideKey = () => state.dir + '\n' + state.index;
 function slideIn(img, where) {
-  const n = state.files.length,
-    was = slid[where],
-    d = was?.dir === state.dir ? (state.index - was.index + n) % n : 0;
-  slid[where] = { dir: state.dir, index: state.index };
-  if (!d) return;
-  img.classList.remove('slide-next', 'slide-prev');
+  const key = slideKey();
+  if (slid[where] === key) return;
+  slid[where] = key;
+  if (slideTo !== key) return;
+  img.classList.remove('slide-next');
   void img.offsetWidth; // restart the animation
-  img.classList.add(d <= n / 2 ? 'slide-next' : 'slide-prev');
+  img.classList.add('slide-next');
 }
 
 function paintView() {
