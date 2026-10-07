@@ -2937,23 +2937,16 @@ const wheelColours = [
 ];
 let lastPointer = [innerWidth / 2, innerHeight / 2];
 
-function colourWheel() {
+// A ring of buttons around the pointer; any other click or key closes it, and its own key (or Esc) is swallowed.
+function popRing(id, toggle, buttons, radius, centre) {
   const w = document.createElement('div'),
-    input = $('mark-color'),
-    pick = (c) => {
-      close();
-      if (c) {
-        input.value = c;
-        input.dispatchEvent(new Event('input'));
-      } else input.click();
-    },
     away = (e) => {
       if (w.contains(e.target)) return;
       e.stopPropagation(); // the click only closes the ring, it does not draw or pin
       close();
     },
     key = (e) => {
-      if (e.key === 'Escape' || e.key.toLowerCase() === 'r') {
+      if (e.key === 'Escape' || e.key.toLowerCase() === toggle) {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
@@ -2963,34 +2956,82 @@ function colourWheel() {
       w.remove();
       removeEventListener('pointerdown', away, true);
       removeEventListener('keydown', key, true);
-    };
-  w.id = 'colour-wheel';
+    },
+    edge = radius + 24;
+  w.id = id;
+  w.className = 'ring';
   // Clicks on the ring stay on it: no mark, no pan, no closing the viewer.
   w.onpointerdown = w.onclick = (e) => e.stopPropagation();
-  w.style.left = Math.min(Math.max(lastPointer[0], 70), innerWidth - 70) + 'px';
-  w.style.top = Math.min(Math.max(lastPointer[1], 70), innerHeight - 70) + 'px';
-  wheelColours.forEach((c, i) => {
-    const b = document.createElement('button'),
-      a = (i / wheelColours.length) * 2 * Math.PI - Math.PI / 2;
-    b.style.background = c;
-    b.style.translate = `${Math.cos(a) * 46}px ${Math.sin(a) * 46}px`;
-    b.title = c;
-    b.classList.toggle('on', c === input.value.toLowerCase());
-    b.onclick = () => pick(c);
+  w.style.left =
+    Math.min(Math.max(lastPointer[0], edge), innerWidth - edge) + 'px';
+  w.style.top =
+    Math.min(Math.max(lastPointer[1], edge), innerHeight - edge) + 'px';
+  buttons.forEach(([b, run], i) => {
+    const a = (i / buttons.length) * 2 * Math.PI - Math.PI / 2;
+    b.style.translate = `${Math.cos(a) * radius}px ${Math.sin(a) * radius}px`;
+    b.onclick = () => {
+      close();
+      run();
+    };
     w.append(b);
   });
-  w.append(
-    Object.assign(document.createElement('button'), {
-      className: 'more',
-      textContent: '🎨',
-      title: 'All colours',
-      onclick: () => pick(),
-    }),
-  );
+  if (centre) {
+    centre[0].onclick = () => {
+      close();
+      centre[1]();
+    };
+    w.append(centre[0]);
+  }
   // Fullscreen covers the page, so the ring goes inside the viewer there.
   ($('viewer').hidden ? document.body : $('viewer')).append(w);
   addEventListener('pointerdown', away, true);
   addEventListener('keydown', key, true);
+}
+
+function colourWheel() {
+  const input = $('mark-color'),
+    pick = (c) => {
+      input.value = c;
+      input.dispatchEvent(new Event('input'));
+    };
+  popRing(
+    'colour-wheel',
+    'r',
+    wheelColours.map((c) => {
+      const b = document.createElement('button');
+      b.style.background = c;
+      b.title = c;
+      b.classList.toggle('on', c === input.value.toLowerCase());
+      return [b, () => pick(c)];
+    }),
+    46,
+    [
+      Object.assign(document.createElement('button'), {
+        className: 'more',
+        textContent: '🎨',
+        title: 'All colours',
+      }),
+      () => input.click(),
+    ],
+  );
+}
+
+// `: every visible rating and flag button in a ring, for rating with the mouse.
+function ratingWheel() {
+  popRing(
+    'rating-wheel',
+    '`',
+    [...document.querySelectorAll('#ratings button[data-rating]')]
+      .filter((o) => !o.hidden)
+      .map((o) => {
+        const b = document.createElement('button');
+        paintIcon(b, o.dataset.rating);
+        b.title += ` (${o.dataset.key})`;
+        b.classList.toggle('on', o.classList.contains('selected'));
+        return [b, keyAction[o.dataset.key]];
+      }),
+    74,
+  );
 }
 
 function setPenShape(shape) {
@@ -3379,6 +3420,7 @@ function keyBinds() {
     D: ['mark', 'Draw'],
     C: ['mark', 'Comment'],
     R: ['mark', 'Colour ring (pen and pins)'],
+    '`': ['rate', 'Rating ring (click to rate)'],
     Z: ['mark', 'Undo (the newest pin or stroke)'],
     H: ['mark', 'Hide marks'],
     Del: ['mark', 'Clear (marks and rating)'],
@@ -4548,6 +4590,9 @@ function initKeyboard() {
     } else if (e.key.toLowerCase() === 'r') {
       e.preventDefault();
       colourWheel();
+    } else if (e.key === '`') {
+      e.preventDefault();
+      ratingWheel();
     } else if (e.key.toLowerCase() === 'z') {
       e.preventDefault();
       undoStroke();
