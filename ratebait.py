@@ -74,10 +74,17 @@ def configuration():
     return args
 
 
+def expand(raw: str) -> Path:
+    try:
+        return Path(raw).expanduser()
+    except RuntimeError:  # unknown "~user"
+        raise ValueError(f"unknown home folder: {raw}") from None
+
+
 def resolve_dir(raw: str) -> Path:
     if not isinstance(raw, str) or not raw:
         raise ValueError("dir must be a nonempty path")
-    d = Path(raw).expanduser().resolve()
+    d = expand(raw).resolve()
     if not d.is_dir():
         raise ValueError(f"not a directory: {d}")
     return d
@@ -87,7 +94,7 @@ def list_subdirs(raw: str) -> list[str]:
     """Names of the subfolders of a folder, for the path field's suggestions."""
     if not isinstance(raw, str) or not raw:
         return []
-    parent = Path(raw).expanduser()
+    parent = expand(raw)
     if not parent.is_dir():
         return []
     names = []
@@ -111,16 +118,17 @@ DIR_REINDEX = threading.Event()
 
 
 def walk_dirs(roots) -> list[str]:
-    found, seen = [], set()
+    found, seen = [], {}
     for root in roots:
         root = str(root)
-        if any(root == s or root.startswith(s + "/") for s in seen):
-            continue
-        seen.add(root)
         try:
             dev = os.stat(root).st_dev
         except OSError:
             continue
+        # A nested root is covered by the outer walk only on the same device.
+        if any((root == s or root.startswith(s + "/")) and seen[s] == dev for s in seen):
+            continue
+        seen[root] = dev
         stack = [root]
         while stack:
             d = stack.pop()
@@ -282,7 +290,10 @@ def load_state(d: Path) -> dict:
     # Caller holds LOCK: malformed-state preservation is also a write.
     p = d / STATE_FILE
     try:
-        state = json.loads(p.read_text(encoding="utf-8"))
+        try:
+            state = json.loads(p.read_text(encoding="utf-8"))
+        except RecursionError:
+            raise ValueError("state too deeply nested") from None
         if not isinstance(state, dict) or not isinstance(state.get("items"), dict):
             raise ValueError("invalid state")
         state["labels"] = clean_labels(state.get("labels", {}))
@@ -338,7 +349,9 @@ def read_embedded(p: Path) -> dict | None:
 
 def embed_review(p: Path, item: dict | None):
     # Preserve pixels and unrelated chunks; publish only a complete replacement.
+    p = p.resolve()  # a symlinked PNG: update its target, not the link
     stat = p.stat()
+    # r+b on purpose: it refuses read-only PNGs, which must stay untouched.
     with p.open("r+b") as source, replacement_file(p) as target:
         target.write(source.read(8))
         source.seek(0)
@@ -351,6 +364,8 @@ def embed_review(p: Path, item: dict | None):
                     text = json.dumps(item, ensure_ascii=False).encode()
                     target.write(png_chunk(b"iTXt", EMBED_KEY + b"\0\0\0\0\0" + text))
                 target.write(png_chunk(b"IEND", b""))
+                while tail := source.read(65536):  # bytes after IEND
+                    target.write(tail)
                 break
             source.seek(offset + 8)
             if (
@@ -484,6 +499,10 @@ def media_meta(p: Path) -> list:
     return rows
 
 
+UMASK = os.umask(0)  # read once at startup: os.umask is process-wide, not thread-safe to probe later
+os.umask(UMASK)
+
+
 @contextmanager
 def replacement_file(p: Path):
     # Exclusive creation prevents collisions and following pre-existing symlinks.
@@ -493,6 +512,13 @@ def replacement_file(p: Path):
         tmp = Path(target.name)
         try:
             yield target
+            target.flush()
+            try:
+                mode = p.stat().st_mode & 0o7777
+            except FileNotFoundError:
+                mode = 0o666 & ~UMASK
+            os.fchmod(target.fileno(), mode)
+            os.fsync(target.fileno())
             target.close()
             os.replace(tmp, p)
         finally:
@@ -537,7 +563,10 @@ def discover_dirs(roots) -> list[dict]:
                 if depth < 6
                 else []
             )
-            files = list_media(d)
+            try:
+                files = list_media(d)
+            except OSError:
+                continue  # vanished mid-scan
             if files:
                 path = str(d)
                 home = str(Path.home())
@@ -674,7 +703,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         matches.append({"name": name, "score": m[0], "hits": m[1]})
                 body = {"matches": matches}
             elif query.get("counts", [""])[0] == "1" and len(names) <= 200:
-                body["counts"] = {n: count_media(Path(raw).expanduser() / n) for n in names}
+                body["counts"] = {n: count_media(expand(raw) / n) for n in names}
             self.json_response(200, body)
         elif url.path == "/api/meta":
             d = resolve_dir(query.get("dir", [""])[0])
@@ -766,7 +795,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             if not 0 < length <= 1048576:
                 raise ValueError("invalid request size")
-            data = json.loads(self.rfile.read(length))
+            try:
+                data = json.loads(self.rfile.read(length))
+            except RecursionError:
+                raise ValueError("request too deeply nested") from None
             if not isinstance(data, dict):
                 raise ValueError("request must be an object")
             if route == "/api/pick-folder":
@@ -775,7 +807,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     raise ValueError("initial path must be a string")
                 # Modal GUIs run in a child process, away from HTTP worker threads.
                 result = subprocess.run(
-                    [sys.executable, __file__, "--pick-folder", str(Path(initial).expanduser())],
+                    [sys.executable, __file__, "--pick-folder", str(expand(initial))],
                     capture_output=True,
                     text=True,
                 )
@@ -821,12 +853,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if labels:
                     state["labels"] = {**state.get("labels", {}), **labels}
                 save_review(d, state, list_media(d))
+                embedded = True
                 if Path(name).suffix.lower() == ".png":
                     try:
                         embed_review(d / name, None if cleared else state["items"].get(name))
                     except (OSError, ValueError) as e:
+                        embedded = False
                         print(f"embed skipped: {e}", file=sys.stderr, flush=True)
-                self.json_response(200, {"ok": True, "items": state["items"]})
+                body = {"ok": True, "items": state["items"]}
+                if not embedded:
+                    body["embedded"] = False
+                self.json_response(200, body)
         except (BrokenPipeError, ConnectionResetError):
             pass
         except (ValueError, UnicodeError) as e:
