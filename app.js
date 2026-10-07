@@ -318,16 +318,39 @@ function paintModes() {
       return pill;
     }),
   );
-  chip.append(opts);
+  // In fullscreen the hints float centred over the top of the picture instead.
+  if (fs) $('viewer').append(opts);
+  else chip.append(opts);
   chip.hidden = !modes.length;
   for (const el of [$('media'), $('viewer')])
     el.dataset.active = modes[0]?.[0] || '';
   // Fullscreen shows only the viewer, so the chip moves in there.
   const home = fs ? $('viewer') : document.body;
   if (chip.parentElement !== home) home.append(chip);
-  const m = fs ? { left: 4, top: 4 } : $('media').getBoundingClientRect();
-  chip.style.left = m.left + 12 + 'px';
-  chip.style.top = Math.max(m.top, 0) + 12 + 'px';
+  placeModes();
+}
+
+// The mode pill sits at the top left of the picture (its visible part when zoomed), in fullscreen the
+// pen / pin hints at its top centre.
+function placeModes() {
+  const fs = !$('viewer').hidden,
+    r = (
+      (fs && $('viewer').querySelector(':scope>.marks')) ||
+      $(fs ? 'viewer' : 'media')
+    ).getBoundingClientRect(),
+    left = Math.max(r.left, 0),
+    right = Math.min(r.right, innerWidth),
+    top = Math.max(r.top, 0) + 12;
+  Object.assign($('mode-chip').style, {
+    left: left + 12 + 'px',
+    top: top + 'px',
+  });
+  if (fs)
+    Object.assign($('mark-opts').style, {
+      left: (left + right) / 2 + 'px',
+      top: top + 'px',
+    });
+  else $('mark-opts').style.left = $('mark-opts').style.top = '';
 }
 
 function paintPicks() {
@@ -995,6 +1018,7 @@ function paintView() {
     view.scale === 1 ? '' : `${Math.round(view.scale * 100)}%`;
   $('zoom-level').querySelector('.zoom-reset').hidden = view.scale === 1;
   paintZoomOpts();
+  placeModes();
 }
 
 // view.w/h are the shown picture's size; the next picture is preloaded and swapped in only once decoded,
