@@ -973,7 +973,9 @@ body.side #banner {
 }
 body.side #media {
   grid-area: 2/1/7/2;
-  height: calc(100vh - 170px);
+  /* fill its rows down to the bottom; size containment keeps the picture from growing them */
+  contain: size;
+  min-height: 0;
 }
 body.side #media > img {
   max-height: none;
