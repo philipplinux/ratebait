@@ -3003,6 +3003,7 @@ function keyBinds() {
     G: ['view', 'Grid'],
     Space: ['view', 'Grid (plays or pauses audio)'],
     L: ['view', 'File list'],
+    X: ['view', 'Bar side (rating buttons right / below)'],
     F: ['folder', 'Folders (pick a discovered one)'],
     B: ['folder', 'Browse (folder dialog)'],
     O: ['folder', 'Browse (folder dialog)'],
@@ -4004,6 +4005,9 @@ function initKeyboard() {
     } else if (e.key.toLowerCase() === 'l') {
       e.preventDefault();
       setList(document.body.classList.contains('list-off'));
+    } else if (e.key.toLowerCase() === 'x') {
+      e.preventDefault();
+      setLayout(!document.body.classList.contains('side'));
     } else if (e.key.toLowerCase() === 'c') {
       e.preventDefault();
       setCommentOpen(true);
