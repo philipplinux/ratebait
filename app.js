@@ -960,11 +960,8 @@ function paintCard(preserveDrafts = false) {
     preloaded.delete(u);
     if (image.getAttribute('src') !== u) image.src = u;
     image.alt = f.name;
-    image.title = 'Click for fullscreen';
+    image.title = 'Double-click for fullscreen';
     image.draggable = false;
-    image.onclick = () => {
-      if (!single.dragged) openViewer();
-    };
     // The old picture stays until the new one is fully loaded and decoded: no half-loaded or blurry frames.
     // Shown already zoomed (paintSingle), so there is no 100% flash either.
     const token = ++single.token;
@@ -1715,7 +1712,7 @@ function initMedia() {
     { passive: false },
   );
 
-  // Zoomed in, drag the picture to pan; a drag does not open fullscreen. Pin/draw tools keep the mouse.
+  // Zoomed in, drag the picture to pan. Pin/draw tools keep the mouse.
   $('media').addEventListener('pointerdown', (e) => {
     single.dragged = false;
     if (
@@ -1760,11 +1757,21 @@ function initMedia() {
   for (const t of ['pointerup', 'pointercancel'])
     $('media').addEventListener(t, (e) => {
       if (single.drag?.id !== e.pointerId) return;
-      const open = t === 'pointerup' && !single.dragged;
       single.drag = null;
       $('media').classList.remove('dragging');
-      if (open) openViewer();
     });
+  // Double-click the picture for fullscreen (not after a drag, not with a mark tool on).
+  $('media').addEventListener('dblclick', (e) => {
+    if (
+      state.grid ||
+      markMode ||
+      single.dragged ||
+      current()?.kind !== 'image' ||
+      e.target.closest('.grid')
+    )
+      return;
+    openViewer();
+  });
 
   // No native image drag (Firefox ignores -webkit-user-drag): it cancels the pointer, the release is lost
   // and the picture would keep following the mouse.
