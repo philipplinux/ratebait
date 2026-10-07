@@ -1486,6 +1486,12 @@ function stepGrid(dir) {
 let wheelSum = 0,
   wheelAt = 0,
   wheelStepAt = 0;
+// Pan distance of a wheel event; Shift turns the vertical wheel sideways (where the browser does not already).
+function wheelPan(e) {
+  return e.shiftKey && !e.deltaX
+    ? [wheelPx(e, e.deltaY), 0]
+    : [wheelPx(e, e.deltaX), wheelPx(e, e.deltaY)];
+}
 // Touchpads send many small deltas: one step per 100px of scrolling; a pause or a turn starts over.
 // After a step the wheel rests for 350ms, so a fast spin or touchpad momentum does not run through the folder.
 function wheelStep(e, step) {
@@ -1633,10 +1639,11 @@ function initMedia() {
       // Ctrl+wheel zooms at the cursor; the plain wheel pans while zoomed, else goes to the previous or next file.
       if (!e.ctrlKey) {
         if (view.scale > 1) {
-          view.x -= wheelPx(e, e.deltaX);
-          view.y -= wheelPx(e, e.deltaY);
+          const [dx, dy] = wheelPan(e);
+          view.x -= dx;
+          view.y -= dy;
           paintView();
-        } else wheelStep(e, (n) => jump(state.index + n));
+        } else if (!e.shiftKey) wheelStep(e, (n) => jump(state.index + n));
         return;
       }
       zoomView(
@@ -1704,9 +1711,10 @@ function initMedia() {
       e.preventDefault();
       // Not zoomed in: the wheel goes to the previous or next file.
       if (single.scale <= 1 || !$('media').querySelector(':scope>img'))
-        return wheelStep(e, (n) => jump(state.index + n));
-      single.x -= wheelPx(e, e.deltaX);
-      single.y -= wheelPx(e, e.deltaY);
+        return e.shiftKey || wheelStep(e, (n) => jump(state.index + n));
+      const [dx, dy] = wheelPan(e);
+      single.x -= dx;
+      single.y -= dy;
       paintSingle();
     },
     { passive: false },
