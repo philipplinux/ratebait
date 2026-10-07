@@ -679,10 +679,7 @@ function paintGrid() {
       r = item.flag || item.rating,
       badge = tile.querySelector('.tile-badge');
     tile.classList.toggle('current', start + k === state.index);
-    if (r) badge.dataset.rating = r;
-    else delete badge.dataset.rating;
-    badge.textContent = label(r);
-    badge.hidden = !r;
+    paintIcon(badge, r);
   });
   // Scroll only when the selection moved, not on a background refresh.
   if (g.dataset.index !== String(state.index))
@@ -1157,7 +1154,7 @@ function zoomSingle(f, px = 0, py = 0) {
   paintSingle();
 }
 
-// Grid: +1 steps to more, smaller tiles, -1 to fewer, bigger ones: 2×1, 2×2, 3×3 … 10×10 (same as the ⚙ grid size).
+// Grid: +1 steps to fewer, bigger tiles (zoom in), -1 to more, smaller ones: 2×1, 2×2, 3×3 … 10×10 (same as the ⚙ grid size).
 // From any size (also a custom one) it goes to the next step with more or fewer tiles; none left: unchanged.
 function stepGrid(dir) {
   const steps = [
@@ -1167,8 +1164,8 @@ function stepGrid(dir) {
     n = gridSize.cols * gridSize.rows;
   const to =
     dir > 0
-      ? steps.find(([c, r]) => c * r > n)
-      : steps.findLast(([c, r]) => c * r < n);
+      ? steps.findLast(([c, r]) => c * r < n)
+      : steps.find(([c, r]) => c * r > n);
   if (!to) return;
   setGridSize(...to);
   $('media')

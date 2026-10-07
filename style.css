@@ -1315,7 +1315,7 @@ body:not(.side) #ratings .keycap {
   color: #fff;
 }
 .tile:has(.tile-badge:not([hidden])) .tile-name {
-  padding-right: 64px;
+  padding-right: 36px;
 }
 .tile .tile-badge {
   position: absolute;
@@ -1327,6 +1327,11 @@ body:not(.side) #ratings .keycap {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
+}
+.tile .tile-badge svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 @media (max-width: 750px) {
   body {
