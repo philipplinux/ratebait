@@ -1805,14 +1805,14 @@ function paintLists() {
   const sec = document.createElement('div');
   sec.className = 'dir-section';
   $('sidebar').append(sec, views);
-  // Head row: Browse folds the browse controls away (V shows the folder's REVIEW.md in the picture area).
+  // Head row: Explore folds the browse controls away (V shows the folder's REVIEW.md in the picture area).
   // A copy rides in the sticky List/Grid block once the section has scrolled away; it scrolls back up, unfolded.
   const [head, mini] = [false, true].map((away) => {
     const row = document.createElement('div');
     row.className = 'dir-head' + (away ? ' away' : '');
     const fold = Object.assign(document.createElement('button'), {
       className: 'dir-fold',
-      textContent: '📁 Browse',
+      textContent: '🧭 Explore',
       title: away
         ? 'Back to the folder browser'
         : 'Show / hide the folder browser',
@@ -1830,7 +1830,15 @@ function paintLists() {
       disabled: !state.dir,
     });
     report.onclick = () => setReport(!reportOn);
-    row.append(fold, report);
+    const wipe = Object.assign(document.createElement('button'), {
+      className: 'wipe-btn',
+      textContent: '🧹',
+      title: 'Remove all ratings, flags, comments and marks in this folder',
+      disabled: !Object.values(state.items).some(hasReview),
+    });
+    wipe.setAttribute('aria-label', wipe.title);
+    wipe.onclick = clearFolder;
+    row.append(fold, report, wipe);
     return row;
   });
   views.prepend(mini);
@@ -1858,14 +1866,7 @@ function paintLists() {
       title: 'Pick a folder (B or O)',
     });
     browse.onclick = () => $('browse').click();
-    const wipe = Object.assign(document.createElement('button'), {
-      textContent: '🧹',
-      title: 'Remove all ratings, flags, comments and marks in this folder',
-      disabled: !Object.values(state.items).some(hasReview),
-    });
-    wipe.setAttribute('aria-label', wipe.title);
-    wipe.onclick = clearFolder;
-    bar.append(path, browse, wipe);
+    bar.append(path, browse);
     sec.append(bar);
     const nav = document.createElement('div');
     nav.className = 'folder-nav';
