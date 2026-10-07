@@ -2661,6 +2661,8 @@ function colourWheel() {
       removeEventListener('keydown', key, true);
     };
   w.id = 'colour-wheel';
+  // Clicks on the ring stay on it: no mark, no pan, no closing the viewer.
+  w.onpointerdown = w.onclick = (e) => e.stopPropagation();
   w.style.left = Math.min(Math.max(lastPointer[0], 70), innerWidth - 70) + 'px';
   w.style.top = Math.min(Math.max(lastPointer[1], 70), innerHeight - 70) + 'px';
   wheelColours.forEach((c, i) => {
@@ -2681,7 +2683,8 @@ function colourWheel() {
       onclick: () => pick(),
     }),
   );
-  document.body.append(w);
+  // Fullscreen covers the page, so the ring goes inside the viewer there.
+  ($('viewer').hidden ? document.body : $('viewer')).append(w);
   addEventListener('pointerdown', away, true);
   addEventListener('keydown', key, true);
 }
@@ -3008,6 +3011,7 @@ function keyBinds() {
 }
 const kbCombos = [
   ['Shift+Enter', 'Save the comment and go to the next file'],
+  ['Alt+Enter', 'New line in the comment'],
   ['Shift+arrows', 'Move the picture while zoomed (also drag or wheel)'],
   ['Ctrl+wheel', 'Zoom at the cursor'],
   ['Ctrl+Space', 'Reset zoom'],
@@ -3145,10 +3149,13 @@ function fitDetails() {
     d = $('details');
   document.body.style.setProperty('--bar-h', h ? h + 'px' : 'none');
   document.body.style.setProperty('--det-h', d.scrollHeight + 'px'); // side layout: keeps the details row from being squeezed by the spacer rows
+  // Cut off: the box itself, or the prompt clamped to a few lines inside it.
+  const p = d.querySelector('dd.prompt');
   d.classList.toggle(
     'more',
     !document.body.classList.contains('details-full') &&
-      d.scrollHeight > d.clientHeight + 1,
+      (d.scrollHeight > d.clientHeight + 1 ||
+        (p && p.scrollHeight > p.clientHeight + 1)),
   );
 }
 
@@ -3758,6 +3765,18 @@ function initKeyboard() {
       escTypedAt = performance.now();
       e.target.blur();
       if (e.target.id === 'comment') setCommentOpen(false);
+      return;
+    }
+    // Comment field: Alt+Enter starts a new line.
+    if (e.key === 'Enter' && e.altKey && e.target === $('comment')) {
+      e.preventDefault();
+      e.target.setRangeText(
+        '\n',
+        e.target.selectionStart,
+        e.target.selectionEnd,
+        'end',
+      );
+      e.target.dispatchEvent(new Event('input'));
       return;
     }
     // Comment field: Enter saves and closes it, Shift+Enter (or Ctrl+Enter) also moves to the next file.
