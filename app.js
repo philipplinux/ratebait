@@ -9,6 +9,7 @@ const state = {
   btnStyle: {},
   picked: new Set(), // multi-select, see pick()
   pickWait: null, // rating/flag waiting for the shared comment
+  pickDraft: null, // shared draft retained if live refresh removes the selection
   dir: '',
   files: [],
   items: {},
@@ -79,7 +80,7 @@ const shortDate = (t) => {
 };
 
 const mediaUrl = (f) =>
-  '/media?' + new URLSearchParams({ dir: state.dir, name: f.name, v: f.mtime });
+  '/media?' + new URLSearchParams({ dir: state.dir, name: f.name, v: `${f.mtime}:${f.size}` });
 
 function toast(message) {
   $('toast').textContent = message;
@@ -105,12 +106,13 @@ async function api(url, data) {
 }
 
 async function transact(action) {
-  if (state.busy) return;
+  while (state.busy) await new Promise((resolve) => setTimeout(resolve, 25));
   state.busy = true;
   document.body.classList.add('busy');
   $('comment').readOnly = true;
+  let success = false;
   try {
-    await action();
+    success = (await action()) !== false;
   } catch (e) {
     toast(e.message);
   } finally {
@@ -130,6 +132,7 @@ async function transact(action) {
       if (!document.querySelector(`#ratings button[data-key="${k}"]`)?.hidden)
         keyAction[k]();
     });
+  return success;
 }
 
 const keyQueue = [];
@@ -194,20 +197,19 @@ async function save(
   paintLists();
   paintRating();
   paintMarks();
-  paintPinList();
+  paintPinList(!marks);
   if (!$('viewer').hidden) paintPeek();
 }
 
-const saveMarks = (marks) =>
-  transact(async () => {
-    const item = state.items[current().name] || {};
-    await save(
-      item.rating || null,
-      $('comment').value,
-      item.flag || null,
-      marks,
-    );
+function saveMarks(marks) {
+  const dir = state.dir, name = current()?.name;
+  return transact(async () => {
+    if (state.dir !== dir || current()?.name !== name)
+      throw new Error('The selected file changed; marks were not saved.');
+    const item = state.items[name] || {};
+    await save(item.rating || null, $('comment').value, item.flag || null, marks);
   });
+}
 
 async function saveComment() {
   if (
@@ -220,13 +222,17 @@ async function saveComment() {
 
 function jump(i) {
   if (!state.files.length) return;
+  const dir = state.dir, name = state.files[(i + state.files.length) % state.files.length].name;
   return transact(async () => {
+    if (state.dir !== dir) throw new Error('The folder changed; selection was not applied.');
     const pop = lastPop;
     await saveComment();
+    clearPicks();
     // Comment saved on the way out (e.g. Redo + comment, Enter): its pop swipes off like a rating that moves on.
     const rated = lastPop !== pop;
     if (rated) lastPop.classList.add('swipe');
-    state.index = (i + state.files.length) % state.files.length;
+    state.index = state.files.findIndex((f) => f.name === name);
+    if (state.index < 0) state.index = 0;
     slideTo = rated ? slideKey() : null;
     paintLists();
     paintCard();
@@ -247,23 +253,36 @@ const multiOn = () =>
   (state.grid || !document.body.classList.contains('list-off'));
 
 function pick(name) {
-  if (!state.picked.size && current()) state.picked.add(current().name);
-  if (state.picked.has(name)) state.picked.delete(name);
-  else state.picked.add(name);
-  if (state.picked.size < 2) state.picked.clear();
-  state.pickFrom = state.files.findIndex((f) => f.name === name);
-  paintPicks();
+  const dir = state.dir;
+  return transact(async () => {
+    if (state.dir !== dir || !state.files.some((f) => f.name === name))
+      throw new Error('The folder changed; selection was not applied.');
+    await saveComment();
+    if (!state.picked.size && current()) state.picked.add(current().name);
+    if (state.picked.has(name)) state.picked.delete(name);
+    else state.picked.add(name);
+    if (state.picked.size < 2) state.picked.clear();
+    state.pickFrom = state.files.findIndex((f) => f.name === name);
+    paintPicks();
+  });
 }
 
 function pickRange(i, add) {
-  const from = state.pickFrom ?? state.index,
-    names = state.files
-      .slice(Math.min(from, i), Math.max(from, i) + 1)
-      .map((f) => f.name);
-  if (!add) state.picked.clear();
-  names.forEach((n) => state.picked.add(n));
-  if (state.picked.size < 2) state.picked.clear();
-  paintPicks();
+  const dir = state.dir, name = state.files[i]?.name;
+  return transact(async () => {
+    if (state.dir !== dir || !state.files.some((f) => f.name === name))
+      throw new Error('The folder changed; selection was not applied.');
+    i = state.files.findIndex((f) => f.name === name);
+    await saveComment();
+    const from = state.pickFrom ?? state.index,
+      names = state.files
+        .slice(Math.min(from, i), Math.max(from, i) + 1)
+        .map((f) => f.name);
+    if (!add) state.picked.clear();
+    names.forEach((n) => state.picked.add(n));
+    if (state.picked.size < 2) state.picked.clear();
+    paintPicks();
+  });
 }
 
 function clearPicks() {
@@ -375,7 +394,10 @@ function paintPicks() {
     ? `${state.pickWait ? nameOf(state.pickWait) + ': c' : 'C'}omment for all ${state.picked.size} files (Enter saves)`
     : 'What works? What needs changing?';
   if (on !== was) {
-    $('comment').value = on ? '' : state.items[current()?.name]?.comment || '';
+    $('comment').value = on
+      ? (state.pickDraft?.dir === state.dir ? state.pickDraft.value : '')
+      : state.items[current()?.name]?.comment || '';
+    if (on && state.pickDraft?.dir === state.dir) state.pickDraft = null;
     paintCommentTool();
   }
 }
@@ -430,7 +452,9 @@ function act(value) {
       setCommentOpen(true);
       return;
     }
-    return transact(() => applyPicks(value)).then(() => setCommentOpen(false));
+    return transact(() => applyPicks(value)).then((success) => {
+      if (success) setCommentOpen(false);
+    });
   }
   const flag = flags.includes(value);
   let next = false,
@@ -460,7 +484,8 @@ function act(value) {
       paintLists();
       paintCard();
     }
-  }).then(() => {
+  }).then((success) => {
+    if (!success) return;
     if (next) setCommentOpen(false);
     else if (ask) setCommentOpen(true);
   });
@@ -470,10 +495,12 @@ function setCommentMode(value, on) {
   commentMode[value] = on;
   store('commentMode', JSON.stringify(commentMode));
   const box = document.querySelector(
-    `#ratings button[data-rating="${value}"] .comment-mode`,
+    `#ratings .comment-mode[data-value="${value}"]`,
   );
   box.classList.toggle('on', on);
   box.setAttribute('aria-checked', on);
+  box.checked = on;
+  box.setAttribute('aria-label', `Comment mode for ${nameOf(value)}`);
   box.title = on
     ? 'Comment mode on: stays until there is a comment'
     : 'Comment mode off: saves and moves on';
@@ -502,9 +529,9 @@ const buttons = [
   ['9', 'custom9', '●'],
 ];
 
-// Button face: word, icon, then a footer with the comment toggle (ratings only) and the keycap.
+// Button face: word, icon, then a footer with the keycap; the comment checkbox is a sibling control.
 // The word hides on narrow button rows; icon and key stay.
-function buttonFace(b, word, symbol, key, box) {
+function buttonFace(b, word, symbol, key) {
   const icon = Object.assign(document.createElement('span'), {
     className: 'rating-icon',
   });
@@ -514,7 +541,6 @@ function buttonFace(b, word, symbol, key, box) {
   const foot = Object.assign(document.createElement('span'), {
     className: 'rating-foot',
   });
-  if (box) foot.append(box);
   foot.append(
     Object.assign(document.createElement('kbd'), {
       className: 'keycap',
@@ -605,18 +631,19 @@ function initReview() {
     if (flag) b.className = 'flag';
     const label = nameOf(value);
     b.title = `${label} (${key})`;
-    const box = document.createElement('span');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
     box.className = 'comment-mode';
-    box.textContent = '💬';
-    box.setAttribute('role', 'checkbox');
-    box.onclick = (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      setCommentMode(value, !commentMode[value]);
-    };
-    buttonFace(b, label, symbol, key, box);
+    box.dataset.value = value;
+    box.onchange = () => setCommentMode(value, box.checked);
+    buttonFace(b, label, symbol, key);
     keyAction[key] = b.onclick = () => act(value);
-    $('ratings').append(b);
+    const wrap = document.createElement('span');
+    wrap.className = 'rating-control';
+    wrap.dataset.key = key;
+    wrap.dataset.rating = value;
+    wrap.append(b, box);
+    $('ratings').append(wrap);
     setCommentMode(value, !!commentMode[value]);
   }
 
@@ -736,8 +763,7 @@ const label = (r) => (r ? nameOf(r) : '');
 
 // Rebuilds the tiles when the folder, file order or media versions change; otherwise just moves the outline and badges.
 function paintGrid() {
-  const start = 0,
-    key =
+  const key =
       state.dir +
       '|' +
       JSON.stringify(
@@ -782,18 +808,17 @@ function paintGrid() {
       tile.append(name, badge, marks);
       tile.onclick = (e) => {
         if (e.shiftKey) {
-          pickRange(start + k, e.ctrlKey || e.metaKey);
+          pickRange(k, e.ctrlKey || e.metaKey);
           return;
         }
         if (e.ctrlKey || e.metaKey) {
           pick(f.name);
           return;
         }
-        clearPicks();
-        jump(start + k);
+        jump(k);
       };
       tile.ondblclick = () => {
-        if (state.index === start + k) openViewer();
+        if (state.index === k) openViewer();
       };
       g.append(tile);
     });
@@ -802,10 +827,10 @@ function paintGrid() {
     keep.forEach(([e, top], k) => ((k ? e : g).scrollTop = top));
   }
   [...g.children].forEach((tile, k) => {
-    const item = state.items[state.files[start + k]?.name] || {},
+    const item = state.items[state.files[k]?.name] || {},
       r = item.flag || item.rating,
       badge = tile.querySelector('.tile-badge');
-    tile.classList.toggle('current', start + k === state.index);
+    tile.classList.toggle('current', k === state.index);
     paintIcon(badge, r);
     // Same markers as the list: 💬 comment, 📍 pins or strokes.
     const marks = tile.querySelector('.tile-marks');
@@ -823,11 +848,11 @@ function paintGrid() {
   });
   // Scroll only when the selection moved, not on a background refresh.
   if (g.dataset.index !== String(state.index))
-    g.children[state.index - start]?.scrollIntoView({ block: 'nearest' });
+    g.children[state.index]?.scrollIntoView({ block: 'nearest' });
   g.dataset.index = state.index;
 }
 
-function paintCard() {
+function paintCard(preserveDrafts = false) {
   const old = $('media').querySelector('audio');
   if (old) {
     old.pause();
@@ -882,7 +907,12 @@ function paintCard() {
         single.x *= b.w / a.w;
         single.y *= b.h / a.h;
       }
-      $('media').replaceChildren(image, marksLayer(f.name));
+      const existing = $('media').querySelector(':scope>.marks');
+      const layer = preserveDrafts && existing?.dataset.name === f.name ? existing : marksLayer(f.name);
+      if (layer === existing) fillMarks(layer);
+      if (layer === existing && old) {
+        if (old !== image) old.replaceWith(image); // Leave the focused pin editor attached.
+      } else $('media').replaceChildren(image, layer);
       slideIn(image, 'single');
       paintSingle();
     };
@@ -908,10 +938,10 @@ function paintCard() {
   $('filename').textContent = f.name;
   $('date').textContent = new Date(f.mtime * 1000).toLocaleString();
   paintDetails(f);
-  if (!multiOn()) $('comment').value = state.items[f.name]?.comment || '';
+  if (!multiOn() && !preserveDrafts) $('comment').value = state.items[f.name]?.comment || '';
   paintCommentTool();
   paintRating();
-  paintPinList();
+  paintPinList(preserveDrafts);
   paintZoomBox();
   if (!state.grid || !$('viewer').hidden) preloadNeighbours();
 }
@@ -1195,8 +1225,12 @@ function showInViewer(f, fresh = false) {
     img.src = next.src;
     view.w = next.naturalWidth;
     view.h = next.naturalHeight;
-    $('viewer').querySelector('.marks')?.remove();
-    $('viewer').append(marksLayer(f.name));
+    const layer = $('viewer').querySelector('.marks');
+    if (layer?.dataset.name === f.name) fillMarks(layer);
+    else {
+      layer?.remove();
+      $('viewer').append(marksLayer(f.name));
+    }
     slideIn(img, 'view');
     resetView();
     if (keep) {
@@ -1950,7 +1984,6 @@ function paintLists() {
         pick(f.name);
         return;
       }
-      clearPicks();
       jump(i);
     };
     row.addEventListener('pointerdown', (e) => {
@@ -2398,9 +2431,12 @@ const shownLayer = () =>
     ? $('media').querySelector(':scope>.marks')
     : $('viewer').querySelector(':scope>.marks');
 
+const markKey = (kind, mark) =>
+  kind + ':' + JSON.stringify(kind === 'pin' ? [mark.x, mark.y] : mark.pts);
+
 function editPin(i) {
   const layer = shownLayer(),
-    f = current();
+    f = current(), dir = state.dir;
   if (!layer || !f) return;
   layer.querySelector('.pin-edit')?.remove();
   const pins = marksOf(f.name).pins || [],
@@ -2411,21 +2447,30 @@ function editPin(i) {
     value: pin.note || '',
     placeholder: `Note for pin ${i + 1}`,
   });
+  ed.dataset.markKey = markKey('pin', pin);
+  ed.defaultValue = pin.note || '';
   Object.assign(ed.style, { left: pin.x * 100 + '%', top: pin.y * 100 + '%' });
   ed.classList.toggle('flip', pin.x > 0.7);
   let done = false;
-  const close = (keep) => {
+  const close = async (keep) => {
     if (done) return;
+    if (keep && ed.value.trim() !== (pin.note || '')) {
+      if (state.dir !== dir || current()?.name !== f.name) return;
+      const currentPins = marksOf(f.name).pins || [],
+        matches = currentPins.map((p, j) => markKey('pin', p) === ed.dataset.markKey ? j : -1).filter((j) => j >= 0);
+      if (matches.length !== 1) {
+        toast('This pin changed externally; its unsaved note is still in the editor.');
+        return;
+      }
+      done = true;
+      if (!await saveMarks({ pins: currentPins.map((p, j) => j === matches[0] ? { ...p, note: ed.value } : p) })) {
+        done = false;
+        ed.focus();
+        return;
+      }
+    }
     done = true;
     ed.remove();
-    if (
-      keep &&
-      ed.value.trim() !== (pin.note || '') &&
-      current()?.name === f.name
-    )
-      saveMarks({
-        pins: pins.map((p, j) => (j === i ? { ...p, note: ed.value } : p)),
-      });
   };
   ed.onkeydown = (e) => {
     if (e.key === 'Enter') {
@@ -2454,11 +2499,12 @@ function fillMarks(layer) {
     .join('');
   layer.querySelectorAll('.pin').forEach((p) => p.remove());
   pins.forEach((pin, i) => {
-    const el = document.createElement('div');
+    const el = document.createElement('button');
     el.className = 'pin';
     el.textContent = i + 1;
     paintPin(el, pin.color);
     el.title = pin.note || '(no note)';
+    el.setAttribute('aria-label', `Edit pin ${i + 1}: ${pin.note || 'no note'}`);
     Object.assign(el.style, {
       left: pin.x * 100 + '%',
       top: pin.y * 100 + '%',
@@ -2529,7 +2575,15 @@ function placeMarksPanel() {
 }
 
 // Panel listing pins (with notes) and strokes; shown only when there is something to list.
-function paintPinList() {
+function paintPinList(preserveDrafts = false) {
+  const inputs = [...$('pin-list').querySelectorAll('input')];
+  const drafts = preserveDrafts ? inputs
+    .filter((input) => input.value !== input.defaultValue || input === document.activeElement)
+    .map((input) => ({ key: input.dataset.markKey, value: input.value,
+      dirty: input.value !== input.defaultValue, focused: input === document.activeElement,
+      start: input.selectionStart, end: input.selectionEnd })) : [];
+  // Replacing a focused editor must not enqueue its old blur save (or resurrect a deleted mark).
+  $('pin-list').querySelectorAll('input,button').forEach((el) => { el.onblur = null; });
   const f = current(),
     { pins = [], strokes = [] } = f ? marksOf(f.name) : {};
   placeMarksPanel();
@@ -2545,13 +2599,17 @@ function paintPinList() {
       placeholder: 'Stroke ' + (i + 1),
       title: 'Name this stroke',
     });
+    name.dataset.mark = `stroke:${i}`;
+    name.dataset.markKey = markKey('stroke', st);
+    name.defaultValue = st.note || '';
     name.onkeydown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         name.blur();
       }
     };
-    name.onblur = () => {
+    name.onblur = (e) => {
+      if (e.relatedTarget === del) return;
       if (name.value.trim() !== (st.note || ''))
         saveMarks({
           strokes: strokes.map((q, j) =>
@@ -2563,6 +2621,8 @@ function paintPinList() {
       textContent: '✕',
       title: 'Remove stroke ' + (i + 1),
     });
+    del.onpointerdown = (e) => e.preventDefault();
+    del.onblur = () => { if (li.isConnected) name.onblur({ relatedTarget: null }); };
     del.onclick = () =>
       saveMarks({ strokes: strokes.filter((_, j) => j !== i) });
     li.append(sw, name, del);
@@ -2593,6 +2653,9 @@ function paintPinList() {
         value: pin.note || '',
         placeholder: 'Note for pin ' + (i + 1),
       });
+      note.dataset.mark = `pin:${i}`;
+      note.dataset.markKey = markKey('pin', pin);
+      note.defaultValue = pin.note || '';
       const commit = () => {
         if (note.value.trim() === (pin.note || '')) return;
         saveMarks({
@@ -2605,17 +2668,29 @@ function paintPinList() {
           note.blur();
         }
       };
-      note.onblur = commit;
+      note.onblur = (e) => { if (e.relatedTarget !== del) commit(); };
       const del = Object.assign(document.createElement('button'), {
         textContent: '✕',
         title: 'Remove pin ' + (i + 1),
       });
+      del.onpointerdown = (e) => e.preventDefault();
+      del.onblur = () => { if (li.isConnected) commit(); };
       del.onclick = () => saveMarks({ pins: pins.filter((_, j) => j !== i) });
       li.append(no, note, del);
       return li;
     }),
     ...strokeRows,
   );
+  for (const draft of drafts) {
+    const matches = [...$('pin-list').querySelectorAll('input')].filter((el) => el.dataset.markKey === draft.key);
+    if (matches.length !== 1) continue;
+    const input = matches[0];
+    if (draft.dirty) input.value = draft.value;
+    if (draft.focused) {
+      input.focus();
+      input.setSelectionRange(draft.start, draft.end);
+    }
+  }
 }
 
 function setMarkMode(mode) {
@@ -2649,19 +2724,18 @@ function setMarksHidden(off) {
 // Undo takes back the newest pin or stroke: the ones added in this tab, newest first, then strokes, then pins.
 const added = [];
 
-function undoStroke() {
-  const f = current();
-  if (!f) return;
+async function undoStroke() {
+  const f = current(), dir = state.dir;
+  if (!f || state.busy) return;
   const { pins = [], strokes = [] } = marksOf(f.name),
-    k = added.findLastIndex((a) => a.name === f.name);
-  let kind =
-    k >= 0 ? added.splice(k, 1)[0].kind : strokes.length ? 'stroke' : 'pin';
+    k = added.findLastIndex((a) => a.dir === dir && a.name === f.name);
+  let kind = k >= 0 ? added[k].kind : strokes.length ? 'stroke' : 'pin';
   if (kind === 'stroke' && !strokes.length) kind = 'pin';
   else if (kind === 'pin' && !pins.length) kind = 'stroke';
-  if (kind === 'stroke' && strokes.length)
-    saveMarks({ strokes: strokes.slice(0, -1) });
-  else if (kind === 'pin' && pins.length)
-    saveMarks({ pins: pins.slice(0, -1) });
+  const marks = kind === 'stroke' && strokes.length
+    ? { strokes: strokes.slice(0, -1) }
+    : kind === 'pin' && pins.length ? { pins: pins.slice(0, -1) } : null;
+  if (marks && await saveMarks(marks) && k >= 0) added.splice(k, 1);
 }
 
 const unitPoint = (e, layer) => {
@@ -2684,8 +2758,12 @@ function startMark(e, layer) {
       ...(marksOf(current().name).pins || []),
       { x: q[0], y: q[1], note: '', color: $('mark-color').value },
     ];
-    added.push({ name: current().name, kind: 'pin' });
-    saveMarks({ pins }).then(() => editPin(pins.length - 1));
+    const entry = { dir: state.dir, name: current().name, kind: 'pin' };
+    saveMarks({ pins }).then((success) => {
+      if (!success) return;
+      added.push(entry);
+      editPin(pins.length - 1);
+    });
     return true;
   }
   layer.setPointerCapture(e.pointerId);
@@ -2948,14 +3026,16 @@ function initMarks() {
     if (pen && e.pointerId !== pen.id) return;
     const p = pen;
     pen = null;
-    if (p && p.layer.dataset.name === current()?.name)
-      added.push({ name: p.layer.dataset.name, kind: 'stroke' });
+    const dir = state.dir;
     if (p && p.layer.dataset.name === current()?.name)
       saveMarks({
         strokes: [
           ...(marksOf(current().name).strokes || []),
           { pts: p.pts, color: $('mark-color').value },
         ],
+      }).then((success) => {
+        if (success) added.push({ dir, name: p.layer.dataset.name, kind: 'stroke' });
+        else p.path.remove();
       });
   });
 }
@@ -2966,6 +3046,7 @@ function setLayout(side) {
   document.body.classList.toggle('side', side);
   $('set-side').checked = side;
   $('layout-btn').setAttribute('aria-pressed', side);
+  $('layout-btn').setAttribute('aria-label', side ? 'Right sidebar layout' : 'Bottom layout');
   store('layout', side ? 'side' : 'bottom');
   if (!$('viewer').hidden) resetView();
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
@@ -3282,6 +3363,8 @@ function paintCustoms() {
     const b = document.querySelector(`#ratings button[data-rating="${v}"]`),
       name = nameOf(v);
     b.hidden = !shown.includes(v);
+    b.parentElement.hidden = b.hidden;
+    b.parentElement.querySelector('.comment-mode').setAttribute('aria-label', `Comment mode for ${name}`);
     b.title = `${name} (${b.dataset.key})`;
     b.querySelector('.rating-word').textContent = name;
   }
@@ -3366,6 +3449,8 @@ let detailsObserver;
 
 function setDetails(mode) {
   document.body.classList.toggle('details-full', mode === 'full');
+  $('details-toggle').setAttribute('aria-expanded', mode === 'full');
+  $('details-toggle').setAttribute('aria-label', mode === 'full' ? 'Collapse file details' : 'Expand file details');
   store('details', mode);
   fitDetails();
 }
@@ -3568,6 +3653,10 @@ function initSettings() {
     const b = document.body.classList;
     if (b.contains('details-full')) setDetails('on');
     else if ($('details').classList.contains('more')) setDetails('full');
+  };
+  $('details-toggle').onclick = (e) => {
+    e.stopPropagation();
+    setDetails(document.body.classList.contains('details-full') ? 'on' : 'full');
   };
 }
 
@@ -3829,21 +3918,60 @@ async function refreshDirs() {
 
 async function refreshFiles() {
   if (!state.dir || state.busy) return;
-  const result = await api(
-    '/api/list?' + new URLSearchParams({ dir: state.dir }),
-  );
-  if (state.busy || result.dir !== state.dir) return;
-  const next = arrange(result.files),
-    names = (f) => f.map((x) => x.name + x.mtime).join('/');
-  if (names(next) === names(state.files)) return;
-  const name = current()?.name;
+  const beforeItems = state.items, beforeDir = state.dir;
+  const result = await api('/api/list?' + new URLSearchParams({ dir: beforeDir }));
+  if (state.busy || result.dir !== state.dir || state.items !== beforeItems) return;
+  const next = arrange(sortFiles(result.files)),
+    identity = (files) => JSON.stringify(files.map(({ name, mtime, size, kind }) => [name, mtime, size, kind])),
+    previous = current(),
+    name = previous?.name,
+    reviewChanged = JSON.stringify(state.items) !== JSON.stringify(result.items),
+    labelsChanged = JSON.stringify(state.folderLabels) !== JSON.stringify(result.labels || {});
+  if (identity(next) === identity(state.files) && !reviewChanged && !labelsChanged) return;
+  const incomingMarks = result.items[current()?.name] || {},
+    keys = [
+      ...(incomingMarks.pins || []).map((p) => markKey('pin', p)),
+      ...(incomingMarks.strokes || []).map((s) => markKey('stroke', s)),
+    ],
+    noteDrafts = [...document.querySelectorAll('#pin-list input,.pin-edit')]
+      .filter((el) => el.value !== el.defaultValue && el.dataset.markKey);
+  if (noteDrafts.some((el) => keys.filter((key) => key === el.dataset.markKey).length !== 1)) {
+    toast('A mark changed externally. Finish its note before refreshing.');
+    return;
+  }
+  const draft = $('comment').value,
+    wasMulti = multiOn(),
+    dirtyComment = wasMulti || draft.trim() !== (state.items[name]?.comment || '');
   state.files = next;
   state.items = result.items;
+  state.folderLabels = result.labels || {};
   const i = state.files.findIndex((f) => f.name === name);
-  state.index =
-    i < 0 ? Math.min(state.index, Math.max(state.files.length - 1, 0)) : i;
+  state.index = i < 0 ? Math.min(state.index, Math.max(state.files.length - 1, 0)) : i;
+  state.picked = new Set([...state.picked].filter((n) => next.some((f) => f.name === n)));
+  if (state.picked.size < 2) state.picked.clear();
+  const endedMulti = wasMulti && !multiOn();
+  if (endedMulti && draft) {
+    state.pickDraft = { dir: state.dir, value: draft };
+    toast('Selection changed. Shared draft kept for the next multi-selection.');
+  }
+  paintPicks();
+  if (labelsChanged) paintCustoms();
   paintLists();
-  if (current()?.name !== name) paintCard();
+  const same = current()?.name === name;
+  if (!same || identity([current()].filter(Boolean)) !== identity([previous].filter(Boolean)))
+    paintCard(same);
+  else {
+    if (state.grid) paintGrid();
+    paintRating();
+    paintMarks();
+    paintPinList(true);
+    if (!$('viewer').hidden) paintPeek();
+  }
+  if (same) {
+    if (!dirtyComment || endedMulti) $('comment').value = state.items[name]?.comment || '';
+    else $('comment').value = draft;
+    paintCommentTool();
+  }
 }
 
 async function startFolders() {
@@ -3865,15 +3993,11 @@ function initFolders() {
 
   setHomeSearch(homeSearch);
 
-  $('open').onclick = () => {
-    $('path').value = basePath($('path').value);
-    openFolder($('path').value);
-  };
 
   // A picked folder opens straight away. The comment is saved first; the dialog itself does not block the app.
   $('browse').onclick = async () => {
     await whenIdle();
-    await transact(saveComment);
+    if (!await transact(saveComment)) return;
     try {
       const result = await api('/api/pick-folder', {
         initial: $('path').value || state.dir,
@@ -3952,6 +4076,11 @@ function initFolders() {
 function initKeyboard() {
   document.addEventListener('keydown', (e) => {
     if (
+      !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey &&
+      ['Enter', ' '].includes(e.key) &&
+      e.target.closest('button:not(.row):not(.tile)')
+    ) return; // Native controls own activation, including inside fullscreen.
+    if (
       !$('viewer').hidden &&
       (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) &&
       !['TEXTAREA', 'INPUT'].includes(e.target.tagName)
@@ -4011,10 +4140,12 @@ function initKeyboard() {
       e.preventDefault();
       if (multiOn()) {
         const v = state.pickWait;
-        state.pickWait = null;
-        transact(() => applyPicks(v));
-        e.target.blur();
-        setCommentOpen(false);
+        transact(() => applyPicks(v)).then((success) => {
+          if (success) {
+            state.pickWait = null;
+            setCommentOpen(false);
+          }
+        });
         return;
       }
       const item = (current() && state.items[current().name]) || {};

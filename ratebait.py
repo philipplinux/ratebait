@@ -268,6 +268,16 @@ def clean_marks(item: dict) -> dict:
     return out
 
 
+def clean_labels(labels) -> dict:
+    if (
+        not isinstance(labels, dict)
+        or not set(labels) <= set(CUSTOM)
+        or not all(isinstance(v, str) and len(v) <= 40 for v in labels.values())
+    ):
+        raise ValueError("invalid labels")
+    return {k: v.strip() for k, v in labels.items() if v.strip()}
+
+
 def load_state(d: Path) -> dict:
     # Caller holds LOCK: malformed-state preservation is also a write.
     p = d / STATE_FILE
@@ -275,8 +285,9 @@ def load_state(d: Path) -> dict:
         state = json.loads(p.read_text(encoding="utf-8"))
         if not isinstance(state, dict) or not isinstance(state.get("items"), dict):
             raise ValueError("invalid state")
+        state["labels"] = clean_labels(state.get("labels", {}))
         for item in state["items"].values():
-            if isinstance(item, dict) and item.get("rating") in LEGACY:
+            if isinstance(item, dict) and isinstance(item.get("rating"), str) and item["rating"] in LEGACY:
                 item["rating"] = LEGACY[item["rating"]]
             if (
                 not isinstance(item, dict)
@@ -285,7 +296,10 @@ def load_state(d: Path) -> dict:
                 or not isinstance(item.get("comment"), str)
             ):
                 raise ValueError("invalid review item")
-            item.update(clean_marks(item))
+            marks = clean_marks(item)
+            item.pop("pins", None)
+            item.pop("strokes", None)
+            item.update(marks)
         return state
     except FileNotFoundError:
         return {"version": 1, "items": {}}
@@ -382,7 +396,8 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
         if not isinstance(item, dict):
             NO_EMBED.add(key)
             continue
-        item["rating"] = LEGACY.get(item.get("rating"), item.get("rating"))
+        if isinstance(item.get("rating"), str):
+            item["rating"] = LEGACY.get(item["rating"], item["rating"])
         if (
             item.get("rating") in [None, *RATINGS]
             and item.get("flag") in [None, *FLAGS]
@@ -436,6 +451,8 @@ def media_meta(p: Path) -> list:
         models, prompts, sampling, scale = [], [], [], []
         for node in graph.values():
             inputs = node.get("inputs", {}) if isinstance(node, dict) else {}
+            if not isinstance(inputs, dict):
+                continue
             kind = node.get("class_type", "") if isinstance(node, dict) else ""
             for key, value in inputs.items():
                 if isinstance(value, str) and key.endswith("_name") and "." in value:
@@ -452,7 +469,7 @@ def media_meta(p: Path) -> list:
                     sampling.append(f"denoise {inputs['denoise']}")
             if kind == "LoadImage" and isinstance(inputs.get("image"), str):
                 rows.append(["Source", inputs["image"]])
-            if kind == "ImageScale" and "width" in inputs:
+            if kind == "ImageScale" and "width" in inputs and "height" in inputs:
                 scale.append(f"{inputs.get('upscale_method', '')} → {inputs['width']}×{inputs['height']}")
         if models:
             rows.append(["Models", " · ".join(dict.fromkeys(models))])
@@ -490,6 +507,21 @@ def atomic_write(p: Path, text: str):
 def save_state(d: Path, state: dict):
     # All callers hold LOCK across the complete read-modify-write operation.
     atomic_write(d / STATE_FILE, json.dumps(state, ensure_ascii=False, indent=2) + "\n")
+
+def save_review(d: Path, state: dict, files: list[dict]):
+    # Keep the authoritative JSON unchanged if rebuilding its report fails.
+    state_path = d / STATE_FILE
+    previous = state_path.read_text(encoding="utf-8") if state_path.exists() else None
+    save_state(d, state)
+    try:
+        write_report(d, state, files)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as e:
+        if previous is None:
+            state_path.unlink()
+        else:
+            atomic_write(state_path, previous)
+        raise OSError(f"report could not be written: {e}") from e
+
 
 
 def discover_dirs(roots) -> list[dict]:
@@ -535,7 +567,7 @@ def write_report(d: Path, state: dict, files: list[dict]):
         "# Media review",
         "",
         f"- Folder: `{d}`",
-        f"- Updated: {state['updated']}",
+        f"- Updated: {state.get('updated', '')}",
         f"- Progress: {rated}/{len(files)} rated · {counts}",
         "",
     ]
@@ -569,8 +601,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def trusted_authority(self):
+        hosts = self.headers.get_all("Host", [])
+        if len(hosts) != 1:
+            raise ValueError("invalid Host")
+        host = hosts[0].lower()
+        port = self.server.server_port
+        allowed = {self.server.server_address[0], "localhost"}
+        if port == 80:
+            host = host.removesuffix(":80")
+        if host not in {name if port == 80 else f"{name}:{port}" for name in allowed}:
+            raise ValueError("untrusted Host")
+        origin = self.headers.get("Origin")
+        if origin is not None:
+            origin = origin.lower().removesuffix(":80") if port == 80 else origin.lower()
+            if origin != f"http://{host}":
+                raise ValueError("cross-origin request is not allowed")
+
     def do_GET(self):
         try:
+            self.trusted_authority()
             self.get_route()
         except (BrokenPipeError, ConnectionResetError):
             pass
@@ -653,8 +703,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     state = load_state(d)
                     if import_embedded(d, state, files):
                         state.update(dir=str(d), updated=datetime.now().astimezone().isoformat(timespec="seconds"))
-                        save_state(d, state)
-                        write_report(d, state, files)
+                        save_review(d, state, files)
                 self.json_response(
                     200, {"dir": str(d), "files": files, "items": state["items"], "labels": state.get("labels", {})}
                 )
@@ -709,14 +758,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
+            self.trusted_authority()
             route = urlsplit(self.path).path
             if route not in {"/api/review", "/api/pick-folder", "/api/forget-label"}:
                 self.json_response(404, {"error": "unknown route"})
                 return
-            # Browsers on other origins must not be able to mutate local files.
-            origin = self.headers.get("Origin")
-            if origin and origin != f"http://{self.headers.get('Host')}":
-                raise ValueError("cross-origin review is not allowed")
             length = int(self.headers.get("Content-Length", "0"))
             if not 0 < length <= 1048576:
                 raise ValueError("invalid request size")
@@ -745,8 +791,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 with LOCK:
                     state = load_state(d)
                     if state.get("labels", {}).pop(data["label"], None) is not None:
-                        save_state(d, state)
-                        write_report(d, state, list_media(d))
+                        save_review(d, state, list_media(d))
                 self.json_response(200, {"labels": state.get("labels", {})})
                 return
             name = data.get("name")
@@ -762,18 +807,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 raise ValueError("comment must be a string")
             comment = comment.strip()
             marks = clean_marks(data)
-            labels = data.get("labels") or {}
-            if (
-                not isinstance(labels, dict)
-                or not set(labels) <= set(CUSTOM)
-                or not all(isinstance(v, str) and len(v) <= 40 for v in labels.values())
-            ):
-                raise ValueError("invalid labels")
-            labels = {k: v.strip() for k, v in labels.items() if v.strip()}
+            labels = clean_labels(data.get("labels", {}))
             with LOCK:
                 state = load_state(d)
-                state_path = d / STATE_FILE
-                previous = state_path.read_text(encoding="utf-8") if state_path.exists() else None
                 now = datetime.now().astimezone().isoformat(timespec="seconds")
                 cleared = rating is None and flag is None and not comment and not marks
                 # An explicit empty PNG entry prevents stale embedded data from being reimported.
@@ -784,16 +820,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 state.update(dir=str(d), updated=now)
                 if labels:
                     state["labels"] = {**state.get("labels", {}), **labels}
-                save_state(d, state)
-                try:
-                    write_report(d, state, list_media(d))
-                except OSError:
-                    # A failed POST must not appear committed on reopening the folder.
-                    if previous is None:
-                        state_path.unlink()
-                    else:
-                        atomic_write(state_path, previous)
-                    raise
+                save_review(d, state, list_media(d))
                 if Path(name).suffix.lower() == ".png":
                     try:
                         embed_review(d / name, None if cleared else state["items"].get(name))

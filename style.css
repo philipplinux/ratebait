@@ -316,8 +316,7 @@ body.list-denser .row-meta {
   margin-bottom: 8px;
 }
 /* The open folder and Browse… live at the top of the sidebar; the header keeps the F list. The path field stays in the DOM for its logic. */
-#browse,
-#open {
+#browse {
   display: none !important;
 }
 aside #path-box {
@@ -678,9 +677,17 @@ body.busy select {
 #ratings button.flag {
   font-size: 15px;
 }
-#ratings button {
+#ratings .rating-control {
   position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 150px;
 }
+#ratings .rating-control[hidden] { display: none; }
+#ratings .rating-control > button { width: 100%; }
+body:not(.side) #ratings .rating-control { flex: 0 0 74px; min-width: 74px; }
+body.side #ratings .rating-control { max-width: none; }
 #ratings .comment-mode {
   position: absolute;
   top: 5px;
@@ -707,9 +714,14 @@ body.busy select {
   border-color: #fff;
   background: var(--tone);
 }
-#ratings button.selected .comment-mode.on {
+#ratings .rating-control:has(button.selected) .comment-mode.on {
   background: #11161b;
 }
+#ratings input.comment-mode {
+  margin: 0;
+  accent-color: var(--tone);
+}
+#ratings input.comment-mode:focus-visible { outline: 2px solid white; outline-offset: 2px; }
 #ratings .rating-icon {
   font-size: 27px;
   line-height: 1;
@@ -1195,7 +1207,7 @@ body:not(.side) #ratings .rating-icon svg {
   width: 22px;
   height: 22px;
 }
-body:not(.side) #ratings .rating-foot .comment-mode {
+body:not(.side) #ratings .comment-mode {
   width: 18px;
   height: 18px;
   font-size: 10px;
@@ -1246,7 +1258,7 @@ body:not(.side) #ratings .keycap {
     width: 19px;
     height: 19px;
   }
-  body:not(.side) #ratings .rating-foot .comment-mode {
+  body:not(.side) #ratings .comment-mode {
     width: 15px;
     height: 15px;
     font-size: 9px;
@@ -1468,7 +1480,7 @@ body:not(.side) main:has(#banner[hidden]) {
   body:not(.side) #ratings {
     grid-area: 3/1;
   }
-  body:not(.side) #ratings button {
+  body:not(.side) #ratings :is(button, .rating-control) {
     flex: 1 1 0;
     min-width: 0;
   }
@@ -1500,7 +1512,7 @@ body:not(.side) main:has(#banner[hidden]) {
   body.customs:not(.side) #ratings {
     grid-area: 3/1;
   }
-  body.customs:not(.side) #ratings button {
+  body.customs:not(.side) #ratings :is(button, .rating-control) {
     flex: 1 1 0;
     min-width: 0;
   }
@@ -1643,6 +1655,7 @@ body:not(.side) main:has(#banner[hidden]) {
   stroke-width: 3;
 }
 .pin {
+  padding: 0;
   position: absolute;
   width: 24px;
   height: 24px;
@@ -2029,6 +2042,9 @@ body:not(.side) #details {
 }
 /* Saved comment, shown like the file details (bottom right); clicking it opens the comment field. */
 #comment-view {
+  text-align: left;
+  color: inherit;
+  font: inherit;
   border: 1px solid #303746;
   border-radius: 8px;
   padding: 4px 10px;
@@ -3611,4 +3627,17 @@ body.dir-folded .dir-section > :not(.dir-head) {
 }
 #sidebar:not(.dir-away) .dir-head.away {
   display: none;
+}
+
+#mp-comment {
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+#comment-view .cv-head, #comment-view .cv-text { display: block; }
+#details-toggle {
+  justify-self: start;
+  grid-column: 1 / -1;
+  font-size: 11px;
+  padding: 2px 6px;
 }

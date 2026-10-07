@@ -60,7 +60,7 @@
             ><ul id="path-hints" hidden></ul></div
           ><button id="browse" title="Pick a folder (B or O)"
             >📁 Browse… <kbd class="keycap">B</kbd></button
-          ><button id="open">Open</button><span id="progress">0/0 rated</span
+          ><span id="progress">0/0 rated</span
           ><nav id="ticks" aria-label="Review progress"></nav></div
         ><button
           id="fs-btn"
@@ -372,16 +372,16 @@
           placeholder="What works? What needs changing?"
         ></textarea></section
       ><aside id="marks-panel" aria-label="Marks" hidden
-        ><div id="mp-comment" title="Click to edit the comment (C)"></div
+        ><button id="mp-comment" type="button" aria-label="Edit saved comment" title="Click to edit the comment (C)"></button
         ><div class="panel-head">Marks</div><ol id="pin-list"></ol></aside
       ><section id="details" hidden
-        ><div id="fileinfo"
+        ><button id="details-toggle" type="button" aria-label="Expand file details" aria-expanded="false">Details</button><div id="fileinfo"
           ><div id="filename"></div><div id="filemeta"></div
           ><div id="date"></div></div
         ><dl id="genmeta"></dl></section
-      ><section id="comment-view" hidden title="Click to edit the comment (C)"
-        ><div class="cv-head">💬 Comment</div
-        ><div class="cv-text"></div></section
+      ><button id="comment-view" type="button" aria-label="Edit saved comment" hidden title="Click to edit the comment (C)"
+        ><span class="cv-head">💬 Comment</span
+        ><span class="cv-text"></span></button
       ></main
     >
     <div id="viewer" hidden
