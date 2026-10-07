@@ -2281,6 +2281,14 @@ function marksLayer(name) {
   return layer;
 }
 
+// Pin number on the pin's colour: black on bright colours, white on dark ones.
+function paintPin(el, color) {
+  if (!color) return;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  el.style.background = color;
+  el.style.color = r * 0.299 + g * 0.587 + b * 0.114 > 160 ? '#000' : '#fff';
+}
+
 const pathD = (pts) =>
   pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('') +
   (pts.length === 1 ? 'l0 0' : '');
@@ -2350,7 +2358,7 @@ function fillMarks(layer) {
     const el = document.createElement('div');
     el.className = 'pin';
     el.textContent = i + 1;
-    if (pin.color) el.style.background = pin.color;
+    paintPin(el, pin.color);
     el.title = pin.note || '(no note)';
     Object.assign(el.style, {
       left: pin.x * 100 + '%',
@@ -2471,7 +2479,7 @@ function paintPinList() {
         className: 'pin-no',
         textContent: i + 1,
       });
-      if (pin.color) no.style.background = pin.color;
+      paintPin(no, pin.color);
       const note = Object.assign(document.createElement('input'), {
         value: pin.note || '',
         placeholder: 'Note for pin ' + (i + 1),
