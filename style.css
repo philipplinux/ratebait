@@ -276,6 +276,35 @@ body.sorting {
   font-size: 11px;
   color: #8b97ab;
 }
+.side-scale-row {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: #8b97ab;
+  padding: 0 2px;
+}
+.side-views button.scale-fold {
+  flex: 0 0 auto;
+  font-size: 14px;
+  padding: 1px 7px;
+}
+.side-scale-row input {
+  flex: 1;
+  min-width: 0;
+}
+body.list-dense .row {
+  padding: calc(8px * var(--side-scale, 1));
+  margin-bottom: 2px;
+}
+body.list-dense .row-name {
+  white-space: nowrap;
+}
+body.list-dense .row-date,
+body.list-denser .row-meta {
+  display: none;
+}
 .side-sort > span {
   font-size: 15px;
   padding: 0 2px;

@@ -234,7 +234,8 @@ function jump(i) {
 // Only one value at a time: a rating replaces any flag and a flag replaces any rating; the comment stays.
 let commentMode = { redo: true };
 
-// Multi-select (Ctrl+click in the file list while it is visible, or on grid tiles): a rating or flag key and
+// Multi-select (Ctrl+click toggles one file, Shift+click picks the range from the last clicked file, Ctrl+Shift+click
+// adds that range; in the file list while it is visible, or on grid tiles): a rating or flag key and
 // the comment field (Enter) apply to every picked file at once; a typed comment rides along with the rating.
 const multiOn = () =>
   state.picked.size > 1 &&
@@ -245,11 +246,24 @@ function pick(name) {
   if (state.picked.has(name)) state.picked.delete(name);
   else state.picked.add(name);
   if (state.picked.size < 2) state.picked.clear();
+  state.pickFrom = state.files.findIndex((f) => f.name === name);
+  paintPicks();
+}
+
+function pickRange(i, add) {
+  const from = state.pickFrom ?? state.index,
+    names = state.files
+      .slice(Math.min(from, i), Math.max(from, i) + 1)
+      .map((f) => f.name);
+  if (!add) state.picked.clear();
+  names.forEach((n) => state.picked.add(n));
+  if (state.picked.size < 2) state.picked.clear();
   paintPicks();
 }
 
 function clearPicks() {
   state.pickWait = null;
+  state.pickFrom = null;
   if (state.picked.size) {
     state.picked.clear();
     paintPicks();
@@ -641,7 +655,7 @@ function paintGrid() {
       const tile = document.createElement('button');
       tile.className = 'tile' + (state.picked.has(f.name) ? ' picked' : '');
       tile.dataset.name = f.name;
-      tile.title = f.name + ' · Ctrl+click to select several';
+      tile.title = f.name + ' · Ctrl/Shift+click to select several';
       if (f.kind === 'image') {
         const img = document.createElement('img');
         img.loading = 'lazy';
@@ -658,6 +672,10 @@ function paintGrid() {
       badge.className = 'tile-badge';
       tile.append(name, badge);
       tile.onclick = (e) => {
+        if (e.shiftKey) {
+          pickRange(start + k, e.ctrlKey || e.metaKey);
+          return;
+        }
         if (e.ctrlKey || e.metaKey) {
           pick(f.name);
           return;
@@ -1564,6 +1582,38 @@ function paintLists() {
     b.onclick = () => setSideView(mode);
     views.append(b);
   }
+  // List scale: grid view, picture size (so how many per row); list view, row density. Same value as ⚙ File list pictures.
+  // ⤢ folds the slider into a button beside List/Grid and opens it again.
+  const scaleOpen = stored('sideScaleOpen') !== '0',
+    fold = Object.assign(document.createElement('button'), {
+      className: 'scale-fold',
+      textContent: '⤢',
+      title: scaleOpen ? 'Hide the list scale slider' : 'List scale',
+      onclick: () => {
+        store('sideScaleOpen', scaleOpen ? '0' : '1');
+        paintLists();
+      },
+    });
+  fold.setAttribute('aria-expanded', scaleOpen);
+  if (scaleOpen) {
+    const scale = document.createElement('div');
+    scale.className = 'side-scale-row';
+    scale.append(
+      fold,
+      Object.assign(document.createElement('input'), {
+        type: 'range',
+        id: 'side-scale-bar',
+        title:
+          'List scale: pictures per row in grid view, row density in list view',
+        min: 50,
+        max: 200,
+        step: 10,
+        value: stored('sideScale') || 100,
+        oninput: (e) => setSideScale(e.target.value),
+      }),
+    );
+    views.append(scale);
+  } else views.append(fold);
   // Sort row: Time (default, oldest first), Name, Size; pressing the active one flips the direction. Dragging rows makes a custom order instead.
   const sorter = document.createElement('div');
   sorter.className = 'side-sort';
@@ -1694,10 +1744,14 @@ function paintLists() {
     row.title =
       f.name +
       (rating ? ' · ' + nameOf(rating) : '') +
-      ' · drag to reorder · Ctrl+click to select several';
+      ' · drag to reorder · Ctrl/Shift+click to select several';
     if (rating) row.dataset.rating = rating;
     row.onclick = (e) => {
       if (dragged) return;
+      if (e.shiftKey) {
+        pickRange(i, e.ctrlKey || e.metaKey);
+        return;
+      }
       if (e.ctrlKey || e.metaKey) {
         pick(f.name);
         return;
@@ -2509,10 +2563,15 @@ function setHints(on) {
   }
 }
 
-// File list pictures: thumbnail size in the left sidebar (50–200%); in its grid, bigger pictures mean fewer columns.
+// File list pictures / list scale: thumbnail size in the left sidebar (50–200%); in its grid, bigger pictures mean
+// fewer columns. In the list, small sizes also tighten the rows: below 100% the name keeps to one line and the date
+// goes, at 60% and less the type/size line goes too.
 function setSideScale(pct) {
   pct = Math.min(200, Math.max(50, +pct || 100));
   $('set-side-scale').value = pct;
+  if ($('side-scale-bar')) $('side-scale-bar').value = pct;
+  document.body.classList.toggle('list-dense', pct < 100);
+  document.body.classList.toggle('list-denser', pct <= 60);
   $('side-scale-out').value = pct + '%';
   document.body.style.setProperty('--side-scale', pct / 100);
   store('sideScale', pct);
