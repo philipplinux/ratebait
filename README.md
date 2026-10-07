@@ -6,15 +6,15 @@ Tiny local web app for rating AI-generated images and music fast: numpad keys to
 
 Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screenshot.png](docs/screenshot.png) (bottom layout), full-size 4K [docs/screenshot-4k.jpg](docs/screenshot-4k.jpg) (right-sidebar layout with docked Marks).
 
-![Demo: folder search, sort row (Time/Name/Size), list/grid sidebar with lens marker, rating icons on the progress bar, grid and zoom/pan, fullscreen, rating pops, multi-select (comment, Love, Redo for several files), pin/draw/comment, Settings > Buttons (colour, icon, title), right-sidebar layout](docs/demo.gif)
+![Demo: folder tiles, numpad rating with pops, the ` pie menu (click, or hold, point at a slice and let go), comment, pin, draw, wheel to the next file, double-click fullscreen with Ctrl+wheel zoom and wheel/Shift+wheel scrolling, Ctrl+click multi-select in the grid, right-sidebar layout, report view](docs/demo.gif)
 
 <details><summary><b>More demos:</b> navigation, annotation, multi-select, layout and settings, 4K vs low-res at the same zoomed spot</summary>
 
-**Navigation:** arrows and W/S, Home/End, PgUp/PgDn, file list (☰ list or ▦ thumbnails, ⇅ sort by time/name/size, the open file marked with a lens, L hides it), F1 settings, grid with + − size (it starts with ↑ Up and the subfolders, which a folder without media also shows), fullscreen, Ctrl+wheel zoom with hint bar, Shift+arrow pan, Ctrl+Space reset.
+**Navigation:** folder tiles (↑ Up and the subfolders; arrows reach them, Enter opens), W/S and arrows, Home/End, the wheel to the previous or next file, file list (☰ list or ▦ thumbnails, ⇅ sort by time/name/size, L hides it), grid with + − size, double-click for fullscreen, Ctrl+wheel zoom, wheel up/down and Shift+wheel sideways, Shift+arrow pan, Ctrl+Space reset, path field with Tab completion.
 
 ![Navigation demo](docs/navigation.gif)
 
-**Annotation:** pin a note (A), draw (D: free, Shift line, Ctrl box, Ctrl+Shift circle, Alt arrow, Alt+Shift cross), pen and pin colour (R: quick ring), undo (Z), hide marks (H), comment (C, Enter saves, Shift+Enter saves and moves on), Redo (4) and Broken (5) with the rating pop and its 💬 📍 ✏️ badges.
+**Annotation:** pin a note (A), draw (D: free, Shift line, Ctrl box, Ctrl+Shift circle, Alt arrow, Alt+Shift cross), pen and pin colour (R: hold, point at a slice, let go), undo (Z), hide marks (H), comment (C, Enter saves), Redo (4) and Broken (5) with the rating pop and its 💬 📍 ✏️ badges, the ` pie menu, Del clears.
 
 ![Annotation demo](docs/annotation.gif)
 
@@ -24,7 +24,7 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 ![Multi-select demo](docs/multiselect.gif)
 
-**Layout and settings:** ◫ or **X** switches to the right sidebar (numpad keys, docked Marks, comment box pops in over the picture); ⚙ Sizes: left sidebar 50–100 %, file list pictures 50–200 %, right sidebar 50–100 %, grid; Hint bars on/off; Rating buttons: colour, icon and title per button, then Reset; Keyboard: every key on a UK keyboard picture.
+**Layout and settings:** ◫ or **X** switches to the right sidebar (numpad keys, docked Marks, comment box pops in over the picture); ⚙ Sizes: file list pictures, right sidebar; Rating buttons: colour, icon and title, name 7–9 for your own; Keyboard: every key on a UK keyboard picture; Folder search: folder tiles in the grid; V shows this folder's REVIEW.md.
 
 ![Layout and settings demo](docs/layout.gif)
 
