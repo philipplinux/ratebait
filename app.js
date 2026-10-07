@@ -2955,7 +2955,7 @@ async function suggestPaths() {
       return {
         path: d.path,
         label,
-        hits: d.hits.map((h) => h - (cut ? cut : 0)),
+        hits: d.hits.map((h) => h - cut),
         score: k,
       };
     });
