@@ -719,7 +719,10 @@ body.side #ratings .rating-control { max-width: none; }
 }
 #ratings input.comment-mode {
   margin: 0;
-  accent-color: var(--tone);
+  appearance: none;
+}
+#ratings input.comment-mode::before {
+  content: '💬';
 }
 #ratings input.comment-mode:focus-visible { outline: 2px solid white; outline-offset: 2px; }
 #ratings .rating-icon {

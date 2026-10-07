@@ -106,7 +106,7 @@ async function api(url, data) {
 }
 
 async function transact(action) {
-  while (state.busy) await new Promise((resolve) => setTimeout(resolve, 25));
+  if (state.busy) return false;
   state.busy = true;
   document.body.classList.add('busy');
   $('comment').readOnly = true;
@@ -637,7 +637,11 @@ function initReview() {
     box.dataset.value = value;
     box.onchange = () => setCommentMode(value, box.checked);
     buttonFace(b, label, symbol, key);
-    keyAction[key] = b.onclick = () => act(value);
+    keyAction[key] = () => act(value);
+    b.onclick = (e) => {
+      if (e.detail) b.blur();
+      return keyAction[key]();
+    };
     const wrap = document.createElement('span');
     wrap.className = 'rating-control';
     wrap.dataset.key = key;
