@@ -21,6 +21,29 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
+// Per-browser settings. Storage can be blocked (private windows, site data off); then defaults apply.
+function stored(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function storedJSON(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch {
+    return null;
+  }
+}
+// null removes the key.
+function store(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {}
+}
+
 const flags = ['redo', 'broken', 'trash', 'custom7', 'custom8', 'custom9'];
 
 const customs = flags.slice(3);
@@ -114,16 +137,12 @@ const keyQueue = [];
 const keyAction = {};
 
 function initState() {
-  try {
-    state.customNames = JSON.parse(localStorage.getItem('customNames')) || {};
-  } catch {}
-  try {
-    state.btnStyle = JSON.parse(localStorage.getItem('btnStyle')) || {};
-  } catch {}
+  state.customNames = storedJSON('customNames') || {};
+  state.btnStyle = storedJSON('btnStyle') || {};
 }
 
 // ── review ──
-    
+
 function paintRating() {
   const flag = state.items[current()?.name]?.flag,
     rating = flag ? null : state.items[current()?.name]?.rating;
@@ -355,9 +374,7 @@ function act(value) {
 
 function setCommentMode(value, on) {
   commentMode[value] = on;
-  try {
-    localStorage.setItem('commentMode', JSON.stringify(commentMode));
-  } catch {}
+  store('commentMode', JSON.stringify(commentMode));
   const box = document.querySelector(
     `#ratings button[data-rating="${value}"] .comment-mode`,
   );
@@ -446,10 +463,7 @@ function paintCommentTool() {
 }
 
 function initReview() {
-  try {
-    commentMode =
-      JSON.parse(localStorage.getItem('commentMode')) || commentMode;
-  } catch {}
+  commentMode = storedJSON('commentMode') || commentMode;
 
   new ResizeObserver(placeMultiTip).observe($('media'));
   addEventListener('resize', placeMultiTip);
@@ -527,7 +541,7 @@ function initReview() {
 }
 
 // ── media ──
-    
+
 // Kept as a reference: #media is often emptied, which detaches the box.
 let zoomOpts, zoomBox, fsBtn;
 
@@ -605,7 +619,9 @@ function paintGrid() {
     key =
       state.dir +
       '|' +
-      JSON.stringify(state.files.map(({ name, mtime, size }) => [name, mtime, size]));
+      JSON.stringify(
+        state.files.map(({ name, mtime, size }) => [name, mtime, size]),
+      );
   let g = $('media').querySelector('.grid');
   if (!g || g.dataset.key !== key) {
     // Keep the scroll position when files change in the same folder.
@@ -805,9 +821,7 @@ function setGrid(on) {
   state.grid = on;
   $('grid-toggle').classList.toggle('on', on);
   if (!on && document.body.classList.contains('list-off')) clearPicks();
-  try {
-    localStorage.setItem('grid', on ? '1' : '0');
-  } catch {}
+  store('grid', on ? '1' : '0');
   $('media').replaceChildren();
   if (state.files.length) paintCard();
   else paintPinList();
@@ -834,9 +848,7 @@ function setGridSize(cols, rows) {
       'on',
       b.dataset.grid === gridSize.cols + 'x' + gridSize.rows,
     );
-  try {
-    localStorage.setItem('gridSize', gridSize.cols + 'x' + gridSize.rows);
-  } catch {}
+  store('gridSize', gridSize.cols + 'x' + gridSize.rows);
   paintZoomBox();
 }
 
@@ -1231,10 +1243,8 @@ function initMedia() {
     $('fs-btn').before(b);
   }
 
-  try {
-    state.grid = localStorage.getItem('grid') === '1';
-    $('grid-toggle').classList.toggle('on', state.grid);
-  } catch {}
+  state.grid = stored('grid') === '1';
+  $('grid-toggle').classList.toggle('on', state.grid);
 
   for (const b of document.querySelectorAll('.grid-presets button'))
     b.onclick = () => setGridSize(...b.dataset.grid.split('x'));
@@ -1242,12 +1252,8 @@ function initMedia() {
   $('grid-cols').onchange = $('grid-rows').onchange = () =>
     setGridSize($('grid-cols').value, $('grid-rows').value);
 
-  try {
-    const [c, r] = (localStorage.getItem('gridSize') || '3x3').split('x');
-    setGridSize(c, r);
-  } catch {
-    setGridSize(3, 3);
-  }
+  const [c, r] = (stored('gridSize') || '3x3').split('x');
+  setGridSize(c, r);
 
   {
     const b = $('zoom-level').querySelector('button');
@@ -1288,7 +1294,9 @@ function initMedia() {
     if (e.key === 'Escape') return;
     setTimeout(() => {
       if (!$('viewer').hidden && !document.fullscreenElement)
-        $('viewer').requestFullscreen?.().catch(() => {});
+        $('viewer')
+          .requestFullscreen?.()
+          .catch(() => {});
     });
   });
 
@@ -1515,7 +1523,8 @@ function initMedia() {
     view.drag = null;
     $('viewer').classList.remove('dragging');
     if (!d || d.moved) return;
-    if (document.fullscreenElement || !$('viewer').requestFullscreen) return closeViewer();
+    if (document.fullscreenElement || !$('viewer').requestFullscreen)
+      return closeViewer();
     $('viewer').requestFullscreen().catch(closeViewer);
   });
 
@@ -1529,7 +1538,7 @@ function initMedia() {
 }
 
 // ── sidebar ──
-    
+
 let pathBoxEl = null,
   foldersEl = null;
 
@@ -1783,9 +1792,7 @@ let sideView = 'list';
 function setSideView(mode) {
   sideView = mode === 'grid' ? 'grid' : 'list';
   document.body.classList.toggle('side-grid', sideView === 'grid');
-  try {
-    localStorage.setItem('sideView', sideView);
-  } catch {}
+  store('sideView', sideView);
   paintLists();
 }
 
@@ -1799,9 +1806,7 @@ function setList(on) {
     'aria-label',
     (on ? 'Hide' : 'Show') + ' file list',
   );
-  try {
-    localStorage.setItem('list', on ? '1' : '0');
-  } catch {}
+  store('list', on ? '1' : '0');
   if (!$('viewer').hidden) resetView();
 }
 
@@ -1813,11 +1818,7 @@ let drag = null,
 const orderKey = () => 'order:' + state.dir;
 
 function loadOrder() {
-  try {
-    return JSON.parse(localStorage.getItem(orderKey())) || [];
-  } catch {
-    return [];
-  }
+  return storedJSON(orderKey()) || [];
 }
 
 let sortBy = { key: 'time', dir: 1 };
@@ -1849,9 +1850,7 @@ function setSort(key, keep = false) {
       sortBy.key === key && !loadOrder().length
         ? { key, dir: -sortBy.dir }
         : { key, dir: key === 'size' ? -1 : 1 };
-  try {
-    localStorage.setItem('sortBy', JSON.stringify(sortBy));
-  } catch {}
+  store('sortBy', JSON.stringify(sortBy));
   const name = current()?.name;
   saveOrder(null);
   state.files = sortFiles(state.files);
@@ -1864,11 +1863,7 @@ function setSort(key, keep = false) {
 }
 
 function saveOrder(names) {
-  try {
-    names
-      ? localStorage.setItem(orderKey(), JSON.stringify(names))
-      : localStorage.removeItem(orderKey());
-  } catch {}
+  store(orderKey(), names ? JSON.stringify(names) : null);
 }
 
 function arrange(list) {
@@ -1898,21 +1893,13 @@ function initSidebar() {
   $('list-flag').onclick = () =>
     setList(document.body.classList.contains('list-off'));
 
-  try {
-    setList(localStorage.getItem('list') !== '0');
-  } catch {
-    setList(true);
-  }
+  setList(stored('list') !== '0');
 
-  try {
-    sideView = localStorage.getItem('sideView') === 'grid' ? 'grid' : 'list';
-  } catch {}
+  sideView = stored('sideView') === 'grid' ? 'grid' : 'list';
 
   document.body.classList.toggle('side-grid', sideView === 'grid');
 
-  try {
-    sortBy = { ...sortBy, ...JSON.parse(localStorage.getItem('sortBy')) };
-  } catch {}
+  sortBy = { ...sortBy, ...storedJSON('sortBy') };
 
   document.addEventListener('pointermove', (e) => {
     if (!drag) return;
@@ -1965,7 +1952,7 @@ function initSidebar() {
 }
 
 // ── marks ──
-   
+
 // Marks: numbered pins with notes and pen strokes, stored with the review in 0..1 image coordinates.
 // They are drawn in an overlay sized to the shown picture (single view and fullscreen), never into the file.
 let markMode = null,
@@ -2222,9 +2209,7 @@ function setMarksHidden(off) {
   document.body.classList.toggle('marks-off', off);
   $('hide-tool').classList.toggle('on', off);
   if (off && markMode) setMarkMode(null); // hidden marks can't be edited, so drop the active tool
-  try {
-    localStorage.setItem('marksOff', off ? '1' : '0');
-  } catch {}
+  store('marksOff', off ? '1' : '0');
 }
 
 // Undo takes back the newest pin or stroke: the ones added in this tab, newest first, then strokes, then pins.
@@ -2321,9 +2306,7 @@ function shapePen(shift, ctrl) {
 }
 
 function initMarks() {
-  try {
-    setMarksHidden(localStorage.getItem('marksOff') === '1');
-  } catch {}
+  setMarksHidden(stored('marksOff') === '1');
 
   $('pin-tool').onclick = () => setMarkMode(markMode === 'pin' ? null : 'pin');
 
@@ -2426,14 +2409,12 @@ function initMarks() {
 }
 
 // ── settings ──
-     
+
 function setLayout(side) {
   document.body.classList.toggle('side', side);
   $('set-side').checked = side;
   $('layout-btn').setAttribute('aria-pressed', side);
-  try {
-    localStorage.setItem('layout', side ? 'side' : 'bottom');
-  } catch {}
+  store('layout', side ? 'side' : 'bottom');
   if (!$('viewer').hidden) resetView();
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
 }
@@ -2441,27 +2422,21 @@ function setLayout(side) {
 function setPeek(on) {
   document.body.classList.toggle('peek-off', !on);
   $('set-peek').checked = on;
-  try {
-    localStorage.setItem('peek', on ? '1' : '0');
-  } catch {}
+  store('peek', on ? '1' : '0');
 }
 
 // Settings switch that hides the file details box entirely (its expanded state is separate).
 function setShowDetails(on) {
   document.body.classList.toggle('no-details', !on);
   $('set-details').checked = on;
-  try {
-    localStorage.setItem('showDetails', on ? '1' : '0');
-  } catch {}
+  store('showDetails', on ? '1' : '0');
 }
 
 // Settings switch for the pen / pin / zoom hint bars (off: keys still work, the zoom box shows the level instead).
 function setHints(on) {
   document.body.classList.toggle('no-hints', !on);
   $('set-hints').checked = on;
-  try {
-    localStorage.setItem('hints', on ? '1' : '0');
-  } catch {}
+  store('hints', on ? '1' : '0');
   if (typeof paintZoomOpts === 'function') {
     paintZoomOpts();
     paintZoomBox();
@@ -2474,9 +2449,7 @@ function setSideScale(pct) {
   $('set-side-scale').value = pct;
   $('side-scale-out').value = pct + '%';
   document.body.style.setProperty('--side-scale', pct / 100);
-  try {
-    localStorage.setItem('sideScale', pct);
-  } catch {}
+  store('sideScale', pct);
 }
 
 // Right sidebar size (50–100%): narrows the column and scales its buttons and text with it.
@@ -2485,9 +2458,7 @@ function setRsScale(pct) {
   $('set-rs-width').value = pct;
   $('rs-width-out').value = pct + '%';
   document.body.style.setProperty('--rs-scale', pct / 100);
-  try {
-    localStorage.setItem('rsScale', pct);
-  } catch {}
+  store('rsScale', pct);
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
 }
 
@@ -2527,9 +2498,7 @@ function saveBtnStyle() {
   for (const v in state.btnStyle)
     if (!Object.values(state.btnStyle[v]).some(Boolean))
       delete state.btnStyle[v];
-  try {
-    localStorage.setItem('btnStyle', JSON.stringify(state.btnStyle));
-  } catch {}
+  store('btnStyle', JSON.stringify(state.btnStyle));
 }
 
 function paintBtnStyle() {
@@ -2573,11 +2542,9 @@ function fitDetails() {
 
 let detailsObserver;
 
-function setDetails(state) {
-  document.body.classList.toggle('details-full', state === 'full');
-  try {
-    localStorage.setItem('details', state);
-  } catch {}
+function setDetails(mode) {
+  document.body.classList.toggle('details-full', mode === 'full');
+  store('details', mode);
   fitDetails();
 }
 
@@ -2591,43 +2558,23 @@ function initSettings() {
 
   $('set-peek').onchange = (e) => setPeek(e.target.checked);
 
-  try {
-    setPeek(localStorage.getItem('peek') !== '0');
-  } catch {
-    setPeek(true);
-  }
+  setPeek(stored('peek') !== '0');
 
   $('set-details').onchange = (e) => setShowDetails(e.target.checked);
 
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
-  try {
-    setHints(localStorage.getItem('hints') !== '0');
-  } catch {
-    setHints(true);
-  }
+  setHints(stored('hints') !== '0');
 
   $('set-side-scale').oninput = (e) => setSideScale(e.target.value);
 
-  try {
-    setSideScale(localStorage.getItem('sideScale') || 100);
-  } catch {
-    setSideScale(100);
-  }
+  setSideScale(stored('sideScale') || 100);
 
   $('set-rs-width').oninput = (e) => setRsScale(e.target.value);
 
-  try {
-    setRsScale(localStorage.getItem('rsScale') || 100);
-  } catch {
-    setRsScale(100);
-  }
+  setRsScale(stored('rsScale') || 100);
 
-  try {
-    setShowDetails(localStorage.getItem('showDetails') !== '0');
-  } catch {
-    setShowDetails(true);
-  }
+  setShowDetails(stored('showDetails') !== '0');
 
   // Key hint bar: small by default, click toggles a bigger size (kept per browser).
   {
@@ -2635,31 +2582,21 @@ function initSettings() {
     h.title = 'Click to resize';
     const setBig = (on) => {
       h.classList.toggle('big', on);
-      try {
-        localStorage.setItem('hintBig', on ? '1' : '0');
-      } catch {}
+      store('hintBig', on ? '1' : '0');
     };
     const setVisible = (on) => {
       h.hidden = !on;
       $('set-keybind-note').checked = on;
-      try {
-        localStorage.setItem('keybindNote', on ? '1' : '0');
-      } catch {}
+      store('keybindNote', on ? '1' : '0');
     };
     $('set-keybind-note').onchange = (e) => setVisible(e.target.checked);
     $('close-keybind-note').onclick = (e) => {
       e.stopPropagation();
       setVisible(false);
     };
-    try {
-      setVisible(localStorage.getItem('keybindNote') !== '0');
-    } catch {
-      setVisible(true);
-    }
+    setVisible(stored('keybindNote') !== '0');
     h.onclick = () => setBig(!h.classList.contains('big'));
-    try {
-      setBig(localStorage.getItem('hintBig') === '1');
-    } catch {}
+    setBig(stored('hintBig') === '1');
   }
 
   $('settings').onclick = () => setMenu($('settings-menu').hidden);
@@ -2715,9 +2652,7 @@ function initSettings() {
     input.oninput = () => {
       state.customNames[v] = input.value.trim();
       if (!state.customNames[v]) delete state.customNames[v];
-      try {
-        localStorage.setItem('customNames', JSON.stringify(state.customNames));
-      } catch {}
+      store('customNames', JSON.stringify(state.customNames));
       paintCustoms();
     };
     // × clears the name here and the one saved in the open folder, which otherwise keeps the button shown.
@@ -2725,9 +2660,7 @@ function initSettings() {
       e.preventDefault();
       input.value = '';
       delete state.customNames[v];
-      try {
-        localStorage.setItem('customNames', JSON.stringify(state.customNames));
-      } catch {}
+      store('customNames', JSON.stringify(state.customNames));
       try {
         if (state.dir && state.folderLabels[v])
           state.folderLabels =
@@ -2801,18 +2734,12 @@ function initSettings() {
 
   paintBtnStyle();
 
-  try {
-    setLayout(localStorage.getItem('layout') === 'side');
-  } catch {
-    setLayout(false);
-  }
+  setLayout(stored('layout') === 'side');
 
   for (const id of ['ratings', 'details', 'fileinfo', 'genmeta'])
     detailsObserver.observe($(id));
 
-  try {
-    setDetails(localStorage.getItem('details') || 'on');
-  } catch {}
+  setDetails(stored('details') || 'on');
 
   $('details').title = 'Click to show all file details, click again to shrink';
 
@@ -2825,7 +2752,7 @@ function initSettings() {
 }
 
 // ── folders ──
-     
+
 const whenIdle = async () => {
   for (let t = 0; state.busy && t < 200; t++)
     await new Promise((r) => setTimeout(r, 50));
@@ -2883,9 +2810,7 @@ function setHomeSearch(on) {
   homeSearch = on;
   $('set-home').checked = on;
   pathBase = nextBase;
-  try {
-    localStorage.setItem('homeSearch', on ? '1' : '0');
-  } catch {}
+  store('homeSearch', on ? '1' : '0');
   if (on) api('/api/find-dirs?scope=home').catch(() => {}); // starts the home scan before the first search
 }
 
@@ -2979,7 +2904,8 @@ async function suggestPaths() {
     input.value !== typed ||
     homeSearch !== scope ||
     pathBase !== base
-  ) return;
+  )
+    return;
   // Skip folders the sidebar already shows: the open one, its parent and its subfolders.
   const strip = (p) => tilde(p.replace(/\/+$/, '') || '/'),
     shown = new Set(
@@ -2996,7 +2922,7 @@ async function suggestPaths() {
   showPathHints(items.slice(0, 50), typed.endsWith('/') ? -1 : 0);
 }
 
-const basePath = (p) => (p && !/^[\/~]/.test(p) ? pathBase + '/' + p : p);
+const basePath = (p) => (p && !/^[/~]/.test(p) ? pathBase + '/' + p : p);
 
 function showPathHints(list, pick) {
   pathHints = list;
@@ -3115,9 +3041,7 @@ async function startFolders() {
 function initFolders() {
   $('set-home').onchange = (e) => setHomeSearch(e.target.checked);
 
-  try {
-    homeSearch = localStorage.getItem('homeSearch') === '1';
-  } catch {}
+  homeSearch = stored('homeSearch') === '1';
 
   setHomeSearch(homeSearch);
 
@@ -3204,7 +3128,7 @@ function initFolders() {
 }
 
 // ── keyboard ──
-      
+
 function initKeyboard() {
   document.addEventListener('keydown', (e) => {
     if (
