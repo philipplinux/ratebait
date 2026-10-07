@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
-"""Run: python3 test_assets.py. Exercises browser asset delivery and route isolation."""
+"""Run from the repo root: python3 -m tests.test_assets. Exercises browser asset delivery and route isolation."""
 
 from http.server import ThreadingHTTPServer
 from threading import Thread

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
-"""Run: python3 test_review.py. Exercises a real HTTP server with scratch PNGs."""
+"""Run from the repo root: python3 -m tests.test_review. Exercises a real HTTP server with scratch PNGs."""
 
 import json
 from pathlib import Path

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 philipplinux
-"""Run: python3 test_writes.py. Uses disposable files only."""
+"""Run from the repo root: python3 -m tests.test_writes. Uses disposable files only."""
 
 from pathlib import Path
 import struct
