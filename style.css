@@ -3167,14 +3167,14 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 [data-active='multi'] {
   --mode: #5ad18a;
 }
-/* The picture area gets a thin inset frame, the picture itself (the marks layer is sized to it) an outline. */
+/* The picture area and the picture itself (the marks layer is sized to it) both get a frame drawn on top of them. */
 #media:not([data-active='']),
 #viewer:not([data-active='']) {
   box-shadow: inset 0 0 0 3px var(--mode, transparent);
 }
 #media:not([data-active='']) > .marks,
 #viewer:not([data-active='']) > .marks {
-  box-shadow: 0 0 0 3px var(--mode, transparent);
+  box-shadow: inset 0 0 0 3px var(--mode, transparent);
 }
 #multi-tip {
   position: fixed;
