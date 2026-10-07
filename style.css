@@ -3292,12 +3292,24 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 #kb-combos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 6px 20px;
-  margin: 4px 0 0;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px 24px;
+  margin-top: 4px;
+  color: #d3dae5;
+}
+#kb-combos h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #929daf;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#kb-combos ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
   padding: 0;
   list-style: none;
-  color: #d3dae5;
 }
 #kb-combos li {
   display: flex;
@@ -3309,6 +3321,7 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   height: 22px;
   padding: 0 7px;
   font-size: 12px;
+  flex: none;
 }
 .kb-legend {
   display: flex;

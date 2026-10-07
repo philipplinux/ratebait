@@ -3007,22 +3007,47 @@ function keyBinds() {
     B: ['folder', 'Browse (folder dialog)'],
     O: ['folder', 'Browse (folder dialog)'],
     Tab: ['folder', 'Accept (path field suggestion)'],
+    // Held while drawing: the pen shape of that stroke.
+    Shift: [
+      'mark',
+      'Line (hold while drawing; with Ctrl: circle, with Alt: cross)',
+    ],
+    Ctrl: ['mark', 'Box (hold while drawing; with Shift: circle)'],
+    Alt: ['mark', 'Arrow (hold while drawing; with Shift: cross)'],
   };
 }
 const kbCombos = [
-  ['Shift+Enter', 'Save the comment and go to the next file'],
-  ['Alt+Enter', 'New line in the comment'],
-  ['Shift+arrows', 'Move the picture while zoomed (also drag or wheel)'],
-  ['Ctrl+wheel', 'Zoom at the cursor'],
-  ['Ctrl+Space', 'Reset zoom'],
-  ['Ctrl+Z', 'Undo the newest pin or stroke'],
-  ['Shift+drag', 'Pen: straight line'],
-  ['Ctrl+drag', 'Pen: rectangle'],
-  ['Ctrl+Shift+drag', 'Pen: circle'],
-  ['Alt+drag', 'Pen: arrow'],
-  ['Alt+Shift+drag', 'Pen: cross'],
-  ['Right-click', 'Turn the pin or draw tool off'],
-  ['Tab / ↑ ↓', 'Path field: take or pick a suggestion'],
+  [
+    'Pen and pins',
+    [
+      ['drag', 'Pen: freehand (or the shape picked in the pen row)'],
+      ['Shift+drag', 'Pen: straight line'],
+      ['Ctrl+drag', 'Pen: box'],
+      ['Ctrl+Shift+drag', 'Pen: circle around the start point'],
+      ['Alt+drag', 'Pen: arrow'],
+      ['Alt+Shift+drag', 'Pen: cross'],
+      ['Ctrl+Z', 'Undo the newest pin or stroke'],
+      ['Right-click', 'Turn the pin or draw tool off'],
+    ],
+  ],
+  [
+    'Comment',
+    [
+      ['Enter', 'Save (moves on if the file is rated)'],
+      ['Shift+Enter', 'Save and go to the next file'],
+      ['Alt+Enter', 'New line'],
+      ['Esc', 'Close without moving on'],
+    ],
+  ],
+  [
+    'Zoom and more',
+    [
+      ['Ctrl+wheel', 'Zoom at the cursor'],
+      ['Shift+arrows', 'Move the picture while zoomed (also drag or wheel)'],
+      ['Ctrl+Space', 'Reset zoom'],
+      ['Tab / ↑ ↓', 'Path field: take or pick a suggestion'],
+    ],
+  ],
 ];
 
 function paintKeyboard() {
@@ -3063,16 +3088,25 @@ function paintKeyboard() {
     }
   });
   $('kb-combos').replaceChildren(
-    ...kbCombos.map(([k, text]) => {
-      const li = document.createElement('li');
-      li.append(
-        Object.assign(document.createElement('kbd'), {
-          className: 'keycap',
-          textContent: k,
-        }),
-        Object.assign(document.createElement('span'), { textContent: text }),
+    ...kbCombos.map(([head, rows]) => {
+      const col = document.createElement('div'),
+        ul = document.createElement('ul');
+      for (const [k, text] of rows) {
+        const li = document.createElement('li');
+        li.append(
+          Object.assign(document.createElement('kbd'), {
+            className: 'keycap',
+            textContent: k,
+          }),
+          Object.assign(document.createElement('span'), { textContent: text }),
+        );
+        ul.append(li);
+      }
+      col.append(
+        Object.assign(document.createElement('h4'), { textContent: head }),
+        ul,
       );
-      return li;
+      return col;
     }),
   );
 }
