@@ -2509,9 +2509,9 @@ function setHints(on) {
   }
 }
 
-// Sidebar pictures: scales each file row/tile in the sidebar (60–100%); folder controls stay full size.
+// File list pictures: thumbnail size in the left sidebar (50–200%); in its grid, bigger pictures mean fewer columns.
 function setSideScale(pct) {
-  pct = Math.min(100, Math.max(60, +pct || 100));
+  pct = Math.min(200, Math.max(50, +pct || 100));
   $('set-side-scale').value = pct;
   $('side-scale-out').value = pct + '%';
   document.body.style.setProperty('--side-scale', pct / 100);

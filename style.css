@@ -191,8 +191,8 @@ aside {
   background: color-mix(in srgb, var(--tone) 40%, #2a3343);
 }
 .thumb {
-  width: 40px;
-  height: 40px;
+  width: calc(40px * var(--side-scale, 1));
+  height: calc(40px * var(--side-scale, 1));
   object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
@@ -425,7 +425,10 @@ aside #path-hints {
 }
 body.side-grid .files {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(calc(84px * var(--side-scale, 1)), 1fr)
+  );
   gap: 4px;
 }
 body.side-grid .row {
@@ -2189,9 +2192,6 @@ body.details-full #genmeta dd.prompt {
   text-align: right;
   color: #b7c1d2;
   font-variant-numeric: tabular-nums;
-}
-#sidebar .files {
-  zoom: var(--side-scale, 1);
 }
 .set-head.first {
   margin-top: 0;
