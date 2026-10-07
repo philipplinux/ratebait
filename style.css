@@ -954,7 +954,6 @@ body:not(.side) :is(#ratings, #comments) {
 }
 body:not(.side) #comments textarea {
   flex: none;
-  height: 46px;
 }
 body:not(.side) #fileinfo {
   max-width: 170px;
@@ -1924,6 +1923,23 @@ body:not(.side) #comments {
 body:not(.side):not(.comment-open) #comments {
   display: none;
 }
+body.comment-float.has-comment:not(.side) #comments {
+  display: flex;
+}
+/* Floating comment that is only being shown: no label row, the text field alone. */
+body.comment-float:not(.side):not(.comment-open) #comments,
+body.comment-float:not(.comment-open) #viewer #comments {
+  padding: 6px;
+}
+body.comment-float:not(.side):not(.comment-open) .comment-line,
+body.comment-float:not(.comment-open) #viewer .comment-line {
+  display: none;
+}
+body:not(.side) #comments textarea,
+#viewer #comments textarea {
+  min-height: 0;
+  max-height: 30vh;
+}
 body.comment-open:not(.side) #marks-panel {
   max-height: calc(100% - 190px);
 }
@@ -2464,7 +2480,6 @@ body.comment-float.has-comment #viewer #comments {
   display: flex;
 }
 #viewer #comments textarea {
-  height: 46px;
   resize: none;
 }
 #zoom-level .vkeys span.on {
@@ -3093,8 +3108,16 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 #ticks .tally {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 6px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+#ticks .tally b {
+  font-weight: inherit;
+}
+#ticks.short .tally b {
+  display: none;
 }
 #ticks .tally button {
   flex: none;
@@ -3292,4 +3315,32 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 .set-card .grid-presets {
   flex-basis: 100%;
   margin-left: 0;
+}
+/* R: quick colours in a ring around the pointer. */
+#colour-wheel {
+  position: fixed;
+  z-index: 70;
+  width: 0;
+  height: 0;
+}
+#colour-wheel button {
+  position: absolute;
+  left: -16px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #11161b;
+  box-shadow: 0 2px 10px #000a;
+}
+#colour-wheel button:hover,
+#colour-wheel button.on {
+  border-color: #fff;
+  scale: 1.15;
+}
+#colour-wheel .more {
+  background: #151a22;
+  border-color: #3d4657;
+  font-size: 15px;
 }

@@ -117,7 +117,7 @@
                 thumbnails in fullscreen</label
               ><label class="set-row"
                 ><input type="checkbox" id="set-comment-float" /> Show a saved
-                comment in fullscreen</label
+                comment over the picture</label
               ><label class="set-row"
                 ><input type="checkbox" id="set-hints" /> Key hints while
                 drawing, pinning or zoomed</label
@@ -297,14 +297,14 @@
             >📍<kbd class="keycap">A</kbd></button
           ><button
             id="draw-tool"
-            title="Draw on the image, as an overlay (D). Shift: straight line, Ctrl+Shift: circle. Click again, Esc or right-click to turn off"
+            title="Draw on the image, as an overlay (D). Shift: line, Ctrl: box, Ctrl+Shift: circle, Alt: arrow, Alt+Shift: cross. Click again, Esc or right-click to turn off"
             >✏️<kbd class="keycap">D</kbd></button
           ><span id="mark-color-wrap"
             ><input
               id="mark-color"
               type="color"
               value="#ff4d6d"
-              title="Pen and pin colour (R)"
+              title="Pen and pin colour: click for all colours, R for a quick ring"
             /><kbd class="keycap">R</kbd></span
           ><button
             id="undo-tool"
@@ -360,6 +360,7 @@
           ></label
         ><textarea
           id="comment"
+          rows="1"
           placeholder="What works? What needs changing?"
         ></textarea></section
       ><aside id="marks-panel" aria-label="Marks" hidden
@@ -383,9 +384,15 @@
               ><kbd class="keycap">drag</kbd>Free</button
             ><button data-shape="line"
               ><kbd class="keycap">Shift</kbd>Line</button
+            ><button data-shape="rect"
+              ><kbd class="keycap">Ctrl</kbd>Box</button
             ><button data-shape="circle"
               ><kbd class="keycap">Ctrl+Shift</kbd>Circle</button
-            ><button data-k="R" class="pen-colour" title="Pen and pin colour (R)"
+            ><button data-shape="arrow"
+              ><kbd class="keycap">Alt</kbd>Arrow</button
+            ><button data-shape="cross"
+              ><kbd class="keycap">Alt+Shift</kbd>Cross</button
+            ><button data-k="R" class="pen-colour" title="Pen and pin colour: click for all colours, R for a quick ring"
               ><kbd class="keycap">R</kbd><i class="swatch"></i>Colour</button
             ><button
               class="mark-off"

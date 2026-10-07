@@ -516,6 +516,7 @@ function placeComments() {
 function setCommentOpen(open) {
   placeComments();
   document.body.classList.toggle('comment-open', open);
+  fitComment();
   $('comment-tool').classList.toggle('on', open);
   $('zoom-level').querySelector('[data-k="C"]').classList.toggle('on', open);
   paintModes();
@@ -524,11 +525,27 @@ function setCommentOpen(open) {
 }
 
 function paintCommentTool() {
-  const text = $('comment').value.trim();
+  const text = $('comment').value.trim(),
+    float = document.body.classList.contains('comment-float');
   $('comment-tool').classList.toggle('has', !!text);
   document.body.classList.toggle('has-comment', !!text && !multiOn());
-  $('comment-view').hidden = !text || !current() || multiOn();
+  // With the floating comment on, the box over the picture shows it; no second copy in the bar.
+  $('comment-view').hidden = !text || !current() || multiOn() || float;
   $('comment-view').querySelector('.cv-text').textContent = text;
+  fitComment();
+}
+
+// Outside the right sidebar the comment field is one line tall and grows with its text (capped in CSS).
+function fitComment() {
+  const t = $('comment');
+  t.style.height = '';
+  if (
+    (document.body.classList.contains('side') && $('viewer').hidden) ||
+    !t.offsetHeight
+  )
+    return;
+  t.style.height = 'auto';
+  t.style.height = t.scrollHeight + t.offsetHeight - t.clientHeight + 'px';
 }
 
 function initReview() {
@@ -540,6 +557,7 @@ function initReview() {
   }).observe($('media'));
   addEventListener('resize', placeMultiTip);
   addEventListener('resize', paintModes);
+  new ResizeObserver(fitComment).observe($('comments'));
 
   for (const entry of buttons) {
     if (!entry) {
@@ -1957,8 +1975,12 @@ function tally(counts) {
     paintIcon(icon, r);
     if (!r) ((icon.textContent = '—'), (icon.hidden = false));
     const name = r ? nameOf(r) : 'Unrated';
-    chip.append(icon, `${counts[r]} ${name}`);
-    chip.title = `Next ${name.toLowerCase()} file`;
+    chip.append(
+      icon,
+      `${counts[r]}`,
+      Object.assign(document.createElement('b'), { textContent: name }),
+    );
+    chip.title = `${counts[r]} ${name}: next ${name.toLowerCase()} file`;
     chip.onclick = () => {
       const n = state.files.length;
       for (let k = 1; k <= n; k++) {
@@ -1977,6 +1999,13 @@ function fitTicks() {
   const t = $('ticks'),
     n = state.files.length;
   t.classList.toggle('rollup', n > 0 && (t.clientWidth - 4 * (n - 1)) / n < 8);
+  // Still too wide as a rollup: drop the names, icon and count only.
+  const box = t.querySelector('.tally');
+  t.classList.remove('short');
+  t.classList.toggle(
+    'short',
+    t.classList.contains('rollup') && box.scrollWidth > box.clientWidth,
+  );
 }
 
 // ▲ under the List/Grid bar and ▼ at the bottom: shown while there is more to scroll, click to jump to that end.
@@ -2552,10 +2581,78 @@ function startMark(e, layer) {
   return true;
 }
 
-// Shift draws a straight line from the start point, Ctrl+Shift a circle around it (radius = drag distance);
-// without modifiers the stroke follows the shape picked in the fullscreen pen row (freehand by default).
-// The modifiers held when the button is released decide.
+// Modifier keys pick the shape of one stroke: Shift line, Ctrl rectangle, Ctrl+Shift circle around the
+// start point (radius = drag distance), Alt arrow, Alt+Shift cross. Without modifiers the stroke follows
+// the shape picked in the pen row (freehand by default). The keys held when the button is released decide.
+// Every shape is one polyline, so the review format stays the same.
 let penShape = 'free';
+
+// R: a ring of quick colours at the pointer; the middle button (or clicking the colour swatch) opens
+// the full picker. A click elsewhere, Esc or R again closes it.
+const wheelColours = [
+  '#ff4d6d',
+  '#ff9f1c',
+  '#ffd166',
+  '#06d6a0',
+  '#4cc9f0',
+  '#4361ee',
+  '#b56cff',
+  '#ffffff',
+];
+let lastPointer = [innerWidth / 2, innerHeight / 2];
+
+function colourWheel() {
+  const w = document.createElement('div'),
+    input = $('mark-color'),
+    pick = (c) => {
+      close();
+      if (c) {
+        input.value = c;
+        input.dispatchEvent(new Event('input'));
+      } else input.click();
+    },
+    away = (e) => {
+      if (w.contains(e.target)) return;
+      e.stopPropagation(); // the click only closes the ring, it does not draw or pin
+      close();
+    },
+    key = (e) => {
+      if (e.key === 'Escape' || e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+      close();
+    },
+    close = () => {
+      w.remove();
+      removeEventListener('pointerdown', away, true);
+      removeEventListener('keydown', key, true);
+    };
+  w.id = 'colour-wheel';
+  w.style.left = Math.min(Math.max(lastPointer[0], 70), innerWidth - 70) + 'px';
+  w.style.top = Math.min(Math.max(lastPointer[1], 70), innerHeight - 70) + 'px';
+  wheelColours.forEach((c, i) => {
+    const b = document.createElement('button'),
+      a = (i / wheelColours.length) * 2 * Math.PI - Math.PI / 2;
+    b.style.background = c;
+    b.style.translate = `${Math.cos(a) * 46}px ${Math.sin(a) * 46}px`;
+    b.title = c;
+    b.classList.toggle('on', c === input.value.toLowerCase());
+    b.onclick = () => pick(c);
+    w.append(b);
+  });
+  w.append(
+    Object.assign(document.createElement('button'), {
+      className: 'more',
+      textContent: '🎨',
+      title: 'All colours',
+      onclick: () => pick(),
+    }),
+  );
+  document.body.append(w);
+  addEventListener('pointerdown', away, true);
+  addEventListener('keydown', key, true);
+}
 
 function setPenShape(shape) {
   penShape = shape;
@@ -2564,25 +2661,57 @@ function setPenShape(shape) {
     .forEach((b) => b.classList.toggle('on', b.dataset.shape === shape));
 }
 
-function shapePen(shift, ctrl) {
-  const [sx, sy] = pen.free[0],
-    [x, y] = pen.at;
-  if (!shift && !ctrl && penShape !== 'free') {
-    shift = true;
-    ctrl = penShape === 'circle';
-  }
-  if (shift && ctrl) {
-    const b = pen.layer.getBoundingClientRect(),
-      r = Math.hypot((x - sx) * b.width, (y - sy) * b.height),
-      c = (v) => Math.round(Math.min(Math.max(v, 0), 1) * 1e4) / 1e4;
-    pen.pts = Array.from({ length: 65 }, (_, i) => {
-      const a = (i / 64) * 2 * Math.PI;
-      return [
-        c(sx + (r * Math.cos(a)) / b.width),
-        c(sy + (r * Math.sin(a)) / b.height),
-      ];
-    });
-  } else pen.pts = shift ? [pen.free[0], pen.at] : pen.free;
+function shapePen(shift, ctrl, alt) {
+  const shape =
+    !shift && !ctrl && !alt
+      ? penShape
+      : alt
+        ? shift
+          ? 'cross'
+          : 'arrow'
+        : ctrl
+          ? shift
+            ? 'circle'
+            : 'rect'
+          : 'line';
+  // Work in pixels so circles stay round and arrow heads keep their angle on any aspect ratio.
+  const { width: w, height: h } = pen.layer.getBoundingClientRect(),
+    c = (v) => Math.round(Math.min(Math.max(v, 0), 1) * 1e4) / 1e4,
+    [sx, sy] = [pen.free[0][0] * w, pen.free[0][1] * h],
+    [x, y] = [pen.at[0] * w, pen.at[1] * h],
+    len = Math.hypot(x - sx, y - sy),
+    head = (t) => {
+      const a = Math.atan2(y - sy, x - sx) + t,
+        r = Math.min(len * 0.35, 40);
+      return [x - r * Math.cos(a), y - r * Math.sin(a)];
+    },
+    pts = {
+      line: [
+        [sx, sy],
+        [x, y],
+      ],
+      rect: [
+        [sx, sy],
+        [x, sy],
+        [x, y],
+        [sx, y],
+        [sx, sy],
+      ],
+      circle: Array.from({ length: 65 }, (_, i) => {
+        const a = (i / 64) * 2 * Math.PI;
+        return [sx + len * Math.cos(a), sy + len * Math.sin(a)];
+      }),
+      arrow: [[sx, sy], [x, y], head(0.45), [x, y], head(-0.45)],
+      // Both diagonals in one line: corner to corner, back to the middle, then the other diagonal.
+      cross: [
+        [sx, sy],
+        [x, y],
+        [(sx + x) / 2, (sy + y) / 2],
+        [sx, y],
+        [x, sy],
+      ],
+    }[shape];
+  pen.pts = pts ? pts.map(([px, py]) => [c(px / w), c(py / h)]) : pen.free;
   pen.path.setAttribute('d', pathD(pen.pts));
 }
 
@@ -2639,6 +2768,11 @@ function initMarks() {
       e.stopPropagation();
       $('mark-color').click();
     };
+    addEventListener(
+      'pointermove',
+      (e) => (lastPointer = [e.clientX, e.clientY]),
+      { passive: true },
+    );
     $('mark-color').addEventListener('input', paint);
     paint();
   }
@@ -2672,13 +2806,15 @@ function initMarks() {
       last = pen.free[pen.free.length - 1];
     pen.at = q;
     if (Math.hypot(q[0] - last[0], q[1] - last[1]) >= 0.002) pen.free.push(q);
-    shapePen(e.shiftKey, e.ctrlKey || e.metaKey);
+    shapePen(e.shiftKey, e.ctrlKey || e.metaKey, e.altKey);
   });
 
   for (const type of ['keydown', 'keyup'])
     document.addEventListener(type, (e) => {
-      if (pen && (e.key === 'Shift' || e.key === 'Control' || e.key === 'Meta'))
-        shapePen(e.shiftKey, e.ctrlKey || e.metaKey);
+      if (pen && ['Shift', 'Control', 'Meta', 'Alt'].includes(e.key)) {
+        e.preventDefault(); // Alt alone would open the browser menu bar
+        shapePen(e.shiftKey, e.ctrlKey || e.metaKey, e.altKey);
+      }
     });
 
   document.addEventListener('pointercancel', (e) => {
@@ -2744,6 +2880,7 @@ function setCommentFloat(on) {
   document.body.classList.toggle('comment-float', on);
   $('set-comment-float').checked = on;
   store('commentFloat', on ? '1' : '0');
+  paintCommentTool();
 }
 
 // File list pictures / list scale: thumbnail size in the left sidebar (50–200%); in its grid, bigger pictures mean
@@ -2823,7 +2960,7 @@ function keyBinds() {
     A: ['mark', 'Pin'],
     D: ['mark', 'Draw'],
     C: ['mark', 'Comment'],
-    R: ['mark', 'Colour (pen and pins)'],
+    R: ['mark', 'Colour ring (pen and pins)'],
     Z: ['mark', 'Undo (the newest pin or stroke)'],
     H: ['mark', 'Hide marks'],
     Del: ['mark', 'Clear all (marks and rating)'],
@@ -2844,7 +2981,10 @@ const kbCombos = [
   ['Ctrl+Space', 'Reset zoom'],
   ['Ctrl+Z', 'Undo the newest pin or stroke'],
   ['Shift+drag', 'Pen: straight line'],
+  ['Ctrl+drag', 'Pen: rectangle'],
   ['Ctrl+Shift+drag', 'Pen: circle'],
+  ['Alt+drag', 'Pen: arrow'],
+  ['Alt+Shift+drag', 'Pen: cross'],
   ['Right-click', 'Turn the pin or draw tool off'],
   ['Tab / ↑ ↓', 'Path field: take or pick a suggestion'],
 ];
@@ -3772,7 +3912,7 @@ function initKeyboard() {
       setMarkMode(markMode === 'draw' ? null : 'draw');
     } else if (e.key.toLowerCase() === 'r') {
       e.preventDefault();
-      $('mark-color').click();
+      colourWheel();
     } else if (e.key.toLowerCase() === 'z') {
       e.preventDefault();
       undoStroke();
