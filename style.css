@@ -16,6 +16,7 @@
   --custom7: #73daca;
   --custom8: #e9e46b;
   --custom9: #ff8fa3;
+  --lupe: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='27' cy='27' r='19'/%3E%3Cpath d='M41 41 57 57' stroke-width='7'/%3E%3Cpath d='M21 37V17h8a6 6 0 0 1 0 12h-8m8 0 7 8'/%3E%3C/svg%3E");
 }
 * {
   box-sizing: border-box;
@@ -254,15 +255,14 @@ body.sorting {
   padding: 8px 12px;
   background: #151a22;
   border-bottom: 1px solid #303746;
+  flex-wrap: wrap;
+  transition: box-shadow 0.15s;
 }
 .side-views button {
   flex: 1;
   font-size: 11px;
   padding: 3px 6px;
   background: transparent;
-}
-.side-views {
-  flex-wrap: wrap;
 }
 .side-sort {
   flex-basis: 100%;
@@ -285,7 +285,8 @@ body.sorting {
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 8px;
-} /* The open folder and Browse… live at the top of the sidebar; the header keeps the F list. The path field stays in the DOM for its logic. */
+}
+/* The open folder and Browse… live at the top of the sidebar; the header keeps the F list. The path field stays in the DOM for its logic. */
 #browse,
 #open {
   display: none !important;
@@ -328,10 +329,12 @@ aside #path-hints {
   text-align: center;
   font-size: 12px;
   color: #c9d3e6;
-  line-height: 22px;
-}
-.side-views {
-  transition: box-shadow 0.15s;
+  content: '▼';
+  bottom: -12px;
+  margin-top: -26px;
+  margin-bottom: -12px;
+  line-height: 30px;
+  background: linear-gradient(#151a2200, #151a22 70%);
 }
 #sidebar.more-up .side-views {
   box-shadow:
@@ -356,14 +359,6 @@ aside #path-hints {
 }
 #sidebar.more-up .side-views::after {
   opacity: 1;
-}
-#sidebar::after {
-  content: '▼';
-  bottom: -12px;
-  margin-top: -26px;
-  margin-bottom: -12px;
-  line-height: 30px;
-  background: linear-gradient(#151a2200, #151a22 70%);
 }
 #sidebar.more-down::after {
   opacity: 1;
@@ -431,6 +426,7 @@ body.side-grid .row {
   margin: 0;
   padding: 2px;
   border-width: 2px;
+  position: relative;
 }
 body.side-grid .row .thumb {
   display: block;
@@ -499,6 +495,9 @@ main {
   height: 100%;
   max-height: calc(100vh - 400px);
   object-fit: contain;
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .audio-card {
   display: flex;
@@ -532,9 +531,6 @@ main {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-:is(#ratings, #grid-box) button {
-  color: var(--tone);
 }
 :is(#ratings, #grid-box) button.selected {
   background: var(--tone);
@@ -578,6 +574,7 @@ body.busy select {
   flex-wrap: nowrap;
 }
 :is(#ratings, #grid-box) button {
+  color: var(--tone);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -685,11 +682,6 @@ body.busy select {
 #filename {
   font-size: 13px;
 }
-#media > img {
-  cursor: zoom-in;
-  user-select: none;
-  -webkit-user-drag: none;
-}
 #media.zoomed > img {
   cursor: grab;
   touch-action: none;
@@ -777,17 +769,10 @@ body.peek-off .peek {
 }
 .peek .tile-badge {
   position: absolute;
-  right: 4px;
-  bottom: 3px;
   background: #000c;
   color: var(--tone, #a2aabb);
-  padding: 1px 5px;
   border-radius: 4px;
-  font-size: 10.5px;
   font-weight: 600;
-  line-height: 1.3;
-}
-.peek .tile-badge {
   top: 50%;
   bottom: auto;
   right: auto;
@@ -899,6 +884,8 @@ body:not(.side) #media {
 body:not(.side) #ratings {
   grid-area: 3/2;
   padding: 0;
+  gap: 8px;
+  justify-content: center;
 }
 body:not(.side) #grid-box {
   grid-area: 3/4;
@@ -913,9 +900,6 @@ body:not(.side) #comments textarea {
   min-height: 0;
   resize: none;
 }
-body:not(.side) #ratings {
-  gap: 8px;
-}
 body:not(.side) #ratings .flag-sep {
   margin: 0 2px;
 }
@@ -927,21 +911,15 @@ body:not(.side) #ratings button {
   flex: 0 0 74px;
   min-width: 74px;
 }
-body:not(.side) #ratings {
-  justify-content: center;
-}
 body:not(.side) :is(#ratings, #comments, #grid-box) {
   align-self: start;
 }
 body:not(.side) #comments textarea {
-  height: 52px;
   flex: none;
+  height: 46px;
 }
 body:not(.side) #fileinfo {
   max-width: 170px;
-}
-body:not(.side) #details {
-  min-width: 0;
 }
 body:not(.side) #genmeta dd.prompt {
   -webkit-line-clamp: 2;
@@ -1150,9 +1128,6 @@ body.side .top #fs-btn {
   font-size: 11px;
   color: #7d8696;
 }
-#grid-toggle {
-  --tone: #a2aabb;
-}
 #grid-toggle .gt-seg {
   display: inline-flex;
   align-items: center;
@@ -1165,10 +1140,6 @@ body.side .top #fs-btn {
   background: #3d6dff;
   color: #fff;
 }
-#grid-toggle {
-  gap: 2px !important;
-  padding: 3px 6px 3px 3px !important;
-}
 #grid-toggle .keycap {
   margin-left: 5px;
 }
@@ -1176,6 +1147,9 @@ body.side .top #fs-btn {
   display: none;
 }
 #grid-toggle {
+  --tone: #a2aabb;
+  gap: 2px !important;
+  padding: 3px 6px 3px 3px !important;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1390,6 +1364,11 @@ body.list-off aside {
   color: #a2aabb;
   font-size: 14px;
   line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 #list-flag:hover {
   color: #fff;
@@ -1398,13 +1377,6 @@ body.list-off #list-flag {
   left: 0;
   width: 24px;
   height: 68px;
-}
-#list-flag {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
 }
 #list-flag .keycap {
   display: none;
@@ -1417,6 +1389,7 @@ body.list-off #list-flag .keycap {
   margin-left: auto;
 }
 body:not(.side) #details {
+  min-width: 0;
   grid-area: 3/1;
   display: grid;
   grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
@@ -1553,7 +1526,8 @@ body:not(.side) main:has(#banner[hidden]) {
     column-gap: 28px;
     margin-top: 4px;
   }
-} /* Custom 7–9 make the button row too wide for the one-row layout: use the stacked one. */
+}
+/* Custom 7–9 make the button row too wide for the one-row layout: use the stacked one. */
 @media (min-width: 1881px) {
   body.customs:not(.side) main {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 24%);
@@ -1769,10 +1743,6 @@ body.marks-off #viewer .marks {
   font-size: 8.5px;
   border-radius: 3px;
 }
-#mark-color {
-  width: 28px;
-  height: 30px;
-}
 #marks-bar :is(#next, #clear) {
   width: auto;
   padding: 0 9px;
@@ -1787,9 +1757,6 @@ body.marks-off #viewer .marks {
 #clear:hover {
   background: #c23b48;
   border-color: #ff8a95;
-}
-#marks-bar #next {
-  margin-left: auto;
 }
 .comment-line {
   display: block;
@@ -1816,6 +1783,8 @@ body:not(.side) .comment-line .blur {
   background: #5a84ff;
 }
 #mark-color {
+  width: 28px;
+  height: 30px;
   padding: 0 2px;
   border-radius: 6px;
 }
@@ -1913,13 +1882,12 @@ body.side #marks-panel {
 body.side #marks-bar {
   grid-area: 3/2;
   margin-bottom: 6px;
-} /* Right-sidebar layout: tool icons centred, then Clear all · Next as a full-width row under the rating keys. */
-body.side #marks-bar {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
 }
+/* Right-sidebar layout: tool icons centred, then Clear all · Next as a full-width row under the rating keys. */
 body.side #marks-bar :is(#clear, #next) {
   flex: 1 1 calc(50% - 6px);
   height: 34px;
@@ -1953,6 +1921,8 @@ body.side :is(.tools-sep, #comment-tool) {
 }
 body:not(.side) main {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  row-gap: 10px;
+  padding-bottom: 30px;
 }
 body:not(.side) #bar {
   grid-area: 3/1/4/-1;
@@ -2007,21 +1977,18 @@ body:not(.side) #marks-bar #next {
 body:not(.side) #comments {
   grid-area: 2/1/3/-1;
   align-self: end;
-  justify-self: end;
   z-index: 6;
-  width: min(460px, calc(100% - 24px));
-  margin: 0 12px 12px 0;
-  padding: 10px 12px 12px;
   background: #151a22f2;
   border: 1px solid #3d4657;
   border-radius: 12px;
   box-shadow: 0 10px 30px #000a;
+  justify-self: center;
+  width: min(720px, calc(100% - 24px));
+  margin: 0 0 12px;
+  padding: 8px 10px 10px;
 }
 body:not(.side):not(.comment-open) #comments {
   display: none;
-}
-body:not(.side) #comments textarea {
-  height: 84px;
 }
 body.comment-open:not(.side) #marks-panel {
   max-height: calc(100% - 190px);
@@ -2058,13 +2025,13 @@ body.comment-open:not(.side) #marks-panel {
 /* File details sit in a box; when cut off, a click shows everything and the next one shrinks it back (remembered). */
 #details {
   border: 1px solid #303746;
-  border-radius: 10px;
-  padding: 8px 12px;
   background: #151a22;
   cursor: pointer;
-  justify-self: start;
   max-width: 100%;
   box-sizing: border-box;
+  justify-self: stretch;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 #details:hover {
   border-color: #4a5468;
@@ -2074,22 +2041,10 @@ body.comment-open:not(.side) #marks-panel {
   display: inline-block;
   width: 14px;
   color: #7d8696;
+  flex: none;
 }
 /* Comment: a floating bar centred over the bottom of the media. */
-body:not(.side) #comments {
-  justify-self: center;
-  width: min(720px, calc(100% - 24px));
-  margin: 0 0 12px;
-  padding: 8px 10px 10px;
-}
-body:not(.side) #comments textarea {
-  height: 46px;
-}
 /* Tighter bottom layout: smaller gaps, a thin full-width details box, bar contents centred vertically. */
-body:not(.side) main {
-  row-gap: 10px;
-  padding-bottom: 30px;
-}
 body:not(.side) main:has(> .hint.big:not([hidden])) {
   padding-bottom: 56px;
 }
@@ -2104,13 +2059,11 @@ body:not(.side) #bar {
 body:not(.side) .tools-sep {
   align-self: stretch;
 }
-#details {
-  justify-self: stretch;
-  padding: 4px 10px;
-  border-radius: 8px;
-}
 body:not(.side) #details {
   margin-top: 0;
+  max-height: var(--bar-h, none);
+  overflow: hidden;
+  position: relative;
 }
 @media (max-height: 900px), (max-width: 1400px) {
   body:not(.side) #ratings button {
@@ -2190,17 +2143,14 @@ body:not(.side) main:has(> #comment-view:not([hidden])) #details {
   justify-content: center;
 }
 #marks-bar #next {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-body:not(.side) #details {
-  max-height: var(--bar-h, none);
-  overflow: hidden;
-  position: relative;
-}
 body.details-full:not(.side) #details {
-  max-height: none;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 body:not(.side) #details.more::after {
   content: 'more ▾';
@@ -2223,18 +2173,11 @@ body:not(.side) #fileinfo {
   display: flex;
   align-items: baseline;
 }
-#filename::before {
-  flex: none;
-}
 body.details-full #genmeta dd.prompt {
   display: block;
   -webkit-line-clamp: none;
   overflow: visible;
   white-space: pre-wrap;
-}
-body.details-full:not(.side) #details {
-  max-height: 50vh;
-  overflow-y: auto;
 }
 #settings-menu {
   max-height: calc(100vh - 80px);
@@ -2278,14 +2221,6 @@ body.details-full:not(.side) #details {
   flex: 1;
   margin-left: 4px;
 }
-.set-keys ul {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 10px;
-}
-.set-keys li {
-  display: contents;
-}
 .set-keys li > * {
   padding: 3px 0;
   border-bottom: 1px solid #262d3a;
@@ -2300,6 +2235,9 @@ body.details-full:not(.side) #details {
   cursor: pointer;
 }
 .set-keys ul {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
   margin: 4px 0 2px;
   padding: 0;
   list-style: none;
@@ -2308,11 +2246,9 @@ body.details-full:not(.side) #details {
   color: #b4bfce;
 }
 .set-keys li {
+  display: contents;
   padding: 2px 0;
   border-bottom: 1px solid #262d3a;
-}
-#grid-toggle {
-  margin-left: auto;
 }
 #fs-btn {
   height: 32px;
@@ -2390,6 +2326,7 @@ header #settings {
   font-size: 16px;
 }
 #grid-toggle {
+  margin-left: auto;
   height: 32px;
 }
 h1 .logo {
@@ -2699,6 +2636,10 @@ body.side #grid-box {
 }
 body.side #details {
   grid-area: 7/2;
+  max-height: 180px;
+  min-height: min(var(--det-h, 0px), 180px);
+  overflow: hidden;
+  position: relative;
 }
 /* Right-sidebar layout: the comment box pops in over the bottom centre of the picture (like the bottom layout); the sidebar shows the comment preview. */
 body.side #comments {
@@ -2760,12 +2701,6 @@ body.side.marks-dock.details-full #details {
 body.side.marks-dock #comment-view:not([hidden]) {
   grid-area: 6/2;
 }
-body.side #details {
-  max-height: 180px;
-  min-height: min(var(--det-h, 0px), 180px);
-  overflow: hidden;
-  position: relative;
-}
 body.side.details-full #details {
   max-height: 50vh;
   min-height: min(var(--det-h, 0px), 50vh);
@@ -2786,9 +2721,6 @@ body.side #details.more:hover::after {
   color: #e6ebf2;
 }
 /* Sidebar grid view: rating icon on each thumbnail. */
-body.side-grid .row {
-  position: relative;
-}
 body.side-grid .row .badge[data-rating] {
   display: inline-flex;
   position: absolute;
@@ -2821,9 +2753,6 @@ body.side-grid .row.current {
   outline: 2px solid #3d6dff;
   outline-offset: 1px;
   z-index: 1;
-}
-:root {
-  --lupe: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='27' cy='27' r='19'/%3E%3Cpath d='M41 41 57 57' stroke-width='7'/%3E%3Cpath d='M21 37V17h8a6 6 0 0 1 0 12h-8m8 0 7 8'/%3E%3C/svg%3E");
 }
 .row.current {
   position: relative;
@@ -3053,9 +2982,9 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   z-index: 3;
   background: #000a;
   color: #e7eaf0;
-  padding: 5px 10px;
   border-radius: 6px;
   max-width: calc(100% - 16px);
+  padding: 3px 8px;
 }
 /* Fullscreen key legend a touch smaller; hint bars a size below it. */
 #zoom-level .vkeys {
@@ -3085,9 +3014,6 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 #zoom-opts .zoom-reset {
   font-size: 10.5px;
-}
-#media > #zoom-opts {
-  padding: 3px 8px;
 }
 #mark-opts .pen-colour .swatch {
   width: 10px;
