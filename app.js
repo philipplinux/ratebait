@@ -1805,17 +1805,17 @@ function paintLists() {
   const sec = document.createElement('div');
   sec.className = 'dir-section';
   $('sidebar').append(sec, views);
-  // Head row: folder name folds the browse controls away (V shows the folder's REVIEW.md in the picture area).
+  // Head row: Browse folds the browse controls away (V shows the folder's REVIEW.md in the picture area).
   // A copy rides in the sticky List/Grid block once the section has scrolled away; it scrolls back up, unfolded.
   const [head, mini] = [false, true].map((away) => {
     const row = document.createElement('div');
     row.className = 'dir-head' + (away ? ' away' : '');
     const fold = Object.assign(document.createElement('button'), {
       className: 'dir-fold',
-      textContent: tilde(state.dir).split('/').pop() || 'Folders',
+      textContent: '📁 Browse',
       title: away
-        ? 'Back to the folder controls'
-        : 'Show / hide the folder controls',
+        ? 'Back to the folder browser'
+        : 'Show / hide the folder browser',
     });
     fold.onclick = () => {
       const on = !away && !document.body.classList.contains('dir-folded');
