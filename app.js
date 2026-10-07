@@ -376,6 +376,7 @@ function act(value) {
         null,
       );
     if (next) {
+      lastPop?.classList.add('swipe');
       state.index = (state.index + 1) % state.files.length;
       paintLists();
       paintCard();
@@ -761,6 +762,7 @@ function paintCard() {
         single.y *= b.h / a.h;
       }
       $('media').replaceChildren(image, marksLayer(f.name));
+      slideIn(image, 'single');
       paintSingle();
     };
     if (image.complete && image.naturalWidth) show();
@@ -872,6 +874,20 @@ const view = { fit: 1, scale: 1, x: 0, y: 0, w: 0, h: 0, token: 0, drag: null };
 
 const viewerImg = () => $('viewer').querySelector('img');
 
+// A newly shown picture slides in briefly: from the right after moving forward, from the left after moving back.
+// Tracked per place (single view, fullscreen), since both repaint on their own once their picture has loaded.
+const slid = {};
+function slideIn(img, where) {
+  const n = state.files.length,
+    was = slid[where],
+    d = was?.dir === state.dir ? (state.index - was.index + n) % n : 0;
+  slid[where] = { dir: state.dir, index: state.index };
+  if (!d) return;
+  img.classList.remove('slide-next', 'slide-prev');
+  void img.offsetWidth; // restart the animation
+  img.classList.add(d <= n / 2 ? 'slide-next' : 'slide-prev');
+}
+
 function paintView() {
   const img = viewerImg(),
     s = view.fit * view.scale;
@@ -934,6 +950,8 @@ function peekIndex(d) {
 // After rating: the rating's icon pops up big over the picture (or the fullscreen viewer) and fades out,
 // with small comment / pin / pen badges on its upper-right edge for what the file carries.
 // r=null (comment saved on an unrated file): just the comment bubble, smaller.
+// When the rating moves on to the next file, the caller adds .swipe and the icon slides off to the left instead.
+let lastPop = null;
 function popRating(r, item = {}) {
   const fs = !$('viewer').hidden,
     m = (fs ? $('viewer') : $('media')).getBoundingClientRect();
@@ -966,6 +984,7 @@ function popRating(r, item = {}) {
     top: m.top + m.height / 2 + 'px',
   });
   (fs ? $('viewer') : document.body).append(el);
+  lastPop = el;
   el.addEventListener('animationend', (e) => {
     if (e.target === el) el.remove();
   });
@@ -1035,6 +1054,7 @@ function showInViewer(f, fresh = false) {
       ru = keep && (innerWidth / 2 - view.x) / (view.w * s),
       rv = keep && (innerHeight / 2 - view.y) / (view.h * s);
     img.src = next.src;
+    slideIn(img, 'view');
     view.w = next.naturalWidth;
     view.h = next.naturalHeight;
     $('viewer').querySelector('.marks')?.remove();

@@ -3094,8 +3094,53 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
     transform: scale(1.15);
   }
 }
+.rate-pop.swipe {
+  animation-name: rate-swipe;
+}
+@keyframes rate-swipe {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-240px) scale(0.9);
+  }
+}
+/* translate, not transform: zoom and pan keep their inline transform while the picture slides. */
+.slide-next {
+  animation: slide-in 0.16s ease-out;
+}
+.slide-prev {
+  animation: slide-in-back 0.16s ease-out;
+}
+@keyframes slide-in {
+  from {
+    translate: 48px 0;
+    opacity: 0.5;
+  }
+}
+@keyframes slide-in-back {
+  from {
+    translate: -48px 0;
+    opacity: 0.5;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .rate-pop {
+  .slide-next,
+  .slide-prev {
+    animation: none;
+  }
+  .rate-pop,
+  .rate-pop.swipe {
     animation: rate-fade 0.6s ease-out forwards;
   }
   @keyframes rate-fade {
