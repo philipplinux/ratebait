@@ -1433,9 +1433,6 @@ body.list-off aside {
   color: #fff;
   border-color: #3d6dff;
 }
-#next {
-  margin-left: auto;
-}
 body:not(.side) #details {
   min-width: 0;
   grid-area: 3/1;
@@ -1737,7 +1734,7 @@ body.marks-off #viewer .marks {
   font-size: 8.5px;
   border-radius: 3px;
 }
-#marks-bar :is(#next, #clear) {
+#marks-bar #clear {
   width: auto;
   padding: 0 9px;
   font-size: 12px;
@@ -1881,10 +1878,10 @@ body.side #marks-bar {
   justify-content: center;
   gap: 6px;
 }
-/* Right-sidebar layout: tool icons centred, then Clear all · Next as a full-width row under the rating keys. */
-body.side #marks-bar :is(#clear, #next) {
-  flex: 1 1 calc(50% - 6px);
-  height: 34px;
+/* Right-sidebar layout: tool icons centred, then Clear all on its own row under them. */
+body.side #marks-bar #clear {
+  flex: none;
+  height: 30px;
   margin: 0;
   justify-content: center;
 }
@@ -1897,9 +1894,6 @@ body.side #marks-bar::after {
 }
 body.side #marks-bar #clear {
   order: 2;
-}
-body.side #marks-bar #next {
-  order: 3;
 }
 body.side #comments {
   grid-area: 4/2;
@@ -1948,15 +1942,12 @@ body:not(.side) #marks-bar {
   align-content: center;
   flex: none;
 }
-body:not(.side) #marks-bar :is(#next, #clear) {
-  grid-column: span 3;
-  width: auto;
-}
-body:not(.side) #marks-bar #next {
-  margin-left: 0;
+body:not(.side) #marks-bar #clear {
+  grid-column: 1 / -1;
+  justify-self: center;
 }
 /* Once the tools no longer fit beside the ratings (380 + gaps + separator + 216 = 617px), they take their own
-   row with Next and Clear all beside them, and those two shrink. */
+   row with Clear all beside them, and everything shrinks. */
 @media (max-width: 1880px) {
   body:not(.side) #bar {
     container-type: inline-size;
@@ -1968,19 +1959,36 @@ body:not(.side) #marks-bar #next {
   }
   body:not(.side) #marks-bar {
     flex: 1 1 100%;
-    grid-template-columns: repeat(6, 31px) repeat(2, minmax(0, max-content));
+    display: flex;
+    flex-wrap: nowrap;
     justify-content: center;
+    gap: 4px;
   }
-  body:not(.side) #marks-bar :is(#next, #clear) {
-    grid-column: auto;
+  body:not(.side) #marks-bar > * {
+    flex: 0 1 31px;
+    min-width: 20px;
+  }
+  body:not(.side) #marks-bar :is(button:not(#clear), #mark-color) {
+    width: 100%;
+  }
+  body:not(.side) #marks-bar #clear {
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 }
 @container (max-width: 440px) {
-  body:not(.side) #marks-bar :is(#next, #clear) .keycap {
+  body:not(.side) #marks-bar #clear .keycap {
     display: none;
+  }
+  /* Rating buttons wrap at a fixed 52px instead of shrinking further. */
+  body:not(.side) #ratings {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  body:not(.side) #ratings .rating-control {
+    flex: 0 0 52px;
   }
 }
 #comment-tool.has::after {
@@ -2158,18 +2166,12 @@ body:not(.side) main:has(> #comment-view:not([hidden])) #details {
   border-radius: 3px;
   pointer-events: none;
 }
-#marks-bar :is(#next, #clear) .keycap {
+#marks-bar #clear .keycap {
   position: static;
   margin-left: 6px;
   font-size: 9px;
 }
 #marks-bar #clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-#marks-bar #next {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;

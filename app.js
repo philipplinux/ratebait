@@ -80,7 +80,12 @@ const shortDate = (t) => {
 };
 
 const mediaUrl = (f) =>
-  '/media?' + new URLSearchParams({ dir: state.dir, name: f.name, v: `${f.mtime}:${f.size}` });
+  '/media?' +
+  new URLSearchParams({
+    dir: state.dir,
+    name: f.name,
+    v: `${f.mtime}:${f.size}`,
+  });
 
 function toast(message) {
   $('toast').textContent = message;
@@ -202,12 +207,18 @@ async function save(
 }
 
 function saveMarks(marks) {
-  const dir = state.dir, name = current()?.name;
+  const dir = state.dir,
+    name = current()?.name;
   return transact(async () => {
     if (state.dir !== dir || current()?.name !== name)
       throw new Error('The selected file changed; marks were not saved.');
     const item = state.items[name] || {};
-    await save(item.rating || null, $('comment').value, item.flag || null, marks);
+    await save(
+      item.rating || null,
+      $('comment').value,
+      item.flag || null,
+      marks,
+    );
   });
 }
 
@@ -222,9 +233,11 @@ async function saveComment() {
 
 function jump(i) {
   if (!state.files.length) return;
-  const dir = state.dir, name = state.files[(i + state.files.length) % state.files.length].name;
+  const dir = state.dir,
+    name = state.files[(i + state.files.length) % state.files.length].name;
   return transact(async () => {
-    if (state.dir !== dir) throw new Error('The folder changed; selection was not applied.');
+    if (state.dir !== dir)
+      throw new Error('The folder changed; selection was not applied.');
     const pop = lastPop;
     await saveComment();
     clearPicks();
@@ -268,7 +281,8 @@ function pick(name) {
 }
 
 function pickRange(i, add) {
-  const dir = state.dir, name = state.files[i]?.name;
+  const dir = state.dir,
+    name = state.files[i]?.name;
   return transact(async () => {
     if (state.dir !== dir || !state.files.some((f) => f.name === name))
       throw new Error('The folder changed; selection was not applied.');
@@ -395,7 +409,9 @@ function paintPicks() {
     : 'What works? What needs changing?';
   if (on !== was) {
     $('comment').value = on
-      ? (state.pickDraft?.dir === state.dir ? state.pickDraft.value : '')
+      ? state.pickDraft?.dir === state.dir
+        ? state.pickDraft.value
+        : ''
       : state.items[current()?.name]?.comment || '';
     if (on && state.pickDraft?.dir === state.dir) state.pickDraft = null;
     paintCommentTool();
@@ -686,11 +702,6 @@ function initReview() {
     transact(saveComment);
   };
 
-  $('next').onclick = () => {
-    jump(state.index + 1);
-    setCommentOpen(false);
-  };
-
   $('clear').onclick = () =>
     transact(async () => {
       if (current()) await save(null, '', null, { pins: [], strokes: [] });
@@ -773,11 +784,11 @@ const label = (r) => (r ? nameOf(r) : '');
 // Rebuilds the tiles when the folder, file order or media versions change; otherwise just moves the outline and badges.
 function paintGrid() {
   const key =
-      state.dir +
-      '|' +
-      JSON.stringify(
-        state.files.map(({ name, mtime, size }) => [name, mtime, size]),
-      );
+    state.dir +
+    '|' +
+    JSON.stringify(
+      state.files.map(({ name, mtime, size }) => [name, mtime, size]),
+    );
   let g = $('media').querySelector('.grid');
   if (!g || g.dataset.key !== key) {
     // Keep the scroll position when files change in the same folder.
@@ -917,7 +928,10 @@ function paintCard(preserveDrafts = false) {
         single.y *= b.h / a.h;
       }
       const existing = $('media').querySelector(':scope>.marks');
-      const layer = preserveDrafts && existing?.dataset.name === f.name ? existing : marksLayer(f.name);
+      const layer =
+        preserveDrafts && existing?.dataset.name === f.name
+          ? existing
+          : marksLayer(f.name);
       if (layer === existing) fillMarks(layer);
       if (layer === existing && old) {
         if (old !== image) old.replaceWith(image); // Leave the focused pin editor attached.
@@ -947,7 +961,8 @@ function paintCard(preserveDrafts = false) {
   $('filename').textContent = f.name;
   $('date').textContent = new Date(f.mtime * 1000).toLocaleString();
   paintDetails(f);
-  if (!multiOn() && !preserveDrafts) $('comment').value = state.items[f.name]?.comment || '';
+  if (!multiOn() && !preserveDrafts)
+    $('comment').value = state.items[f.name]?.comment || '';
   paintCommentTool();
   paintRating();
   paintPinList(preserveDrafts);
@@ -2445,7 +2460,8 @@ const markKey = (kind, mark) =>
 
 function editPin(i) {
   const layer = shownLayer(),
-    f = current(), dir = state.dir;
+    f = current(),
+    dir = state.dir;
   if (!layer || !f) return;
   layer.querySelector('.pin-edit')?.remove();
   const pins = marksOf(f.name).pins || [],
@@ -2466,13 +2482,23 @@ function editPin(i) {
     if (keep && ed.value.trim() !== (pin.note || '')) {
       if (state.dir !== dir || current()?.name !== f.name) return;
       const currentPins = marksOf(f.name).pins || [],
-        matches = currentPins.map((p, j) => markKey('pin', p) === ed.dataset.markKey ? j : -1).filter((j) => j >= 0);
+        matches = currentPins
+          .map((p, j) => (markKey('pin', p) === ed.dataset.markKey ? j : -1))
+          .filter((j) => j >= 0);
       if (matches.length !== 1) {
-        toast('This pin changed externally; its unsaved note is still in the editor.');
+        toast(
+          'This pin changed externally; its unsaved note is still in the editor.',
+        );
         return;
       }
       done = true;
-      if (!await saveMarks({ pins: currentPins.map((p, j) => j === matches[0] ? { ...p, note: ed.value } : p) })) {
+      if (
+        !(await saveMarks({
+          pins: currentPins.map((p, j) =>
+            j === matches[0] ? { ...p, note: ed.value } : p,
+          ),
+        }))
+      ) {
         done = false;
         ed.focus();
         return;
@@ -2513,7 +2539,10 @@ function fillMarks(layer) {
     el.textContent = i + 1;
     paintPin(el, pin.color);
     el.title = pin.note || '(no note)';
-    el.setAttribute('aria-label', `Edit pin ${i + 1}: ${pin.note || 'no note'}`);
+    el.setAttribute(
+      'aria-label',
+      `Edit pin ${i + 1}: ${pin.note || 'no note'}`,
+    );
     Object.assign(el.style, {
       left: pin.x * 100 + '%',
       top: pin.y * 100 + '%',
@@ -2586,13 +2615,28 @@ function placeMarksPanel() {
 // Panel listing pins (with notes) and strokes; shown only when there is something to list.
 function paintPinList(preserveDrafts = false) {
   const inputs = [...$('pin-list').querySelectorAll('input')];
-  const drafts = preserveDrafts ? inputs
-    .filter((input) => input.value !== input.defaultValue || input === document.activeElement)
-    .map((input) => ({ key: input.dataset.markKey, value: input.value,
-      dirty: input.value !== input.defaultValue, focused: input === document.activeElement,
-      start: input.selectionStart, end: input.selectionEnd })) : [];
+  const drafts = preserveDrafts
+    ? inputs
+        .filter(
+          (input) =>
+            input.value !== input.defaultValue ||
+            input === document.activeElement,
+        )
+        .map((input) => ({
+          key: input.dataset.markKey,
+          value: input.value,
+          dirty: input.value !== input.defaultValue,
+          focused: input === document.activeElement,
+          start: input.selectionStart,
+          end: input.selectionEnd,
+        }))
+    : [];
   // Replacing a focused editor must not enqueue its old blur save (or resurrect a deleted mark).
-  $('pin-list').querySelectorAll('input,button').forEach((el) => { el.onblur = null; });
+  $('pin-list')
+    .querySelectorAll('input,button')
+    .forEach((el) => {
+      el.onblur = null;
+    });
   const f = current(),
     { pins = [], strokes = [] } = f ? marksOf(f.name) : {};
   placeMarksPanel();
@@ -2631,7 +2675,9 @@ function paintPinList(preserveDrafts = false) {
       title: 'Remove stroke ' + (i + 1),
     });
     del.onpointerdown = (e) => e.preventDefault();
-    del.onblur = () => { if (li.isConnected) name.onblur({ relatedTarget: null }); };
+    del.onblur = () => {
+      if (li.isConnected) name.onblur({ relatedTarget: null });
+    };
     del.onclick = () =>
       saveMarks({ strokes: strokes.filter((_, j) => j !== i) });
     li.append(sw, name, del);
@@ -2677,13 +2723,17 @@ function paintPinList(preserveDrafts = false) {
           note.blur();
         }
       };
-      note.onblur = (e) => { if (e.relatedTarget !== del) commit(); };
+      note.onblur = (e) => {
+        if (e.relatedTarget !== del) commit();
+      };
       const del = Object.assign(document.createElement('button'), {
         textContent: '✕',
         title: 'Remove pin ' + (i + 1),
       });
       del.onpointerdown = (e) => e.preventDefault();
-      del.onblur = () => { if (li.isConnected) commit(); };
+      del.onblur = () => {
+        if (li.isConnected) commit();
+      };
       del.onclick = () => saveMarks({ pins: pins.filter((_, j) => j !== i) });
       li.append(no, note, del);
       return li;
@@ -2691,7 +2741,9 @@ function paintPinList(preserveDrafts = false) {
     ...strokeRows,
   );
   for (const draft of drafts) {
-    const matches = [...$('pin-list').querySelectorAll('input')].filter((el) => el.dataset.markKey === draft.key);
+    const matches = [...$('pin-list').querySelectorAll('input')].filter(
+      (el) => el.dataset.markKey === draft.key,
+    );
     if (matches.length !== 1) continue;
     const input = matches[0];
     if (draft.dirty) input.value = draft.value;
@@ -2734,17 +2786,21 @@ function setMarksHidden(off) {
 const added = [];
 
 async function undoStroke() {
-  const f = current(), dir = state.dir;
+  const f = current(),
+    dir = state.dir;
   if (!f || state.busy) return;
   const { pins = [], strokes = [] } = marksOf(f.name),
     k = added.findLastIndex((a) => a.dir === dir && a.name === f.name);
   let kind = k >= 0 ? added[k].kind : strokes.length ? 'stroke' : 'pin';
   if (kind === 'stroke' && !strokes.length) kind = 'pin';
   else if (kind === 'pin' && !pins.length) kind = 'stroke';
-  const marks = kind === 'stroke' && strokes.length
-    ? { strokes: strokes.slice(0, -1) }
-    : kind === 'pin' && pins.length ? { pins: pins.slice(0, -1) } : null;
-  if (marks && await saveMarks(marks) && k >= 0) added.splice(k, 1);
+  const marks =
+    kind === 'stroke' && strokes.length
+      ? { strokes: strokes.slice(0, -1) }
+      : kind === 'pin' && pins.length
+        ? { pins: pins.slice(0, -1) }
+        : null;
+  if (marks && (await saveMarks(marks)) && k >= 0) added.splice(k, 1);
 }
 
 const unitPoint = (e, layer) => {
@@ -3043,7 +3099,8 @@ function initMarks() {
           { pts: p.pts, color: $('mark-color').value },
         ],
       }).then((success) => {
-        if (success) added.push({ dir, name: p.layer.dataset.name, kind: 'stroke' });
+        if (success)
+          added.push({ dir, name: p.layer.dataset.name, kind: 'stroke' });
         else p.path.remove();
       });
   });
@@ -3055,7 +3112,10 @@ function setLayout(side) {
   document.body.classList.toggle('side', side);
   $('set-side').checked = side;
   $('layout-btn').setAttribute('aria-pressed', side);
-  $('layout-btn').setAttribute('aria-label', side ? 'Right sidebar layout' : 'Bottom layout');
+  $('layout-btn').setAttribute(
+    'aria-label',
+    side ? 'Right sidebar layout' : 'Bottom layout',
+  );
   store('layout', side ? 'side' : 'bottom');
   if (!$('viewer').hidden) resetView();
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
@@ -3373,7 +3433,9 @@ function paintCustoms() {
       name = nameOf(v);
     b.hidden = !shown.includes(v);
     b.parentElement.hidden = b.hidden;
-    b.parentElement.querySelector('.comment-mode').setAttribute('aria-label', `Comment mode for ${name}`);
+    b.parentElement
+      .querySelector('.comment-mode')
+      .setAttribute('aria-label', `Comment mode for ${name}`);
     b.title = `${name} (${b.dataset.key})`;
     b.querySelector('.rating-word').textContent = name;
   }
@@ -3459,7 +3521,10 @@ let detailsObserver;
 function setDetails(mode) {
   document.body.classList.toggle('details-full', mode === 'full');
   $('details-toggle').setAttribute('aria-expanded', mode === 'full');
-  $('details-toggle').setAttribute('aria-label', mode === 'full' ? 'Collapse file details' : 'Expand file details');
+  $('details-toggle').setAttribute(
+    'aria-label',
+    mode === 'full' ? 'Collapse file details' : 'Expand file details',
+  );
   store('details', mode);
   fitDetails();
 }
@@ -3665,7 +3730,9 @@ function initSettings() {
   };
   $('details-toggle').onclick = (e) => {
     e.stopPropagation();
-    setDetails(document.body.classList.contains('details-full') ? 'on' : 'full');
+    setDetails(
+      document.body.classList.contains('details-full') ? 'on' : 'full',
+    );
   };
 }
 
@@ -3927,36 +3994,60 @@ async function refreshDirs() {
 
 async function refreshFiles() {
   if (!state.dir || state.busy) return;
-  const beforeItems = state.items, beforeDir = state.dir;
-  const result = await api('/api/list?' + new URLSearchParams({ dir: beforeDir }));
-  if (state.busy || result.dir !== state.dir || state.items !== beforeItems) return;
+  const beforeItems = state.items,
+    beforeDir = state.dir;
+  const result = await api(
+    '/api/list?' + new URLSearchParams({ dir: beforeDir }),
+  );
+  if (state.busy || result.dir !== state.dir || state.items !== beforeItems)
+    return;
   const next = arrange(sortFiles(result.files)),
-    identity = (files) => JSON.stringify(files.map(({ name, mtime, size, kind }) => [name, mtime, size, kind])),
+    identity = (files) =>
+      JSON.stringify(
+        files.map(({ name, mtime, size, kind }) => [name, mtime, size, kind]),
+      ),
     previous = current(),
     name = previous?.name,
-    reviewChanged = JSON.stringify(state.items) !== JSON.stringify(result.items),
-    labelsChanged = JSON.stringify(state.folderLabels) !== JSON.stringify(result.labels || {});
-  if (identity(next) === identity(state.files) && !reviewChanged && !labelsChanged) return;
+    reviewChanged =
+      JSON.stringify(state.items) !== JSON.stringify(result.items),
+    labelsChanged =
+      JSON.stringify(state.folderLabels) !==
+      JSON.stringify(result.labels || {});
+  if (
+    identity(next) === identity(state.files) &&
+    !reviewChanged &&
+    !labelsChanged
+  )
+    return;
   const incomingMarks = result.items[current()?.name] || {},
     keys = [
       ...(incomingMarks.pins || []).map((p) => markKey('pin', p)),
       ...(incomingMarks.strokes || []).map((s) => markKey('stroke', s)),
     ],
-    noteDrafts = [...document.querySelectorAll('#pin-list input,.pin-edit')]
-      .filter((el) => el.value !== el.defaultValue && el.dataset.markKey);
-  if (noteDrafts.some((el) => keys.filter((key) => key === el.dataset.markKey).length !== 1)) {
+    noteDrafts = [
+      ...document.querySelectorAll('#pin-list input,.pin-edit'),
+    ].filter((el) => el.value !== el.defaultValue && el.dataset.markKey);
+  if (
+    noteDrafts.some(
+      (el) => keys.filter((key) => key === el.dataset.markKey).length !== 1,
+    )
+  ) {
     toast('A mark changed externally. Finish its note before refreshing.');
     return;
   }
   const draft = $('comment').value,
     wasMulti = multiOn(),
-    dirtyComment = wasMulti || draft.trim() !== (state.items[name]?.comment || '');
+    dirtyComment =
+      wasMulti || draft.trim() !== (state.items[name]?.comment || '');
   state.files = next;
   state.items = result.items;
   state.folderLabels = result.labels || {};
   const i = state.files.findIndex((f) => f.name === name);
-  state.index = i < 0 ? Math.min(state.index, Math.max(state.files.length - 1, 0)) : i;
-  state.picked = new Set([...state.picked].filter((n) => next.some((f) => f.name === n)));
+  state.index =
+    i < 0 ? Math.min(state.index, Math.max(state.files.length - 1, 0)) : i;
+  state.picked = new Set(
+    [...state.picked].filter((n) => next.some((f) => f.name === n)),
+  );
   if (state.picked.size < 2) state.picked.clear();
   const endedMulti = wasMulti && !multiOn();
   if (endedMulti && draft) {
@@ -3967,7 +4058,11 @@ async function refreshFiles() {
   if (labelsChanged) paintCustoms();
   paintLists();
   const same = current()?.name === name;
-  if (!same || identity([current()].filter(Boolean)) !== identity([previous].filter(Boolean)))
+  if (
+    !same ||
+    identity([current()].filter(Boolean)) !==
+      identity([previous].filter(Boolean))
+  )
     paintCard(same);
   else {
     if (state.grid) paintGrid();
@@ -3977,7 +4072,8 @@ async function refreshFiles() {
     if (!$('viewer').hidden) paintPeek();
   }
   if (same) {
-    if (!dirtyComment || endedMulti) $('comment').value = state.items[name]?.comment || '';
+    if (!dirtyComment || endedMulti)
+      $('comment').value = state.items[name]?.comment || '';
     else $('comment').value = draft;
     paintCommentTool();
   }
@@ -4002,11 +4098,10 @@ function initFolders() {
 
   setHomeSearch(homeSearch);
 
-
   // A picked folder opens straight away. The comment is saved first; the dialog itself does not block the app.
   $('browse').onclick = async () => {
     await whenIdle();
-    if (!await transact(saveComment)) return;
+    if (!(await transact(saveComment))) return;
     try {
       const result = await api('/api/pick-folder', {
         initial: $('path').value || state.dir,
@@ -4085,10 +4180,14 @@ function initFolders() {
 function initKeyboard() {
   document.addEventListener('keydown', (e) => {
     if (
-      !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      !e.shiftKey &&
       ['Enter', ' '].includes(e.key) &&
       e.target.closest('button:not(.row):not(.tile)')
-    ) return; // Native controls own activation, including inside fullscreen.
+    )
+      return; // Native controls own activation, including inside fullscreen.
     if (
       !$('viewer').hidden &&
       (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) &&
