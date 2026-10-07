@@ -3374,3 +3374,57 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   border-color: #3d4657;
   font-size: 15px;
 }
+/* Bottom layout: the docked marks panel is a full-width row at the end of the bar, its entries in columns. */
+body.marks-dock:not(.side) #marks-panel {
+  flex: 1 1 100%;
+  order: 9;
+  flex-direction: row;
+  align-items: start;
+  gap: 12px;
+  contain: inline-size; /* takes the bar's width, never widens it */
+  width: auto;
+  max-height: none;
+  margin: 0;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+body.marks-dock:not(.side) .panel-head {
+  margin: 4px 0 0;
+}
+body.marks-dock:not(.side) #pin-list {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
+  max-height: 92px;
+}
+/* Packed header: the buttons drop their keycaps and tighten, then shrink. */
+@media (max-width: 1100px) {
+  header .top {
+    gap: 8px;
+  }
+  header :is(#list-btn, #grid-toggle, #fs-btn, #settings, #layout-btn) .keycap {
+    display: none;
+  }
+  header :is(#list-btn, #fs-btn, #settings, #layout-btn) {
+    padding: 0 7px;
+  }
+  #progress {
+    white-space: nowrap;
+  }
+}
+@media (max-width: 800px) {
+  h1 .logo {
+    width: 34px;
+    height: 34px;
+    margin: -4px 0;
+  }
+  header :is(#list-btn, #grid-toggle, #fs-btn, #settings, #layout-btn) {
+    height: 28px;
+  }
+  #progress {
+    font-size: 12px;
+  }
+}

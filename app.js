@@ -2423,20 +2423,23 @@ function placeMarks() {
   });
 }
 
-// Right-sidebar layout: the marks panel docks under the mark tools when the sidebar still fits the window,
-// otherwise it floats over the picture as in the bottom layout.
+// The marks panel docks when there is room, otherwise it floats over the picture. Right-sidebar layout: under the
+// mark tools while the sidebar still fits the window. Bottom layout: as a full-width row in the bar.
 function placeMarksPanel() {
-  const b = document.body;
-  b.classList.toggle(
-    'marks-dock',
-    b.classList.contains('side') && !$('marks-panel').hidden,
-  );
+  const b = document.body,
+    side = b.classList.contains('side'),
+    mp = $('marks-panel');
+  b.classList.toggle('marks-dock', !mp.hidden && (side || innerHeight >= 700));
   if (
+    side &&
     b.classList.contains('marks-dock') &&
     !$('details').hidden &&
     $('details').getBoundingClientRect().height < 70
   )
     b.classList.remove('marks-dock');
+  const inBar = b.classList.contains('marks-dock') && !side;
+  if (inBar !== (mp.parentNode === $('bar')))
+    inBar ? $('bar').append(mp) : $('details').before(mp);
 }
 
 // Right-hand panel over the picture, listing pins (with notes) and strokes; shown only when there is something to list.
