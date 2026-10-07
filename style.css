@@ -1878,22 +1878,22 @@ body.side #marks-bar {
   justify-content: center;
   gap: 6px;
 }
-/* Right-sidebar layout: tool icons centred, then Clear all on its own row under them. */
+/* Right-sidebar layout: one row of tools; Clear, last, wraps first. */
 body.side #marks-bar #clear {
   flex: none;
   height: 30px;
   margin: 0;
   justify-content: center;
 }
-/* Undo, hide and Clear all share the second row. */
-#marks-bar::after {
+/* Bottom layout: undo, hide and Clear share the second row. */
+body:not(.side) #marks-bar::after {
   content: '';
   flex-basis: 100%;
   height: 0;
   order: 1;
   margin-top: -6px;
 }
-#marks-bar :is(#undo-tool, #hide-tool, #clear) {
+body:not(.side) #marks-bar :is(#undo-tool, #hide-tool, #clear) {
   order: 2;
 }
 body.side #comments {
@@ -1943,7 +1943,7 @@ body:not(.side) #marks-bar {
   flex: none;
 }
 /* Once the tools no longer fit beside the ratings (380 + gaps + separator + 170 = 571px), they take their own
-   row with Clear all beside them, and everything shrinks. */
+   row with Clear beside them, and everything shrinks. */
 @media (max-width: 1880px) {
   body:not(.side) #bar {
     container-type: inline-size;

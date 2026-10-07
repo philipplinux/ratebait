@@ -3296,7 +3296,7 @@ function keyBinds() {
     R: ['mark', 'Colour ring (pen and pins)'],
     Z: ['mark', 'Undo (the newest pin or stroke)'],
     H: ['mark', 'Hide marks'],
-    Del: ['mark', 'Clear all (marks and rating)'],
+    Del: ['mark', 'Clear (marks and rating)'],
     Enter: ['view', 'Fullscreen (Shift: next file)'],
     G: ['view', 'Grid'],
     Space: ['view', 'Grid (plays or pauses audio)'],
