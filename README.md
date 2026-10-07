@@ -2,9 +2,9 @@
 
 # RateBait
 
-Tiny local web app for rating AI-generated images and music fast: numpad keys to rate (Reject → MVP) and flag (Redo, Broken, Trash), a comment per file, pins and drawings over the picture, a scrollable grid view, and a `REVIEW.md` summary per folder that an LLM can read to learn your taste. Python standard library only: no install, no build.
+Tiny local web app for rating AI-generated images and music fast: numpad keys or a pie menu at the pointer to rate (Reject → MVP) and flag (Redo, Broken, Trash), a comment per file, pins and drawings over the picture, the mouse wheel to step through files, a scrollable grid view with folder tiles, multi-select, and a `REVIEW.md` summary per folder that an LLM can read to learn your taste. Python standard library only: no install, no build.
 
-Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screenshot.png](docs/screenshot.png) (bottom layout), full-size 4K [docs/screenshot-4k.jpg](docs/screenshot-4k.jpg) (right-sidebar layout with docked Marks).
+Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screenshot.png](docs/screenshot.png) (bottom layout, the ` pie menu with a slice lit), full-size 4K [docs/screenshot-4k.jpg](docs/screenshot-4k.jpg) (right-sidebar layout, three files selected, docked Marks).
 
 ![Demo: folder tiles, numpad rating with pops, the ` pie menu (click, or hold, point at a slice and let go), comment, pin, draw, wheel to the next file, double-click fullscreen with Ctrl+wheel zoom and wheel/Shift+wheel scrolling, Ctrl+click multi-select in the grid, right-sidebar layout, report view](docs/demo.gif)
 
