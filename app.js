@@ -807,8 +807,9 @@ function paintGrid() {
     g.className = 'grid';
     g.dataset.key = key;
     if (!same) folderPick = -1;
-    // Folder tiles first: up one folder, like ↑ Up in the sidebar.
-    if (state.dir !== '/') {
+    // Folder tiles first (⚙ Viewport gridview navigation): up one folder, like ↑ Up in the sidebar.
+    const folderTiles = $('set-folder-tiles').checked;
+    if (folderTiles && state.dir !== '/') {
       const parent = state.dir.replace(/\/[^/]+\/?$/, '') || '/',
         up = Object.assign(document.createElement('button'), {
           className: 'tile folder-tile',
@@ -825,7 +826,7 @@ function paintGrid() {
       g.append(up);
     }
     // Then the subfolders, like the 📁 buttons in the sidebar.
-    for (const sub of state.subfolders) {
+    for (const sub of folderTiles ? state.subfolders : []) {
       const n = state.subCounts[sub],
         tile = Object.assign(document.createElement('button'), {
           className: 'tile folder-tile',
@@ -933,7 +934,11 @@ function paintCard(preserveDrafts = false) {
   if (!f || f.kind !== 'image') closeViewer();
   if (!f) {
     // No media: the folder tiles (↑ Up, subfolders), keyboard-selectable from the first one.
-    if (state.dir && (state.dir !== '/' || state.subfolders.length)) {
+    if (
+      $('set-folder-tiles').checked &&
+      state.dir &&
+      (state.dir !== '/' || state.subfolders.length)
+    ) {
       paintGrid();
       if (folderPick < 0) folderPick = 0;
       paintFolderPick();
@@ -3224,6 +3229,15 @@ function setRollup(on) {
   fitTicks();
 }
 
+// Settings switch: the grid (and a folder without media) starts with ↑ Up and subfolder tiles.
+function setFolderTiles(on) {
+  $('set-folder-tiles').checked = on;
+  store('folderTiles', on ? '1' : '0');
+  folderPick = -1;
+  $('media').replaceChildren();
+  paintCard();
+}
+
 // Settings switch: fullscreen shows the comment box whenever the file has a comment (off: only on C).
 function setCommentFloat(on) {
   document.body.classList.toggle('comment-float', on);
@@ -3632,6 +3646,8 @@ function initSettings() {
   };
   $('set-rollup').onchange = (e) => setRollup(e.target.checked);
   setRollup(stored('rollup') === '1');
+  $('set-folder-tiles').onchange = (e) => setFolderTiles(e.target.checked);
+  $('set-folder-tiles').checked = stored('folderTiles') !== '0';
   $('set-comment-float').onchange = (e) => setCommentFloat(e.target.checked);
   setCommentFloat(stored('commentFloat') !== '0');
 
