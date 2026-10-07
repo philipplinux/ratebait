@@ -3514,13 +3514,15 @@ body.side main {
   margin-bottom: 8px;
 }
 .dir-head button {
+  flex: none; /* 🧹 just fits its icon, Report 40%, Explore takes the rest */
+  min-width: 0;
+  justify-content: center;
   height: 26px;
   padding: 0 8px;
   font-size: 13px;
 }
-.dir-fold {
+.dir-head .dir-fold {
   flex: 1;
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3536,10 +3538,14 @@ body.dir-folded .dir-fold::before {
 body.dir-folded .dir-section > :not(.dir-head) {
   display: none !important; /* #folders and #path-box set display by id */
 }
+.dir-head .report-btn {
+  flex-basis: 40%;
+}
 .report-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  white-space: nowrap;
 }
 .report-btn .keycap {
   position: static;
