@@ -3459,6 +3459,7 @@ body > #mark-opts .ps-label,
   box-shadow: 0 2px 10px #000a;
 }
 .ring button:hover,
+.ring button.aim,
 .ring button.on {
   border-color: #fff;
   scale: 1.15;

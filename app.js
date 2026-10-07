@@ -2966,8 +2966,30 @@ const wheelColours = [
 let lastPointer = [innerWidth / 2, innerHeight / 2];
 
 // A ring of buttons around the pointer; any other click or key closes it, and its own key (or Esc) is swallowed.
+// While its key is still held, moving the pointer a short way toward a button picks that slice, like a pie menu.
 function popRing(id, toggle, buttons, radius, centre) {
-  const w = document.createElement('div'),
+  const [ox, oy] = lastPointer,
+    w = document.createElement('div'),
+    aim = (e) => {
+      const dx = e.clientX - ox,
+        dy = e.clientY - oy,
+        n = buttons.length,
+        i =
+          (Math.round(
+            (Math.atan2(dy, dx) + Math.PI / 2) / ((2 * Math.PI) / n),
+          ) +
+            n) %
+          n;
+      buttons.forEach(([b], j) =>
+        b.classList.toggle('aim', j === i && Math.hypot(dx, dy) > 6),
+      );
+      if (Math.hypot(dx, dy) > radius * 0.4) buttons[i][0].click();
+    },
+    up = (e) => {
+      if (e.key.toLowerCase() !== toggle) return;
+      removeEventListener('pointermove', aim, true);
+      buttons.forEach(([b]) => b.classList.remove('aim'));
+    },
     away = (e) => {
       if (w.contains(e.target)) return;
       e.stopPropagation(); // the click only closes the ring, it does not draw, pin or press a button
@@ -2986,6 +3008,8 @@ function popRing(id, toggle, buttons, radius, centre) {
       w.remove();
       removeEventListener('pointerdown', away, true);
       removeEventListener('keydown', key, true);
+      removeEventListener('keyup', up, true);
+      removeEventListener('pointermove', aim, true);
     },
     edge = radius + 24;
   w.id = id;
@@ -3016,6 +3040,8 @@ function popRing(id, toggle, buttons, radius, centre) {
   ($('viewer').hidden ? document.body : $('viewer')).append(w);
   addEventListener('pointerdown', away, true);
   addEventListener('keydown', key, true);
+  addEventListener('keyup', up, true);
+  addEventListener('pointermove', aim, true);
 }
 
 function colourWheel() {
@@ -3459,8 +3485,8 @@ function keyBinds() {
     A: ['mark', 'Pin'],
     D: ['mark', 'Draw'],
     C: ['mark', 'Comment'],
-    R: ['mark', 'Colour ring (pen and pins)'],
-    '`': ['rate', 'Rating ring (click to rate)'],
+    R: ['mark', 'Colour ring (pen and pins; hold and move to pick)'],
+    '`': ['rate', 'Rating ring (click, or hold and move toward a button)'],
     Z: ['mark', 'Undo (the newest pin or stroke)'],
     H: ['mark', 'Hide marks'],
     Del: ['mark', 'Clear (marks and rating)'],
