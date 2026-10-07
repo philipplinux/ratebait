@@ -1907,9 +1907,10 @@ body:not(.side) #bar {
   gap: 8px;
   min-width: 0;
 }
+/* Ratings and tools share one row; the buttons shrink first and the tools wrap under them only once they can't. */
 body:not(.side) #ratings {
   flex: 1 1 0;
-  min-width: min(480px, 100%);
+  min-width: min(380px, 100%);
 }
 body:not(.side) #details {
   grid-area: 4/1/5/-1;
@@ -1983,11 +1984,6 @@ body:not(.side) #comments textarea,
 }
 body.comment-open:not(.side) #marks-panel {
   max-height: calc(100% - 190px);
-}
-@media (max-width: 1000px) {
-  body:not(.side) #ratings {
-    min-width: 100%;
-  }
 }
 @media (min-width: 1881px) {
   body:not(.side):not(.customs) #ratings {
