@@ -646,7 +646,12 @@ function initReview() {
     wrap.className = 'rating-control';
     wrap.dataset.key = key;
     wrap.dataset.rating = value;
-    wrap.append(b, box);
+    const foot = b.querySelector('.rating-foot');
+    const spacer = foot.cloneNode(true);
+    spacer.style.visibility = 'hidden';
+    foot.replaceWith(spacer);
+    foot.append(box);
+    wrap.append(b, foot);
     $('ratings').append(wrap);
     setCommentMode(value, !!commentMode[value]);
   }

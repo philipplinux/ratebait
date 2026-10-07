@@ -688,10 +688,21 @@ body.busy select {
 #ratings .rating-control > button { width: 100%; }
 body:not(.side) #ratings .rating-control { flex: 0 0 74px; min-width: 74px; }
 body.side #ratings .rating-control { max-width: none; }
-#ratings .comment-mode {
+#ratings .rating-control > .rating-foot {
   position: absolute;
-  top: 5px;
-  left: 5px;
+  bottom: 13px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+#ratings .rating-control > .rating-foot .comment-mode {
+  pointer-events: auto;
+}
+body:not(.side) #ratings .rating-control > .rating-foot { bottom: 9px; }
+@media (max-height: 900px), (max-width: 1400px) {
+  body:not(.side) #ratings .rating-control > .rating-foot { bottom: 6px; }
+}
+#ratings .comment-mode {
   width: 22px;
   height: 22px;
   display: grid;
@@ -1577,8 +1588,7 @@ body:not(.side) main:has(#banner[hidden]) {
   }
 }
 @container ratings (max-width:640px) {
-  #ratings .rating-word,
-  #ratings .rating-foot {
+  #ratings .rating-word {
     display: none;
   }
   body:not(.side) #ratings button {
@@ -1601,9 +1611,10 @@ body:not(.side) main:has(#banner[hidden]) {
 }
 #ratings .rating-foot .comment-mode {
   position: static;
-  width: 20px;
-  height: 20px;
-  font-size: 11px;
+  padding: 0;
+  min-width: 0;
+  border-color: transparent;
+  background: transparent;
 }
 .keycap {
   display: inline-grid;
