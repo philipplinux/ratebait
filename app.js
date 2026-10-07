@@ -1811,6 +1811,7 @@ function paintLists() {
     $('sidebar').append(bar);
   }
   let rated = 0;
+  const counts = {};
   const list = document.createElement('div');
   list.className = 'files';
   $('sidebar').append(list, scrollHint('to-end', '▼', 'To the last file'));
@@ -1818,6 +1819,7 @@ function paintLists() {
     const item = state.items[f.name] || {},
       rating = item.flag || item.rating;
     if (rating) rated++;
+    counts[rating || ''] = (counts[rating || ''] || 0) + 1;
     const tick = document.createElement('button');
     if (rating) {
       paintIcon(tick, rating);
@@ -1878,6 +1880,7 @@ function paintLists() {
     };
     if (f.kind === 'image') {
       thumb.loading = 'lazy';
+      thumb.draggable = false;
       thumb.alt = '';
       thumb.onload = () => {
         dims[mediaUrl(f)] = `${thumb.naturalWidth}×${thumb.naturalHeight}`;
@@ -1917,6 +1920,8 @@ function paintLists() {
     list.append(row);
   });
   $('progress').textContent = `${rated}/${state.files.length} rated`;
+  $('ticks').append(tally(counts));
+  fitTicks();
   $('banner').hidden = !state.files.length || rated !== state.files.length;
   $('sidebar').querySelector('.current')?.scrollIntoView({ block: 'nearest' });
   if (state.grid && current()) paintGrid();
@@ -1934,6 +1939,39 @@ function paintScrollHints() {
     'more-down',
     s.scrollTop + s.clientHeight < s.scrollHeight - 2,
   );
+}
+
+// Too many files for one tick each: the bar rolls up into a count per rating; a click jumps to the next file with it.
+function tally(counts) {
+  const box = document.createElement('div');
+  box.className = 'tally';
+  for (const r of ['mvp', 'love', 'pass', 'neutral', 'reject', ...flags, '']) {
+    if (!counts[r]) continue;
+    const chip = document.createElement('button'),
+      icon = document.createElement('span');
+    paintIcon(icon, r);
+    if (!r) ((icon.textContent = '—'), (icon.hidden = false));
+    const name = r ? nameOf(r) : 'Unrated';
+    chip.append(icon, `${counts[r]} ${name}`);
+    chip.title = `Next ${name.toLowerCase()} file`;
+    chip.onclick = () => {
+      const n = state.files.length;
+      for (let k = 1; k <= n; k++) {
+        const i = (state.index + k) % n,
+          it = state.items[state.files[i].name] || {};
+        if ((it.flag || it.rating || '') === r) return jump(i);
+      }
+    };
+    box.append(chip);
+  }
+  return box;
+}
+
+// Rolls up when a tick would be narrower than 8 CSS px, so the rule follows window size and zoom alike.
+function fitTicks() {
+  const t = $('ticks'),
+    n = state.files.length;
+  t.classList.toggle('rollup', n > 0 && (t.clientWidth - 4 * (n - 1)) / n < 8);
 }
 
 // ▲ under the List/Grid bar and ▼ at the bottom: shown while there is more to scroll, click to jump to that end.
@@ -2098,6 +2136,7 @@ function clearDropMarks() {
 
 function initSidebar() {
   sideResize = new ResizeObserver(() => paintScrollHints());
+  new ResizeObserver(fitTicks).observe($('ticks'));
 
   $('sidebar').addEventListener('scroll', paintScrollHints, { passive: true });
 
@@ -2120,6 +2159,10 @@ function initSidebar() {
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
       drag.active = true;
       drag.row.classList.add('dragging');
+      if (drag.row.classList.contains('picked'))
+        $('sidebar')
+          .querySelectorAll('.row.picked')
+          .forEach((r) => r.classList.add('dragging'));
       document.body.classList.add('sorting');
     }
     const rows = [...$('sidebar').querySelectorAll('.row')];
@@ -2135,18 +2178,24 @@ function initSidebar() {
     if (to < 0) to = rows.length;
     drag.to = to;
     clearDropMarks();
-    if (to < rows.length) rows[to].classList.add('drop-before');
-    else rows[rows.length - 1]?.classList.add('drop-after');
+    // Grid: at the end of a line the mark goes after the tile under the pointer, not before the next line.
+    const prev = rows[to - 1]?.getBoundingClientRect();
+    if (to < rows.length && !(tiles && prev && e.clientY < prev.bottom))
+      rows[to].classList.add('drop-before');
+    else rows[to - 1]?.classList.add('drop-after');
     const box = $('sidebar').getBoundingClientRect();
     if (e.clientY < box.top + 40) $('sidebar').scrollBy(0, -14);
     else if (e.clientY > box.bottom - 40) $('sidebar').scrollBy(0, 14);
   });
 
-  document.addEventListener('pointerup', () => {
+  // A cancelled pointer (or Escape) ends the drag without moving anything.
+  const endDrag = (drop) => {
     const d = drag;
     drag = null;
     if (!d?.active) return;
-    d.row.classList.remove('dragging');
+    $('sidebar')
+      .querySelectorAll('.dragging')
+      .forEach((r) => r.classList.remove('dragging'));
     document.body.classList.remove('sorting');
     clearDropMarks();
     // The click that ends a drag must not open the row; reset after this event loop turn either way.
@@ -2154,13 +2203,29 @@ function initSidebar() {
     setTimeout(() => {
       dragged = false;
     }, 0);
-    if (d.to == null || d.to === d.from || d.to === d.from + 1) return;
-    const name = current()?.name,
-      [f] = state.files.splice(d.from, 1);
-    state.files.splice(d.to > d.from ? d.to - 1 : d.to, 0, f);
-    state.index = state.files.findIndex((x) => x.name === name);
-    saveOrder(state.files.map((x) => x.name));
+    if (!drop || d.to == null) return;
+    // Dragging a picked file moves all picked files, in their current order.
+    const grabbed = state.files[d.from].name,
+      moving = (n) =>
+        state.picked.size > 1 && state.picked.has(grabbed)
+          ? state.picked.has(n)
+          : n === grabbed,
+      block = state.files.filter((f) => moving(f.name)),
+      rest = state.files.filter((f) => !moving(f.name)),
+      anchor = state.files.slice(d.to).find((f) => !moving(f.name)),
+      at = anchor ? rest.indexOf(anchor) : rest.length,
+      files = [...rest.slice(0, at), ...block, ...rest.slice(at)];
+    if (files.every((f, i) => f === state.files[i])) return;
+    const name = current()?.name;
+    state.files = files;
+    state.index = files.findIndex((x) => x.name === name);
+    saveOrder(files.map((x) => x.name));
     paintLists();
+  };
+  document.addEventListener('pointerup', () => endDrag(true));
+  document.addEventListener('pointercancel', () => endDrag(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drag?.active) endDrag(false);
   });
 }
 
@@ -2251,6 +2316,7 @@ function fillMarks(layer) {
     const el = document.createElement('div');
     el.className = 'pin';
     el.textContent = i + 1;
+    if (pin.color) el.style.background = pin.color;
     el.title = pin.note || '(no note)';
     Object.assign(el.style, {
       left: pin.x * 100 + '%',
@@ -2369,6 +2435,7 @@ function paintPinList() {
         className: 'pin-no',
         textContent: i + 1,
       });
+      if (pin.color) no.style.background = pin.color;
       const note = Object.assign(document.createElement('input'), {
         value: pin.note || '',
         placeholder: 'Note for pin ' + (i + 1),
@@ -2462,7 +2529,7 @@ function startMark(e, layer) {
   if (markMode === 'pin') {
     const pins = [
       ...(marksOf(current().name).pins || []),
-      { x: q[0], y: q[1], note: '' },
+      { x: q[0], y: q[1], note: '', color: $('mark-color').value },
     ];
     added.push({ name: current().name, kind: 'pin' });
     saveMarks({ pins }).then(() => editPin(pins.length - 1));

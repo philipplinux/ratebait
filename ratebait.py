@@ -224,7 +224,7 @@ def safe_media_path(d: Path, name: str) -> Path:
 
 
 def clean_marks(item: dict) -> dict:
-    # Pins {x, y, note} and pen strokes {pts: [[x, y], ...], color}; x and y are 0..1 of the image size.
+    # Pins {x, y, note, color?} and pen strokes {pts: [[x, y], ...], color}; x and y are 0..1 of the image size.
     pins, strokes = item.get("pins") or [], item.get("strokes") or []
     if not isinstance(pins, list) or not isinstance(strokes, list) or len(pins) > 200 or len(strokes) > 1000:
         raise ValueError("invalid marks")
@@ -237,6 +237,7 @@ def clean_marks(item: dict) -> dict:
             and unit(pin.get("y"))
             and isinstance(pin.get("note", ""), str)
             and len(pin.get("note", "")) <= 2000
+            and ("color" not in pin or re.fullmatch(r"#[0-9a-fA-F]{6}", str(pin["color"])))
         ):
             raise ValueError("invalid pin")
     for stroke in strokes:
@@ -251,7 +252,10 @@ def clean_marks(item: dict) -> dict:
         ):
             raise ValueError("invalid stroke")
     if pins:
-        out["pins"] = [dict(x=round(q["x"], 4), y=round(q["y"], 4), note=q.get("note", "").strip()) for q in pins]
+        out["pins"] = [
+            dict(x=round(q["x"], 4), y=round(q["y"], 4), note=q.get("note", "").strip(), **({"color": q["color"]} if "color" in q else {}))
+            for q in pins
+        ]
     if strokes:
         out["strokes"] = [
             dict(

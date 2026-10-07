@@ -354,7 +354,10 @@ aside #path-hints {
 }
 .scroll-hint button {
   pointer-events: none;
-  padding: 0 14px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
   border: 0;
   background: none;
   font-size: 12px;
@@ -364,6 +367,7 @@ aside #path-hints {
 }
 .scroll-hint button:hover {
   color: #fff;
+  background: #ffffff14;
 }
 #sidebar.more-up .to-start,
 #sidebar.more-down .to-end {
@@ -484,10 +488,12 @@ body.side-grid .row[data-rating] {
   border-bottom-color: var(--tone);
 }
 body.side-grid .row.drop-before {
-  box-shadow: inset 3px 0 0 #8fb3ff;
+  border-left-color: #8fb3ff;
+  box-shadow: -4px 0 0 -1px #8fb3ff;
 }
 body.side-grid .row.drop-after {
-  box-shadow: inset -3px 0 0 #8fb3ff;
+  border-right-color: #8fb3ff;
+  box-shadow: 4px 0 0 -1px #8fb3ff;
 }
 .order-bar {
   display: flex;
@@ -1384,7 +1390,11 @@ body.list-off aside {
   height: 32px;
   display: inline-flex;
   align-items: center;
-  padding: 0 9px;
+  gap: 6px;
+  padding: 0 8px 0 9px;
+}
+#list-btn .keycap {
+  position: static;
 }
 #list-btn[aria-pressed='true'] {
   color: #fff;
@@ -3157,7 +3167,11 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 [data-active='multi'] {
   --mode: #5ad18a;
 }
-/* The outline hugs the picture: the marks layer is sized to it. */
+/* The picture area gets a thin inset frame, the picture itself (the marks layer is sized to it) an outline. */
+#media:not([data-active='']),
+#viewer:not([data-active='']) {
+  box-shadow: inset 0 0 0 3px var(--mode, transparent);
+}
 #media:not([data-active='']) > .marks,
 #viewer:not([data-active='']) > .marks {
   box-shadow: 0 0 0 3px var(--mode, transparent);
@@ -3202,4 +3216,35 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 .tile.picked {
   outline: 3px solid #3d6dff;
   outline-offset: -3px;
+}
+/* Progress bar rolled up (too many files for a tile each): one chip per rating with its count. */
+#ticks.rollup > button,
+#ticks:not(.rollup) > .tally {
+  display: none;
+}
+#ticks .tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+#ticks .tally button {
+  flex: none;
+  height: 22px;
+  gap: 5px;
+  padding: 0 8px 0 5px;
+  border: 1px solid #303746;
+  border-radius: 11px;
+  background: #1b212c;
+  color: #c9d3e6;
+  font-size: 12px;
+  container-type: normal;
+}
+#ticks .tally button:hover {
+  border-color: #5a6478;
+  color: #fff;
+}
+#ticks .tally span {
+  display: inline-flex;
+  color: var(--tone, #8a94a6);
+  font-size: 13px;
 }
