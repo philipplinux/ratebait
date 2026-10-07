@@ -3181,9 +3181,10 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 [data-active='multi'] {
   --mode: #5ad18a;
 }
-#media:not([data-active='']),
-#viewer:not([data-active='']) {
-  box-shadow: inset 0 0 0 3px var(--mode, transparent);
+/* The outline hugs the picture: the marks layer is sized to it. */
+#media:not([data-active='']) > .marks,
+#viewer:not([data-active='']) > .marks {
+  box-shadow: 0 0 0 3px var(--mode, transparent);
 }
 #multi-tip {
   position: fixed;
