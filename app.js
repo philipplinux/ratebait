@@ -1485,6 +1485,17 @@ function stepGrid(dir) {
 // Fullscreen has its own handler. Elsewhere (sidebar, settings, comment) Ctrl+wheel does nothing.
 let wheelSum = 0,
   wheelAt = 0;
+// Touchpads send many small deltas: one step per 100px of scrolling; a pause or a turn starts over.
+function wheelStep(e, step) {
+  const dy = wheelPx(e, e.deltaY);
+  if (e.timeStamp - wheelAt > 400 || Math.sign(dy) !== Math.sign(wheelSum))
+    wheelSum = 0;
+  wheelAt = e.timeStamp;
+  wheelSum += dy;
+  if (Math.abs(wheelSum) < 100) return;
+  step(wheelSum > 0 ? 1 : -1);
+  wheelSum = 0;
+}
 
 // Shift+arrows pan a zoomed picture (single view or fullscreen) by a tenth of the screen; plain arrows still change pictures.
 function panBy(dx, dy) {
@@ -1615,13 +1626,13 @@ function initMedia() {
     (e) => {
       if (e.target.closest('#comments')) return; // the comment box scrolls itself
       e.preventDefault();
-      // Ctrl+wheel zooms at the cursor; the plain wheel pans while zoomed.
+      // Ctrl+wheel zooms at the cursor; the plain wheel pans while zoomed, else goes to the previous or next file.
       if (!e.ctrlKey) {
         if (view.scale > 1) {
           view.x -= wheelPx(e, e.deltaX);
           view.y -= wheelPx(e, e.deltaY);
           paintView();
-        }
+        } else wheelStep(e, (n) => jump(state.index + n));
         return;
       }
       zoomView(
@@ -1670,20 +1681,7 @@ function initMedia() {
       e.preventDefault();
       if (!current() || !e.target.closest?.('#media')) return;
       const dy = wheelPx(e, e.deltaY);
-      if (state.grid) {
-        // Touchpads send many small deltas: one grid step per 100px of scrolling; a pause or a turn starts over.
-        if (
-          e.timeStamp - wheelAt > 400 ||
-          Math.sign(dy) !== Math.sign(wheelSum)
-        )
-          wheelSum = 0;
-        wheelAt = e.timeStamp;
-        wheelSum += dy;
-        if (Math.abs(wheelSum) < 100) return;
-        stepGrid(wheelSum < 0 ? 1 : -1);
-        wheelSum = 0;
-        return;
-      }
+      if (state.grid) return wheelStep(e, (n) => stepGrid(-n));
       if (!$('media').querySelector(':scope>img')) return;
       const m = $('media').getBoundingClientRect();
       zoomSingle(
@@ -1698,13 +1696,11 @@ function initMedia() {
   $('media').addEventListener(
     'wheel',
     (e) => {
-      if (
-        e.ctrlKey ||
-        single.scale <= 1 ||
-        !$('media').querySelector(':scope>img')
-      )
-        return;
+      if (e.ctrlKey || state.grid || !current()) return;
       e.preventDefault();
+      // Not zoomed in: the wheel goes to the previous or next file.
+      if (single.scale <= 1 || !$('media').querySelector(':scope>img'))
+        return wheelStep(e, (n) => jump(state.index + n));
       single.x -= wheelPx(e, e.deltaX);
       single.y -= wheelPx(e, e.deltaY);
       paintSingle();
