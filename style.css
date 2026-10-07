@@ -1885,14 +1885,15 @@ body.side #marks-bar #clear {
   margin: 0;
   justify-content: center;
 }
-body.side #marks-bar::after {
+/* Undo, hide and Clear all share the second row. */
+#marks-bar::after {
   content: '';
   flex-basis: 100%;
   height: 0;
   order: 1;
   margin-top: -6px;
 }
-body.side #marks-bar #clear {
+#marks-bar :is(#undo-tool, #hide-tool, #clear) {
   order: 2;
 }
 body.side #comments {
@@ -1935,34 +1936,32 @@ body:not(.side) #details {
   display: none;
 }
 body:not(.side) #marks-bar {
-  display: grid;
-  grid-template-columns: repeat(6, 31px);
-  grid-auto-rows: 30px;
-  gap: 6px;
+  width: 170px;
+  justify-content: center;
   align-content: center;
+  gap: 6px;
   flex: none;
 }
-body:not(.side) #marks-bar #clear {
-  grid-column: 1 / -1;
-  justify-self: center;
-}
-/* Once the tools no longer fit beside the ratings (380 + gaps + separator + 216 = 617px), they take their own
+/* Once the tools no longer fit beside the ratings (380 + gaps + separator + 170 = 571px), they take their own
    row with Clear all beside them, and everything shrinks. */
 @media (max-width: 1880px) {
   body:not(.side) #bar {
     container-type: inline-size;
   }
 }
-@container (max-width: 616px) {
+@container (max-width: 570px) {
   body:not(.side) .tools-sep {
     display: none;
   }
   body:not(.side) #marks-bar {
     flex: 1 1 100%;
-    display: flex;
+    width: auto;
     flex-wrap: nowrap;
     justify-content: center;
     gap: 4px;
+  }
+  body:not(.side) #marks-bar::after {
+    display: none;
   }
   body:not(.side) #marks-bar > * {
     flex: 0 1 31px;
