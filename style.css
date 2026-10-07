@@ -2537,7 +2537,8 @@ h1 .logo {
   box-shadow: 0 10px 30px #000a;
   cursor: auto;
 }
-body.comment-open #viewer #comments {
+body.comment-open #viewer #comments,
+body.comment-float.has-comment #viewer #comments {
   display: flex;
 }
 #viewer #comments textarea {
@@ -2747,7 +2748,7 @@ body.side-grid .row.picked::before {
   text-align: center;
   pointer-events: none;
 }
-/* Pen (D) / pin (A) options: in the marks panel in single view, above the key legend in fullscreen. */
+/* Pen (D) / pin (A) options: beside the mode pill at the top of the picture. */
 #mark-opts {
   display: flex;
   flex-direction: column;
@@ -2759,16 +2760,11 @@ body.side-grid .row.picked::before {
 #mark-opts:not([data-mode='draw']):not([data-mode='pin']) {
   display: none;
 }
-#zoom-level #mark-opts {
-  flex-basis: 100%;
-  padding-bottom: 5px;
-  margin-bottom: 1px;
-  border-bottom: 1px solid #ffffff26;
-}
-#marks-panel #mark-opts {
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #303746;
+#mode-chip #mark-opts {
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(21, 26, 34, 0.94);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 #mark-opts .pen-shapes,
 #mark-opts .pin-opts {
@@ -3251,4 +3247,8 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   display: inline-flex;
   color: var(--tone, #8a94a6);
   font-size: 13px;
+}
+/* The mode pill already names the tool. */
+#mode-chip #mark-opts .ps-label {
+  display: none;
 }

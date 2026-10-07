@@ -299,6 +299,7 @@ function paintModes() {
     multiOn() && ['multi', `☑ ${state.picked.size} selected`, 'Esc'],
   ].filter(Boolean);
   const chip = $('mode-chip'),
+    opts = $('mark-opts'), // pen / pin hints sit beside the mode pill, at the top of the picture
     fs = !$('viewer').hidden;
   chip.replaceChildren(
     ...modes.map(([mode, text, key]) => {
@@ -317,6 +318,7 @@ function paintModes() {
       return pill;
     }),
   );
+  chip.append(opts);
   chip.hidden = !modes.length;
   for (const el of [$('media'), $('viewer')])
     el.dataset.active = modes[0]?.[0] || '';
@@ -524,6 +526,7 @@ function setCommentOpen(open) {
 function paintCommentTool() {
   const text = $('comment').value.trim();
   $('comment-tool').classList.toggle('has', !!text);
+  document.body.classList.toggle('has-comment', !!text && !multiOn());
   $('comment-view').hidden = !text || !current() || multiOn();
   $('comment-view').querySelector('.cv-text').textContent = text;
 }
@@ -1147,7 +1150,6 @@ function openViewer() {
   if (!f || f.kind !== 'image') return;
   $('viewer').hidden = false;
   placeComments();
-  placeMarkOpts();
   showInViewer(f, true);
   resetView();
   paintModes();
@@ -1162,7 +1164,6 @@ function closeViewer() {
   if ($('viewer').hidden) return;
   $('viewer').hidden = true;
   placeComments();
-  placeMarkOpts();
   if (markMode) setMarkMode(null);
   view.drag = null;
   view.scale = 1;
@@ -1220,7 +1221,7 @@ function paintZoomOpts() {
     (fs ? false : state.grid || !$('media').querySelector(':scope>img')) ||
     s === 1;
   if (fs) {
-    if (o.parentNode !== $('zoom-level')) $('mark-opts').after(o);
+    if (o.parentNode !== $('zoom-level')) $('zoom-level').prepend(o);
   } else if (o.parentNode !== $('media') && !o.hidden) $('media').append(o);
   o.querySelector('.zpct').textContent = Math.round(s * 100) + '%';
 }
@@ -2557,13 +2558,6 @@ function setPenShape(shape) {
     .forEach((b) => b.classList.toggle('on', b.dataset.shape === shape));
 }
 
-// The options row sits in the marks panel in single view and moves into the fullscreen legend.
-function placeMarkOpts() {
-  if ($('viewer').hidden)
-    $('marks-panel').querySelector('.panel-head').after($('mark-opts'));
-  else $('zoom-level').prepend($('mark-opts'));
-}
-
 function shapePen(shift, ctrl) {
   const [sx, sy] = pen.free[0],
     [x, y] = pen.at;
@@ -2654,8 +2648,6 @@ function initMarks() {
   for (const t of ['pointerdown', 'pointerup'])
     $('mark-opts').addEventListener(t, (e) => e.stopPropagation());
 
-  placeMarkOpts();
-
   // Right-click on the picture drops the active pen or pin tool (text fields and the rest of the page keep their own menu).
   document.addEventListener('contextmenu', (e) => {
     if (
@@ -2739,6 +2731,13 @@ function setHints(on) {
     paintZoomOpts();
     paintZoomBox();
   }
+}
+
+// Settings switch: fullscreen shows the comment box whenever the file has a comment (off: only on C).
+function setCommentFloat(on) {
+  document.body.classList.toggle('comment-float', on);
+  $('set-comment-float').checked = on;
+  store('commentFloat', on ? '1' : '0');
 }
 
 // File list pictures / list scale: thumbnail size in the left sidebar (50–200%); in its grid, bigger pictures mean
@@ -2877,6 +2876,8 @@ function initSettings() {
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
   setHints(stored('hints') !== '0');
+  $('set-comment-float').onchange = (e) => setCommentFloat(e.target.checked);
+  setCommentFloat(stored('commentFloat') !== '0');
 
   $('set-ls-width').oninput = (e) => setLsScale(e.target.value);
 
