@@ -2706,13 +2706,14 @@ body.side-grid .row.picked::before {
 #mark-opts:not([data-mode='draw']):not([data-mode='pin']) {
   display: none;
 }
+body > #mark-opts,
 #viewer > #mark-opts {
   position: fixed;
   z-index: 25;
   translate: -50% 0;
   max-width: calc(100vw - 32px);
 }
-#mode-chip #mark-opts,
+body > #mark-opts,
 #viewer > #mark-opts {
   padding: 4px 8px;
   border-radius: 10px;
@@ -3157,7 +3158,7 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
   font-size: 13px;
 }
 /* The mode pill already names the tool. */
-#mode-chip #mark-opts .ps-label,
+body > #mark-opts .ps-label,
 #viewer > #mark-opts .ps-label {
   display: none;
 }

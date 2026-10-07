@@ -318,9 +318,9 @@ function paintModes() {
       return pill;
     }),
   );
-  // In fullscreen the hints float centred over the top of the picture instead.
-  if (fs) $('viewer').append(opts);
-  else chip.append(opts);
+  // The hints float centred over the top of the picture area (fixed, so they stay put while zooming or panning).
+  const optsHome = fs ? $('viewer') : document.body;
+  if (opts.parentElement !== optsHome) optsHome.append(opts);
   chip.hidden = !modes.length;
   for (const el of [$('media'), $('viewer')])
     el.dataset.active = modes[0]?.[0] || '';
@@ -330,27 +330,31 @@ function paintModes() {
   placeModes();
 }
 
-// The mode pill sits at the top left of the picture (its visible part when zoomed), in fullscreen the
-// pen / pin hints at its top centre.
+// The mode pill sits at the top left of the picture (its visible part when zoomed); the pen / pin hints centred in
+// the picture area, so they do not follow the picture sideways.
 function placeModes() {
   const fs = !$('viewer').hidden,
+    box = $(fs ? 'viewer' : 'media').getBoundingClientRect(),
     r = (
       (fs && $('viewer').querySelector(':scope>.marks')) ||
       $(fs ? 'viewer' : 'media')
     ).getBoundingClientRect(),
-    left = Math.max(r.left, 0),
-    right = Math.min(r.right, innerWidth),
     top = Math.max(r.top, 0) + 12;
   Object.assign($('mode-chip').style, {
-    left: left + 12 + 'px',
+    left: Math.max(r.left, 0) + 12 + 'px',
     top: top + 'px',
   });
-  if (fs)
-    Object.assign($('mark-opts').style, {
-      left: (left + right) / 2 + 'px',
-      top: top + 'px',
-    });
-  else $('mark-opts').style.left = $('mark-opts').style.top = '';
+  // Above the picture when the letterbox leaves room, otherwise over its top.
+  const opts = $('mark-opts'),
+    img = $(fs ? 'viewer' : 'media')
+      .querySelector(':scope>.marks')
+      ?.getBoundingClientRect(),
+    boxTop = Math.max(box.top, 0),
+    above = img && img.top - opts.offsetHeight - 6;
+  Object.assign(opts.style, {
+    left: (Math.max(box.left, 0) + Math.min(box.right, innerWidth)) / 2 + 'px',
+    top: (above >= boxTop + 6 ? above : boxTop + 12) + 'px',
+  });
 }
 
 function paintPicks() {
