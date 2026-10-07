@@ -1284,6 +1284,15 @@ function initMedia() {
     }
     closeViewer();
   });
+  // The next key (not Esc) brings that overlay back to true fullscreen; so does a click,
+  // see pointerup. Deferred so keys that close the viewer (Enter, F1) win.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') return;
+    setTimeout(() => {
+      if (!$('viewer').hidden && !document.fullscreenElement)
+        $('viewer').requestFullscreen?.().catch(() => {});
+    });
+  });
 
   addEventListener('resize', () => {
     if (!$('viewer').hidden) resetView();
@@ -1507,7 +1516,9 @@ function initMedia() {
     if (d && e.pointerId !== d.id) return;
     view.drag = null;
     $('viewer').classList.remove('dragging');
-    if (d && !d.moved) closeViewer();
+    if (!d || d.moved) return;
+    if (document.fullscreenElement || !$('viewer').requestFullscreen) return closeViewer();
+    $('viewer').requestFullscreen().catch(closeViewer);
   });
 
   $('viewer').addEventListener('pointercancel', (e) => {
