@@ -1582,20 +1582,25 @@ function paintLists() {
     b.onclick = () => setSideView(mode);
     views.append(b);
   }
+  // List scale and sort rows: their icon (⤢, ⇅) folds the row into a button beside List/Grid; clicking that opens it again.
+  const rows = [];
+  const foldable = (key, icon, name, row) => {
+    const open = stored(key) !== '0',
+      fold = Object.assign(document.createElement('button'), {
+        className: 'fold',
+        textContent: icon,
+        title: open ? `Fold ${name} into a button` : name,
+        onclick: () => {
+          store(key, open ? '0' : '1');
+          paintLists();
+        },
+      });
+    fold.setAttribute('aria-expanded', open);
+    if (open) rows.push(row(fold));
+    else views.append(fold);
+  };
   // List scale: grid view, picture size (so how many per row); list view, row density. Same value as ⚙ File list pictures.
-  // ⤢ folds the slider into a button beside List/Grid and opens it again.
-  const scaleOpen = stored('sideScaleOpen') !== '0',
-    fold = Object.assign(document.createElement('button'), {
-      className: 'scale-fold',
-      textContent: '⤢',
-      title: scaleOpen ? 'Hide the list scale slider' : 'List scale',
-      onclick: () => {
-        store('sideScaleOpen', scaleOpen ? '0' : '1');
-        paintLists();
-      },
-    });
-  fold.setAttribute('aria-expanded', scaleOpen);
-  if (scaleOpen) {
+  foldable('sideScaleOpen', '⤢', 'List scale', (fold) => {
     const scale = document.createElement('div');
     scale.className = 'side-scale-row';
     scale.append(
@@ -1612,33 +1617,31 @@ function paintLists() {
         oninput: (e) => setSideScale(e.target.value),
       }),
     );
-    views.append(scale);
-  } else views.append(fold);
+    return scale;
+  });
   // Sort row: Time (default, oldest first), Name, Size; pressing the active one flips the direction. Dragging rows makes a custom order instead.
-  const sorter = document.createElement('div');
-  sorter.className = 'side-sort';
-  sorter.append(
-    Object.assign(document.createElement('span'), {
-      textContent: '⇅',
-      title: 'Sort the file list',
-    }),
-  );
-  const custom = loadOrder().length > 0;
-  for (const [key, text, title] of [
-    ['time', 'Time', 'By modification time'],
-    ['name', 'Name', 'Alphabetical (numbers in order)'],
-    ['size', 'Size', 'By file size'],
-  ]) {
-    const on = !custom && sortBy.key === key,
-      b = Object.assign(document.createElement('button'), {
-        textContent: text + (on ? (sortBy.dir > 0 ? ' ↑' : ' ↓') : ''),
-        title: title + (on ? ' · click to reverse' : ''),
-      });
-    b.classList.toggle('on', on);
-    b.onclick = () => setSort(key);
-    sorter.append(b);
-  }
-  views.append(sorter, scrollHint('to-start', '▲', 'Back to the first file'));
+  foldable('sideSortOpen', '⇅', 'Sort', (fold) => {
+    const sorter = document.createElement('div');
+    sorter.className = 'side-sort';
+    sorter.append(fold);
+    const custom = loadOrder().length > 0;
+    for (const [key, text, title] of [
+      ['time', 'Time', 'By modification time'],
+      ['name', 'Name', 'Alphabetical (numbers in order)'],
+      ['size', 'Size', 'By file size'],
+    ]) {
+      const on = !custom && sortBy.key === key,
+        b = Object.assign(document.createElement('button'), {
+          textContent: text + (on ? (sortBy.dir > 0 ? ' ↑' : ' ↓') : ''),
+          title: title + (on ? ' · click to reverse' : ''),
+        });
+      b.classList.toggle('on', on);
+      b.onclick = () => setSort(key);
+      sorter.append(b);
+    }
+    return sorter;
+  });
+  views.append(...rows, scrollHint('to-start', '▲', 'Back to the first file'));
   // Discovered-folder list (F) and fuzzy folder search sit above the open folder; keep typing focus across repaints.
   const sec = document.createElement('div');
   sec.className = 'dir-section';

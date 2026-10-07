@@ -285,7 +285,7 @@ body.sorting {
   color: #8b97ab;
   padding: 0 2px;
 }
-.side-views button.scale-fold {
+.side-views button.fold {
   flex: 0 0 auto;
   font-size: 14px;
   padding: 1px 7px;
@@ -304,10 +304,6 @@ body.list-dense .row-name {
 body.list-dense .row-date,
 body.list-denser .row-meta {
   display: none;
-}
-.side-sort > span {
-  font-size: 15px;
-  padding: 0 2px;
 }
 .side-sort button.on {
   color: #fff;
