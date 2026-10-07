@@ -2583,7 +2583,7 @@ function placeMarks() {
 }
 
 // The marks panel docks when there is room, otherwise it floats over the picture (only when there are marks).
-// Right-sidebar layout: under the mark tools while the sidebar still fits the window. Bottom layout: right of the
+// Right-sidebar layout: under the mark tools, its list scrolling when space runs short. Bottom layout: right of the
 // rating buttons, where it also shows the saved comment.
 function placeMarksPanel() {
   const b = document.body,
@@ -2603,11 +2603,11 @@ function placeMarksPanel() {
       (below && $('mp-comment').textContent)
     );
   b.classList.toggle('marks-dock', !mp.hidden && (side || below));
+  // Too short for even two rows of the list: float it over the picture instead.
   if (
     side &&
     b.classList.contains('marks-dock') &&
-    !$('details').hidden &&
-    $('details').getBoundingClientRect().height < 70
+    $('pin-list').clientHeight < 50
   )
     b.classList.remove('marks-dock');
 }

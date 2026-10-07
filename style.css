@@ -2649,18 +2649,19 @@ body.side :is(#ratings, #marks-bar, #comment-view, #details),
 body.side.marks-dock #marks-panel {
   zoom: var(--rs-scale, 1);
 }
+/* The marks list shrinks and scrolls before the details drop under 70px. */
 body.side.marks-dock main {
-  grid-template-rows: auto 0 auto auto auto auto minmax(0, 1fr) 0;
+  grid-template-rows: auto 0 auto auto minmax(0, auto) auto minmax(70px, 1fr) 0;
 }
 body.side.marks-dock #marks-panel {
   grid-area: 5/2;
   justify-self: stretch;
   align-self: start;
   width: auto;
-  max-height: none;
+  max-height: 100%;
   margin: 0 0 10px;
   box-sizing: border-box;
-  overflow: visible;
+  overflow: hidden;
   backdrop-filter: none;
   box-shadow: none;
 }
