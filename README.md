@@ -18,6 +18,8 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 ![Annotation demo](docs/annotation.gif)
 
+**Mode chip:** while Pin, Draw, the comment box or a multi-selection is on, a coloured pill at the top left of the picture (also in fullscreen) names the mode and the key that turns it off, and the picture area is outlined in that colour (Pin red, Draw yellow, Comment blue, Multi-select green).
+
 **Multi-select:** Ctrl+click files in the list or grid (Shift+click picks a range), then one key rates or flags all of them; C + Enter gives them one comment; Redo asks for the comment first.
 
 ![Multi-select demo](docs/multiselect.gif)

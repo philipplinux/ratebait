@@ -283,7 +283,51 @@ function placeMultiTip() {
     : '';
 }
 
+// Mode chip: one pill per active mode (pin, draw, comment, multi-select) at the top left of the picture, or of the
+// fullscreen view, and the picture area outlined in the first mode's colour, so it is always clear what clicks and keys do.
+function paintModes() {
+  const modes = [
+    markMode === 'pin' && ['pin', '📍 Pin', 'A'],
+    markMode === 'draw' && ['draw', '✏️ Draw', 'D'],
+    document.body.classList.contains('comment-open') && [
+      'comment',
+      '💬 Comment',
+      'Esc',
+    ],
+    multiOn() && ['multi', `☑ ${state.picked.size} selected`, 'Esc'],
+  ].filter(Boolean);
+  const chip = $('mode-chip'),
+    fs = !$('viewer').hidden;
+  chip.replaceChildren(
+    ...modes.map(([mode, text, key]) => {
+      const pill = Object.assign(document.createElement('span'), {
+        className: 'mode-pill',
+        textContent: text + ' ',
+        title: `${text.slice(3)} is on · ${key} turns it off`,
+      });
+      pill.dataset.mode = mode;
+      pill.append(
+        Object.assign(document.createElement('kbd'), {
+          className: 'keycap',
+          textContent: key,
+        }),
+      );
+      return pill;
+    }),
+  );
+  chip.hidden = !modes.length;
+  for (const el of [$('media'), $('viewer')])
+    el.dataset.active = modes[0]?.[0] || '';
+  // Fullscreen shows only the viewer, so the chip moves in there.
+  const home = fs ? $('viewer') : document.body;
+  if (chip.parentElement !== home) home.append(chip);
+  const m = fs ? { left: 4, top: 4 } : $('media').getBoundingClientRect();
+  chip.style.left = m.left + 12 + 'px';
+  chip.style.top = Math.max(m.top, 0) + 12 + 'px';
+}
+
 function paintPicks() {
+  paintModes();
   const on = multiOn(),
     was = document.body.classList.contains('multi');
   document.body.classList.toggle('multi', on);
@@ -469,6 +513,7 @@ function setCommentOpen(open) {
   document.body.classList.toggle('comment-open', open);
   $('comment-tool').classList.toggle('on', open);
   $('zoom-level').querySelector('[data-k="C"]').classList.toggle('on', open);
+  paintModes();
   if (open) $('comment').focus();
   else if (document.activeElement === $('comment')) $('comment').blur();
 }
@@ -483,8 +528,12 @@ function paintCommentTool() {
 function initReview() {
   commentMode = storedJSON('commentMode') || commentMode;
 
-  new ResizeObserver(placeMultiTip).observe($('media'));
+  new ResizeObserver(() => {
+    placeMultiTip();
+    paintModes();
+  }).observe($('media'));
   addEventListener('resize', placeMultiTip);
+  addEventListener('resize', paintModes);
 
   for (const entry of buttons) {
     if (!entry) {
@@ -1095,6 +1144,7 @@ function openViewer() {
   placeMarkOpts();
   showInViewer(f, true);
   resetView();
+  paintModes();
   $('viewer')
     .requestFullscreen?.()
     .catch(() => {});
@@ -1113,6 +1163,7 @@ function closeViewer() {
   view.pending = null;
   view.token++;
   paintSingle();
+  paintModes();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
 
@@ -2359,6 +2410,7 @@ function setMarkMode(mode) {
     .classList.toggle('on', mode === 'draw');
   if (mode) setMarksHidden(false);
   paintPinList();
+  paintModes();
 }
 
 function setMarksHidden(off) {
