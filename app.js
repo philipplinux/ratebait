@@ -555,6 +555,8 @@ function paintCommentTool() {
   // With the floating comment on, the box over the picture shows it; no second copy in the bar.
   $('comment-view').hidden = !text || !current() || multiOn() || float;
   $('comment-view').querySelector('.cv-text').textContent = text;
+  $('mp-comment').textContent = multiOn() ? '' : text;
+  placeMarksPanel();
   fitComment();
 }
 
@@ -629,7 +631,8 @@ function initReview() {
     $('ratings').append(b);
   }
 
-  $('comment-view').onclick = () => setCommentOpen(true);
+  $('comment-view').onclick = $('mp-comment').onclick = () =>
+    setCommentOpen(true);
 
   $('comment-tool').onclick = () =>
     setCommentOpen(!document.body.classList.contains('comment-open'));
@@ -2423,13 +2426,27 @@ function placeMarks() {
   });
 }
 
-// The marks panel docks when there is room, otherwise it floats over the picture. Right-sidebar layout: under the
-// mark tools while the sidebar still fits the window. Bottom layout: as a full-width row in the bar.
+// The marks panel docks when there is room, otherwise it floats over the picture (only when there are marks).
+// Right-sidebar layout: under the mark tools while the sidebar still fits the window. Bottom layout: right of the
+// rating buttons, where it also shows the saved comment.
 function placeMarksPanel() {
   const b = document.body,
     side = b.classList.contains('side'),
-    mp = $('marks-panel');
-  b.classList.toggle('marks-dock', !mp.hidden && (side || innerHeight >= 700));
+    mp = $('marks-panel'),
+    f = current(),
+    { pins = [], strokes = [] } = f ? marksOf(f.name) : {},
+    below = !side && innerHeight >= 700 && innerWidth > 1000;
+  mp.hidden =
+    state.grid ||
+    !f ||
+    f.kind !== 'image' ||
+    !(
+      pins.length ||
+      strokes.length ||
+      markMode ||
+      (below && $('mp-comment').textContent)
+    );
+  b.classList.toggle('marks-dock', !mp.hidden && (side || below));
   if (
     side &&
     b.classList.contains('marks-dock') &&
@@ -2437,20 +2454,13 @@ function placeMarksPanel() {
     $('details').getBoundingClientRect().height < 70
   )
     b.classList.remove('marks-dock');
-  const inBar = b.classList.contains('marks-dock') && !side;
-  if (inBar !== (mp.parentNode === $('bar')))
-    inBar ? $('bar').append(mp) : $('details').before(mp);
 }
 
-// Right-hand panel over the picture, listing pins (with notes) and strokes; shown only when there is something to list.
+// Panel listing pins (with notes) and strokes; shown only when there is something to list.
 function paintPinList() {
   const f = current(),
     { pins = [], strokes = [] } = f ? marksOf(f.name) : {};
-  $('marks-panel').hidden =
-    state.grid ||
-    !f ||
-    f.kind !== 'image' ||
-    !(pins.length || strokes.length || markMode);
+  placeMarksPanel();
   requestAnimationFrame(placeMarksPanel);
   const strokeRows = strokes.map((st, i) => {
     const li = document.createElement('li');
