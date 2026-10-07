@@ -1,6 +1,6 @@
 # AGENTS.md
 
-RateBait is a local web app in which a person rates AI-generated images and music. You (the agent) set it up, then read what the person decided and act on it. The person rates in the browser; you read the files the app writes. Two files, `ratebait.py` (Python standard library only) and `index.html`; no install, no build.
+RateBait is a local web app in which a person rates AI-generated images and music. You (the agent) set it up, then read what the person decided and act on it. The person rates in the browser; you read the files the app writes. `ratebait.py` uses Python standard library only; `index.html`, `style.css`, the `app.js` bootstrap and native feature modules in `js/` are the frontend. No install, no build.
 
 ## Set it up
 
@@ -102,7 +102,14 @@ curl -s http://127.0.0.1:8765/api/review -H 'Content-Type: application/json' -d 
 
 ## Working on the code
 
-- Keep it dependency-free: standard-library Python and plain HTML/CSS/JS in one `index.html`, no build step.
-- Keep the AGPL-3.0-or-later header in both files.
-- Restart `ratebait.py` after changing it; `index.html` only needs a browser reload.
+- Keep it dependency-free: standard-library Python, plain HTML/CSS and native JavaScript modules, no build step. `README.md` maps the feature modules.
+- Keep the AGPL-3.0-or-later header in each source file.
+- Restart `ratebait.py` after changing it; frontend changes only need a browser reload.
 - Update `README.md` when keys or behaviour change. The ⚙ Keybinds list in `index.html` is the in-app reference.
+- Run `python3 test_assets.py` for asset MIME types/private-route isolation and `python3 test_search.py` for folder matching/fresh listings; exercise frontend changes in the browser too.
+- Keep shared review state in `js/state.js`; module-specific state stays local. Register DOM handlers through the feature initialization functions called by `app.js`, not at module top level. Preserve startup order and existing storage keys.
+- New frontend modules need explicit routes in `ratebait.py`'s `FRONTEND_ASSETS` and asset-delivery coverage. Never expose arbitrary repository files to simplify module serving.
+
+## Vault
+
+- Record: `~/Documents/Vault/wiki/entities/Media Review.md`

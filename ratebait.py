@@ -52,6 +52,19 @@ REPORT_FILE = "REVIEW.md"
 LOCK = threading.Lock()
 EMBED_KEY = b"simple-media-rater"
 NO_EMBED = set()  # (path, mtime_ns, size) of PNGs already found without an embedded review
+FRONTEND_ASSETS = {
+    "/": "text/html",
+    "/style.css": "text/css",
+    "/app.js": "text/javascript",
+    "/js/state.js": "text/javascript",
+    "/js/media.js": "text/javascript",
+    "/js/review.js": "text/javascript",
+    "/js/settings.js": "text/javascript",
+    "/js/folders.js": "text/javascript",
+    "/js/marks.js": "text/javascript",
+    "/js/keyboard.js": "text/javascript",
+    "/js/sidebar.js": "text/javascript",
+}
 
 
 def configuration():
@@ -145,7 +158,7 @@ def index_dirs_forever(roots):
 
 
 def fuzzy(query: str, text: str):
-    """Score (lower is better) and matched positions, or None. Mirrors fuzzy() in index.html."""
+    """Shared folder-search score (lower is better) and matched positions, or None."""
     q, t = query.lower(), text.lower()
     at = t.find(q)
     if at >= 0:
@@ -507,10 +520,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def get_route(self):
         url = urlsplit(self.path)
         query = parse_qs(url.query)
-        if url.path == "/":
-            body = (Path(__file__).parent / "index.html").read_bytes()
+        if url.path in FRONTEND_ASSETS:
+            filename = "index.html" if url.path == "/" else url.path[1:]
+            body = (Path(__file__).parent / filename).read_bytes()
+            content_type = FRONTEND_ASSETS[url.path]
             self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Type", content_type + "; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -525,7 +540,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             raw = query.get("path", [""])[0]
             names = list_subdirs(raw)
             body = {"names": names}
-            if query.get("counts", [""])[0] == "1" and len(names) <= 200:
+            if query.get("match", [""])[0] == "1":
+                needle = query.get("q", [""])[0]
+                matches = []
+                for name in names:
+                    if name.startswith(".") and not needle.startswith("."):
+                        continue
+                    m = fuzzy(needle, name) if needle else (0, [])
+                    if m is not None:
+                        matches.append({"name": name, "score": m[0], "hits": m[1]})
+                body = {"matches": matches}
+            elif query.get("counts", [""])[0] == "1" and len(names) <= 200:
                 body["counts"] = {n: count_media(Path(raw).expanduser() / n) for n in names}
             self.json_response(200, body)
         elif url.path == "/api/meta":
