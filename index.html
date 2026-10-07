@@ -28,7 +28,7 @@
             aria-label="Discovered folders"
             title="Choose a folder (F)"
             ><option value="">Choose a folder (F)</option></select
-          ><span id="path-box"
+          ><div id="path-box"
             ><input
               id="path"
               aria-label="Folder path"
@@ -39,7 +39,7 @@
               id="path-ghost"
               aria-hidden="true"
             ></span
-            ><ul id="path-hints" hidden></ul></span
+            ><ul id="path-hints" hidden></ul></div
           ><button id="browse" title="Pick a folder (B or O)"
             >📁 Browse… <kbd class="keycap">B</kbd></button
           ><button id="open">Open</button><span id="progress">0/0 rated</span
@@ -431,7 +431,7 @@
           id="comment"
           placeholder="What works? What needs changing?"
         ></textarea></section
-      ><aside id="marks-panel" hidden
+      ><aside id="marks-panel" aria-label="Marks" hidden
         ><div class="panel-head">Marks</div><ol id="pin-list"></ol></aside
       ><div id="grid-box" hidden></div
       ><section id="details" hidden
