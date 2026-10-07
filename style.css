@@ -1338,7 +1338,7 @@ body:not(.side) #ratings .keycap {
 .tile.current {
   border-color: #fff;
 }
-.up-tile {
+.folder-tile {
   background: #151a22;
   color: #929daf;
 }

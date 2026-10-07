@@ -788,7 +788,8 @@ function paintGrid() {
     '|' +
     JSON.stringify(
       state.files.map(({ name, mtime, size }) => [name, mtime, size]),
-    );
+    ) +
+    state.subfolders;
   let g = $('media').querySelector('.grid');
   if (!g || g.dataset.key !== key) {
     // Keep the scroll position when files change in the same folder.
@@ -804,11 +805,11 @@ function paintGrid() {
     if (same) g.dataset.index = last;
     g.className = 'grid';
     g.dataset.key = key;
-    // First tile: up one folder, like ↑ Up in the sidebar.
+    // Folder tiles first: up one folder, like ↑ Up in the sidebar.
     if (state.dir !== '/') {
       const parent = state.dir.replace(/\/[^/]+\/?$/, '') || '/',
         up = Object.assign(document.createElement('button'), {
-          className: 'tile up-tile',
+          className: 'tile folder-tile',
           textContent: '↑',
           title: 'Up one folder: ' + parent,
         });
@@ -820,6 +821,24 @@ function paintGrid() {
       );
       up.onclick = () => openFolder(parent);
       g.append(up);
+    }
+    // Then the subfolders, like the 📁 buttons in the sidebar.
+    for (const sub of state.subfolders) {
+      const n = state.subCounts[sub],
+        tile = Object.assign(document.createElement('button'), {
+          className: 'tile folder-tile',
+          textContent: '📁',
+          title: 'Open ' + sub + (n != null ? ` (${n} files)` : ''),
+        });
+      tile.append(
+        Object.assign(document.createElement('span'), {
+          className: 'tile-name',
+          textContent: sub + (n != null ? ` · ${n}` : ''),
+        }),
+      );
+      tile.onclick = () =>
+        openFolder((state.dir === '/' ? '' : state.dir) + '/' + sub);
+      g.append(tile);
     }
     state.files.forEach((f, k) => {
       const tile = document.createElement('button');
