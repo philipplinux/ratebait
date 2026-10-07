@@ -804,6 +804,23 @@ function paintGrid() {
     if (same) g.dataset.index = last;
     g.className = 'grid';
     g.dataset.key = key;
+    // First tile: up one folder, like ↑ Up in the sidebar.
+    if (state.dir !== '/') {
+      const parent = state.dir.replace(/\/[^/]+\/?$/, '') || '/',
+        up = Object.assign(document.createElement('button'), {
+          className: 'tile up-tile',
+          textContent: '↑',
+          title: 'Up one folder: ' + parent,
+        });
+      up.append(
+        Object.assign(document.createElement('span'), {
+          className: 'tile-name',
+          textContent: 'Up: ' + (parent.split('/').pop() || '/'),
+        }),
+      );
+      up.onclick = () => openFolder(parent);
+      g.append(up);
+    }
     state.files.forEach((f, k) => {
       const tile = document.createElement('button');
       tile.className = 'tile' + (state.picked.has(f.name) ? ' picked' : '');
@@ -846,7 +863,8 @@ function paintGrid() {
     paintZoomBox();
     keep.forEach(([e, top], k) => ((k ? e : g).scrollTop = top));
   }
-  [...g.children].forEach((tile, k) => {
+  const tiles = g.querySelectorAll('.tile[data-name]');
+  tiles.forEach((tile, k) => {
     const item = state.items[state.files[k]?.name] || {},
       r = item.flag || item.rating,
       badge = tile.querySelector('.tile-badge');
@@ -868,7 +886,7 @@ function paintGrid() {
   });
   // Scroll only when the selection moved, not on a background refresh.
   if (g.dataset.index !== String(state.index))
-    g.children[state.index]?.scrollIntoView({ block: 'nearest' });
+    tiles[state.index]?.scrollIntoView({ block: 'nearest' });
   g.dataset.index = state.index;
 }
 

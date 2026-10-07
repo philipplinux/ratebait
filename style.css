@@ -1338,6 +1338,10 @@ body:not(.side) #ratings .keycap {
 .tile.current {
   border-color: #fff;
 }
+.up-tile {
+  background: #151a22;
+  color: #929daf;
+}
 .tile img {
   width: 100%;
   height: 100%;
