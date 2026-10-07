@@ -2966,29 +2966,33 @@ const wheelColours = [
 let lastPointer = [innerWidth / 2, innerHeight / 2];
 
 // A ring of buttons around the pointer; any other click or key closes it, and its own key (or Esc) is swallowed.
-// While its key is still held, moving the pointer a short way toward a button picks that slice, like a pie menu.
+// Pie menu: while its key is held, moving the pointer out of the middle lights the slice it points at, and letting
+// go of the key picks it; letting go in the middle keeps the ring open for clicking.
 function popRing(id, toggle, buttons, radius, centre) {
   const [ox, oy] = lastPointer,
+    n = buttons.length,
+    span = 360 / n,
+    dead = radius * 0.45,
     w = document.createElement('div'),
+    pie = Object.assign(document.createElement('div'), { className: 'pie' }),
+    light = (i) => {
+      pick = i;
+      pie.classList.toggle('aiming', i >= 0);
+      pie.style.setProperty('--from', i * span - span / 2 + 'deg');
+      buttons.forEach(([b], j) => b.classList.toggle('aim', j === i));
+    },
     aim = (e) => {
       const dx = e.clientX - ox,
         dy = e.clientY - oy,
-        n = buttons.length,
-        i =
-          (Math.round(
-            (Math.atan2(dy, dx) + Math.PI / 2) / ((2 * Math.PI) / n),
-          ) +
-            n) %
-          n;
-      buttons.forEach(([b], j) =>
-        b.classList.toggle('aim', j === i && Math.hypot(dx, dy) > 6),
-      );
-      if (Math.hypot(dx, dy) > radius * 0.4) buttons[i][0].click();
+        // conic angles: 0 at the top, clockwise, like the button order
+        deg = ((Math.atan2(dy, dx) * 180) / Math.PI + 450) % 360;
+      light(Math.hypot(dx, dy) > dead ? Math.round(deg / span) % n : -1);
     },
     up = (e) => {
       if (e.key.toLowerCase() !== toggle) return;
       removeEventListener('pointermove', aim, true);
-      buttons.forEach(([b]) => b.classList.remove('aim'));
+      if (pick >= 0) buttons[pick][0].click();
+      else light(-1);
     },
     away = (e) => {
       if (w.contains(e.target)) return;
@@ -3012,8 +3016,13 @@ function popRing(id, toggle, buttons, radius, centre) {
       removeEventListener('pointermove', aim, true);
     },
     edge = radius + 24;
+  let pick = -1;
   w.id = id;
   w.className = 'ring';
+  w.style.setProperty('--r', radius + 30 + 'px');
+  w.style.setProperty('--dead', dead + 'px');
+  w.style.setProperty('--span', span + 'deg');
+  w.append(pie);
   // Clicks on the ring stay on it: no mark, no pan, no closing the viewer.
   w.onpointerdown = w.onclick = (e) => e.stopPropagation();
   w.style.left =
@@ -3485,8 +3494,8 @@ function keyBinds() {
     A: ['mark', 'Pin'],
     D: ['mark', 'Draw'],
     C: ['mark', 'Comment'],
-    R: ['mark', 'Colour ring (pen and pins; hold and move to pick)'],
-    '`': ['rate', 'Rating ring (click, or hold and move toward a button)'],
+    R: ['mark', 'Colour ring (pen and pins; hold, point and let go)'],
+    '`': ['rate', 'Rating ring (click, or hold, point at a slice and let go)'],
     Z: ['mark', 'Undo (the newest pin or stroke)'],
     H: ['mark', 'Hide marks'],
     Del: ['mark', 'Clear (marks and rating)'],

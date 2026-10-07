@@ -3464,6 +3464,37 @@ body > #mark-opts .ps-label,
   border-color: #fff;
   scale: 1.15;
 }
+/* Pie behind the buttons: slice lines, a hole in the middle, the pointed-at slice lit. */
+.ring .pie {
+  position: absolute;
+  left: calc(-1 * var(--r));
+  top: calc(-1 * var(--r));
+  width: calc(2 * var(--r));
+  height: calc(2 * var(--r));
+  border-radius: 50%;
+  pointer-events: none;
+  --hi: transparent;
+  background:
+    conic-gradient(
+      from var(--from, 0deg),
+      var(--hi) 0 var(--span),
+      transparent 0
+    ),
+    repeating-conic-gradient(
+      from calc(var(--span) / -2),
+      #ffffff38 0 0.7deg,
+      transparent 0 var(--span)
+    ),
+    #0d1117b8;
+  mask: radial-gradient(
+    circle,
+    transparent var(--dead),
+    #000 calc(var(--dead) + 1px)
+  );
+}
+.ring .pie.aiming {
+  --hi: #ffd16670;
+}
 #rating-wheel button {
   left: -21px;
   top: -21px;
