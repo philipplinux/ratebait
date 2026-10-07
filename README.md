@@ -10,7 +10,7 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 
 <details><summary><b>More demos:</b> navigation, annotation, multi-select, layout and settings, 4K vs low-res at the same zoomed spot</summary>
 
-**Navigation:** arrows and W/S, Home/End, PgUp/PgDn, file list (☰ list or ▦ thumbnails, ⇅ sort by time/name/size, the open file marked with a lens, L hides it), F1 settings, grid with + − size (it starts with ↑ Up and the subfolders), fullscreen, Ctrl+wheel zoom with hint bar, Shift+arrow pan, Ctrl+Space reset.
+**Navigation:** arrows and W/S, Home/End, PgUp/PgDn, file list (☰ list or ▦ thumbnails, ⇅ sort by time/name/size, the open file marked with a lens, L hides it), F1 settings, grid with + − size (it starts with ↑ Up and the subfolders, which a folder without media also shows), fullscreen, Ctrl+wheel zoom with hint bar, Shift+arrow pan, Ctrl+Space reset.
 
 ![Navigation demo](docs/navigation.gif)
 

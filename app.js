@@ -921,7 +921,7 @@ function paintCard(preserveDrafts = false) {
   }
   const f = current();
   // A single-view picture replaces the old content itself, once decoded (see below).
-  if ((!state.grid && f?.kind !== 'image') || !f) $('media').replaceChildren();
+  if (f && !state.grid && f.kind !== 'image') $('media').replaceChildren();
   for (const id of [
     'details',
     'ratings',
@@ -932,7 +932,12 @@ function paintCard(preserveDrafts = false) {
     $(id).hidden = !f;
   if (!f || f.kind !== 'image') closeViewer();
   if (!f) {
-    $('media').textContent = 'No media files in this folder';
+    // No media: the folder tiles (↑ Up, subfolders), keyboard-selectable from the first one.
+    if (state.dir && (state.dir !== '/' || state.subfolders.length)) {
+      paintGrid();
+      if (folderPick < 0) folderPick = 0;
+      paintFolderPick();
+    } else $('media').textContent = 'No media files in this folder';
     return;
   }
   if (state.grid) {
@@ -1055,8 +1060,9 @@ function setGrid(on) {
   if (!on && document.body.classList.contains('list-off')) clearPicks();
   store('grid', on ? '1' : '0');
   $('media').replaceChildren();
-  if (state.files.length) paintCard();
-  else paintPinList();
+  folderPick = -1;
+  paintCard();
+  if (!state.files.length) paintPinList();
 }
 
 // Grid size (columns × rows), kept per browser. ↑↓ move one row, PgUp/PgDn one page.
@@ -3818,6 +3824,7 @@ async function openFolder(raw) {
       paintPicks();
     }
     state.dir = result.dir;
+    folderPick = -1;
     state.files = arrange(sortFiles(result.files));
     state.items = result.items;
     state.folderLabels = result.labels || {};
@@ -4394,7 +4401,7 @@ function initKeyboard() {
     }
     if (typing || state.busy || e.ctrlKey || e.metaKey || e.altKey) return;
     // Enter: fullscreen. A focused list row or grid tile selects that file first; other buttons keep their own Enter.
-    if (e.key === 'Enter' && state.grid && folderPick >= 0) {
+    if (e.key === 'Enter' && folderPick >= 0) {
       e.preventDefault();
       $('media').querySelectorAll('.folder-tile')[folderPick]?.click();
       return;
@@ -4427,7 +4434,7 @@ function initKeyboard() {
       else if (!state.grid) zoomSingle(f);
       else stepGrid(e.key === '-' ? -1 : 1);
     } else if (
-      state.grid &&
+      (state.grid || !state.files.length) &&
       [
         'ArrowLeft',
         'ArrowRight',
