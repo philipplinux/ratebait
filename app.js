@@ -2035,10 +2035,20 @@ function paintLists() {
 function paintScrollHints() {
   const s = $('sidebar');
   s.classList.toggle('more-up', s.scrollTop > 2);
-  s.classList.toggle(
-    'dir-away',
-    s.scrollTop > (s.querySelector('.dir-section')?.offsetHeight || 0),
-  );
+  // The head copy shows once the sticky block has stuck (its top is -12px), and its height is taken back
+  // with a negative margin so the list below doesn't jump.
+  const sec = s.querySelector('.dir-section'),
+    views = s.querySelector('.side-views');
+  const away =
+    !!sec &&
+    sec.getBoundingClientRect().bottom <=
+      s.getBoundingClientRect().top + s.clientTop - 12;
+  s.classList.toggle('dir-away', away);
+  const mini = away && views?.querySelector('.dir-head.away');
+  if (views)
+    views.style.marginTop = mini
+      ? `${mini.offsetTop - mini.nextElementSibling.offsetTop}px`
+      : '';
   s.classList.toggle(
     'more-down',
     s.scrollTop + s.clientHeight < s.scrollHeight - 2,
