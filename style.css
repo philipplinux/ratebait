@@ -2504,17 +2504,21 @@ h1 .logo {
 }
 #media.mode-pin .marks,
 #viewer.mode-pin {
-  cursor:
+  cursor: var(
+    --pin-cursor,
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='30' viewBox='0 0 24 30'%3E%3Cpath d='M12 29s9-9.5 9-16a9 9 0 0 0-18 0c0 6.5 9 16 9 16z' fill='%23ff4d6d' stroke='%23fff' stroke-width='2'/%3E%3Ccircle cx='12' cy='13' r='3.5' fill='%23fff'/%3E%3C/svg%3E")
       12 29,
-    crosshair;
+    crosshair
+  );
 }
 #media.mode-draw .marks,
 #viewer.mode-draw {
-  cursor:
+  cursor: var(
+    --pen-cursor,
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25l2-7L19 4l5 5L10 23z' fill='%23ffd166' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M3 25l2-7 5 5z' fill='%23f4c9a0' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M3 25l1-3.5 2.5 2.5z'/%3E%3Cpath d='M16.5 6.5l5 5' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E")
       3 25,
-    crosshair;
+    crosshair
+  );
 }
 #viewer #comments {
   position: fixed;

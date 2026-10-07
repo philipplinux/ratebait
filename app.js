@@ -2616,8 +2616,25 @@ function initMarks() {
 
   {
     const k = document.querySelector('.pen-colour'),
-      paint = () =>
-        (k.querySelector('.swatch').style.background = $('mark-color').value);
+      paint = () => {
+        const c = $('mark-color').value,
+          svg = (body) =>
+            `url("data:image/svg+xml,${encodeURIComponent(body.replaceAll('C', c))}")`;
+        k.querySelector('.swatch').style.background = c;
+        // The pin and pen cursors take the current colour (C in the SVG).
+        document.body.style.setProperty(
+          '--pin-cursor',
+          svg(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='30' viewBox='0 0 24 30'><path d='M12 29s9-9.5 9-16a9 9 0 0 0-18 0c0 6.5 9 16 9 16z' fill='C' stroke='#fff' stroke-width='2'/><circle cx='12' cy='13' r='3.5' fill='#fff'/></svg>`,
+          ) + ' 12 29, crosshair',
+        );
+        document.body.style.setProperty(
+          '--pen-cursor',
+          svg(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><path d='M3 25l2-7L19 4l5 5L10 23z' fill='C' stroke='#000' stroke-width='1.5' stroke-linejoin='round'/><path d='M3 25l2-7 5 5z' fill='#f4c9a0' stroke='#000' stroke-width='1.5' stroke-linejoin='round'/><path d='M3 25l1-3.5 2.5 2.5z'/><path d='M16.5 6.5l5 5' stroke='#000' stroke-width='1.5'/></svg>`,
+          ) + ' 3 25, crosshair',
+        );
+      };
     k.onclick = (e) => {
       e.stopPropagation();
       $('mark-color').click();
