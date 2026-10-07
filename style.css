@@ -3498,3 +3498,11 @@ body.marks-dock.comment-float.has-comment:not(.side):not(.comment-open)
     font-size: 12px;
   }
 }
+/* Right-sidebar layout without the "All rated" banner: the picture starts at the top like in the bottom layout. */
+body.side main:has(> #banner[hidden]) > #media {
+  grid-row-start: 1;
+}
+/* Same gap above the picture as below it. */
+body.side main {
+  padding-top: 8px;
+}
