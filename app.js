@@ -942,9 +942,13 @@ function slideIn(img, where) {
   if (slid[where] === key) return;
   slid[where] = key;
   if (slideTo !== key) return;
-  img.classList.remove('slide-next');
-  void img.offsetWidth; // restart the animation
-  img.classList.add('slide-next');
+  // The marks layer (with the mode outline) slides along with the picture.
+  for (const el of [img, img.parentElement.querySelector(':scope>.marks')]) {
+    if (!el) continue;
+    el.classList.remove('slide-next');
+    void el.offsetWidth; // restart the animation
+    el.classList.add('slide-next');
+  }
 }
 
 function paintView() {
@@ -1125,11 +1129,11 @@ function showInViewer(f, fresh = false) {
       ru = keep && (innerWidth / 2 - view.x) / (view.w * s),
       rv = keep && (innerHeight / 2 - view.y) / (view.h * s);
     img.src = next.src;
-    slideIn(img, 'view');
     view.w = next.naturalWidth;
     view.h = next.naturalHeight;
     $('viewer').querySelector('.marks')?.remove();
     $('viewer').append(marksLayer(f.name));
+    slideIn(img, 'view');
     resetView();
     if (keep) {
       view.scale = scale;
@@ -2344,7 +2348,9 @@ function placeMarks() {
     layer = $('media').querySelector(':scope>.marks');
   if (!img || !layer || !img.naturalWidth) return;
   const r = img.getBoundingClientRect(),
-    m = $('media').getBoundingClientRect();
+    m = $('media').getBoundingClientRect(),
+    tx = parseFloat(getComputedStyle(img).translate) || 0; // mid slide-in: measure where the picture lands
+  r.x -= tx;
   const k = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight),
     w = img.naturalWidth * k,
     h = img.naturalHeight * k;
