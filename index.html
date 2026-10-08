@@ -151,6 +151,14 @@
                   min="50"
                   max="100"
                   step="5" /><output id="rs-width-out"></output></label
+              ><label class="set-row side-scale"
+                >Bottom bar
+                <input
+                  type="range"
+                  id="set-bar-scale"
+                  min="50"
+                  max="150"
+                  step="5" /><output id="bar-scale-out"></output></label
               ><div class="set-row grid-size"
                 ><span class="gs-label">Grid</span>
                 <input
@@ -295,9 +303,17 @@
       aria-modal="true"
       aria-labelledby="first-run-q"
       ><div class="card"
-        ><p id="first-run-q">Where should the path field search for folders?</p
-        ><button id="first-run-root"></button
-        ><button id="first-run-home">All of my home folder</button
+        ><section id="first-run-search" hidden
+          ><p class="fr-q" id="first-run-q">Where should the path field search for folders?</p
+          ><button id="first-run-root"></button
+          ><button id="first-run-home">All of my home folder</button></section
+        ><section id="first-run-embed" hidden
+          ><p class="fr-q">Save each review inside its PNG too?</p
+          ><p class="set-hint"
+            >A copied PNG then keeps its rating, comment and marks, and anyone
+            you share it with can read them.</p
+          ><button id="first-run-embed-off">No, leave the PNGs as they are</button
+          ><button id="first-run-embed-on">Yes, save it in the PNG</button></section
         ><p class="set-hint">You can change this later in ⚙.</p></div
       ></div
     ><main

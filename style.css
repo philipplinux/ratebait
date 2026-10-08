@@ -951,10 +951,11 @@ body.peek-off .peek {
 /* Bottom layout: buttons and comment share one row under the media. */
 body:not(.side) main {
   display: grid;
-  grid-template-columns: minmax(240px, 560px) minmax(max-content, 1fr) minmax(
-      320px,
-      17%
-    );
+  /* The side columns grow and shrink with the ⚙ Bottom bar size, like the content zoomed inside them. */
+  grid-template-columns:
+    minmax(calc(240px * var(--bar-scale, 1)), calc(560px * var(--bar-scale, 1)))
+    minmax(max-content, 1fr)
+    minmax(calc(320px * var(--bar-scale, 1)), calc(17% * var(--bar-scale, 1)));
   grid-template-rows: auto minmax(200px, 1fr) auto;
   column-gap: 28px;
 }
@@ -1502,7 +1503,7 @@ body:not(.side) main:has(#banner[hidden]) {
 }
 @media (max-width: 1880px) {
   body:not(.side) main {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 24%);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(320px * var(--bar-scale, 1)), calc(24% * var(--bar-scale, 1)));
   }
   body:not(.side) main,
   body:not(.side) main:has(#banner[hidden]) {
@@ -1534,7 +1535,7 @@ body:not(.side) main:has(#banner[hidden]) {
 /* Custom 7–9 make the button row too wide for the one-row layout: use the stacked one. */
 @media (min-width: 1881px) {
   body.customs:not(.side) main {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 24%);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(320px * var(--bar-scale, 1)), calc(24% * var(--bar-scale, 1)));
   }
   body.customs:not(.side) main,
   body.customs:not(.side) main:has(#banner[hidden]) {
@@ -1565,7 +1566,7 @@ body:not(.side) main:has(#banner[hidden]) {
 }
 @media (max-width: 1400px) {
   body:not(.side) main {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 34%);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(320px * var(--bar-scale, 1)), calc(34% * var(--bar-scale, 1)));
   }
   body:not(.side) main,
   body:not(.side) main:has(#banner[hidden]) {
@@ -2456,10 +2457,22 @@ h1 .logo {
   border-radius: 12px;
   box-shadow: 0 12px 40px #000a;
 }
+#first-run section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#first-run section[hidden] {
+  display: none;
+}
+#first-run section + section:not([hidden]) {
+  padding-top: 12px;
+  border-top: 1px solid #303746;
+}
 #first-run p {
   margin: 0;
 }
-#first-run #first-run-q {
+#first-run .fr-q {
   font-weight: 600;
   margin-bottom: 4px;
 }
@@ -2655,6 +2668,10 @@ body.side #comment-view:not([hidden]) {
 body.side :is(#ratings, #marks-bar, #comment-view, #details),
 body.side.marks-dock #marks-panel {
   zoom: var(--rs-scale, 1);
+}
+body:not(.side) :is(#bar, #details),
+body.marks-dock:not(.side) #marks-panel {
+  zoom: var(--bar-scale, 1);
 }
 /* The marks list shrinks and scrolls before the details drop under 70px. */
 body.side.marks-dock main {
@@ -3218,6 +3235,7 @@ body:not(.no-hints) #zoom-level > :is(.zl, .zoom-reset) {
 }
 #ticks .tally {
   display: flex;
+  justify-content: safe center;
   gap: 6px;
   flex: 1;
   min-width: 0;
@@ -3312,9 +3330,13 @@ body > #mark-opts .ps-label,
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.set-btns,
 .set-keys {
   grid-column: 1 / -1;
+}
+@media (min-width: 900px) {
+  .set-btns {
+    grid-column: span 2;
+  }
 }
 /* Keyboard: quarter-unit grid columns, so 1.25 and 1.75 wide keys line up like a real board. */
 #kb-board {

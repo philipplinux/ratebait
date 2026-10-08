@@ -3392,6 +3392,22 @@ function setRsScale(pct) {
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
 }
 
+// Bottom bar size (50–150%): scales the rating buttons, tools, comment and details under the picture.
+function setBarScale(pct) {
+  pct = Math.min(150, Math.max(50, +pct || 100));
+  $('set-bar-scale').value = pct;
+  $('bar-scale-out').value = pct + '%';
+  document.body.style.setProperty('--bar-scale', pct / 100);
+  store('barScale', pct);
+  if (typeof fitDetails === 'function') fitDetails();
+}
+
+function setEmbed(on) {
+  embedPng = on;
+  $('set-embed').checked = on;
+  store('embedPng', on ? '1' : '0');
+}
+
 // ⚙ Keyboard: a UK keyboard (main block, navigation keys, numpad) with every bound key coloured by what it does.
 // Rows of "label:width:height" in key units; _ is a gap, a leading ~ marks a numpad key (bound like its main-row twin).
 const kbRows = [
@@ -3755,10 +3771,7 @@ function initSettings() {
   $('set-hints').onchange = (e) => setHints(e.target.checked);
 
   $('set-embed').checked = embedPng;
-  $('set-embed').onchange = (e) => {
-    embedPng = e.target.checked;
-    store('embedPng', embedPng ? '1' : '0');
-  };
+  $('set-embed').onchange = (e) => setEmbed(e.target.checked);
 
   setHints(stored('hints') !== '0');
   document.body.classList.toggle('dir-folded', stored('dirFolded') === '1');
@@ -3791,6 +3804,10 @@ function initSettings() {
   $('set-rs-width').oninput = (e) => setRsScale(e.target.value);
 
   setRsScale(stored('rsScale') || 100);
+
+  $('set-bar-scale').oninput = (e) => setBarScale(e.target.value);
+
+  setBarScale(stored('barScale') || 100);
 
   setShowDetails(stored('showDetails') !== '0');
 
@@ -4013,30 +4030,43 @@ function setHomeSearch(on) {
   if (on) api('/api/find-dirs?scope=home').catch(() => {}); // starts the home scan before the first search
 }
 
-// First start in this browser: a small popup asks which scope to use. Esc keeps the start folder.
+// First start in this browser: a small popup asks each question not answered yet (folder search scope,
+// PNG embedding). Each answer hides its section; Esc keeps the defaults (start folder, PNGs untouched).
 function askSearchOnce() {
+  const asks = [
+    ['first-run-search', 'searchAsked', setHomeSearch, 'first-run-root', 'first-run-home'],
+    ['first-run-embed', 'embedAsked', setEmbed, 'first-run-embed-off', 'first-run-embed-on'],
+  ];
+  let open;
   try {
-    if (localStorage.getItem('searchAsked')) return;
-    localStorage.setItem('searchAsked', '1');
+    open = asks.filter(([, key]) => !localStorage.getItem(key));
+    open.forEach(([, key]) => localStorage.setItem(key, '1'));
   } catch {
     return;
   }
+  if (!open.length) return;
   const box = $('first-run');
   $('first-run-root').textContent =
     `Just the start folder (${tilde(serverRoot) || 'current folder'})`;
-  const choose = (on) => {
-    setHomeSearch(on);
-    box.hidden = true;
+  const choose = (ask, on) => {
+    ask[2](on);
+    $(ask[0]).hidden = true;
+    open = open.filter((a) => a !== ask);
+    if (open.length) $(open[0][3]).focus();
+    else box.hidden = true;
   };
-  $('first-run-root').onclick = () => choose(false);
-  $('first-run-home').onclick = () => choose(true);
+  for (const ask of open) {
+    $(ask[0]).hidden = false;
+    $(ask[3]).onclick = () => choose(ask, false);
+    $(ask[4]).onclick = () => choose(ask, true);
+  }
   box.onkeydown = (e) => {
     e.stopPropagation();
     if (!['Tab', 'Enter', ' '].includes(e.key)) e.preventDefault();
-    if (e.key === 'Escape') choose(false);
+    if (e.key === 'Escape') [...open].forEach((ask) => choose(ask, false));
   };
   box.hidden = false;
-  $('first-run-root').focus();
+  $(open[0][3]).focus();
 }
 
 // Path suggestions while typing, fuzzy matched against the subfolders of the folder typed so far.
