@@ -3333,6 +3333,20 @@ body > #mark-opts .ps-label,
 .set-keys {
   grid-column: 1 / -1;
 }
+.set-btns > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.set-btns > summary h3 {
+  display: inline;
+}
+.set-btns > summary::before {
+  content: "▸ ";
+  color: #8fa3c0;
+}
+.set-btns[open] > summary::before {
+  content: "▾ ";
+}
 @media (min-width: 900px) {
   .set-btns {
     grid-column: span 2;
