@@ -56,7 +56,7 @@ let scoreOn = stored('scoreMode') === '1';
 const scoreTone = (n) => `hsl(${n * 12} 70% 60%)`;
 // A key acts only while its button shows; in score mode the digits and * score instead.
 const keyLive = (k) =>
-  (scoreOn && /^[\d*]$/.test(k)) ||
+  (scoreOn && /^[\d*.]$/.test(k)) ||
   (k !== '*' &&
     !document.querySelector(`#ratings button[data-rating][data-key="${k}"]`)
       ?.hidden);
@@ -719,7 +719,9 @@ function initReview() {
     box.onchange = () => setCommentMode(value, box.checked);
     buttonFace(b, label, symbol, key);
     keyAction[key] = () =>
-      scoreOn && /\d/.test(key) ? scoreAct(+key) : act(value);
+      scoreOn && /[\d.]/.test(key)
+        ? scoreAct(key === '.' ? 10 : +key)
+        : act(value);
     b.onclick = (e) => {
       if (e.detail) b.blur();
       return keyAction[key]();
@@ -753,16 +755,16 @@ function initReview() {
     $('ratings').append(b);
   }
 
-  // Score mode swaps the rating buttons for 0–10, laid out on the same numpad (* is 10).
+  // Score mode swaps the rating buttons for 0–10, laid out on the same numpad (. or * is 10).
   for (let n = 0; n <= 10; n++) {
     const b = document.createElement('button'),
       key = n === 10 ? '*' : String(n);
     b.className = 'score-btn';
     b.dataset.score = n;
     b.dataset.key = key;
-    b.title = `Score ${n} (${key})`;
+    b.title = `Score ${n} (${n === 10 ? '. or *' : key})`;
     b.style.setProperty('--tone', scoreTone(n));
-    buttonFace(b, 'Score', String(n), key);
+    buttonFace(b, 'Score', String(n), n === 10 ? '.' : key);
     b.onclick = (e) => {
       if (e.detail) b.blur();
       scoreAct(n);
@@ -3587,8 +3589,8 @@ function keyBinds() {
   return {
     Esc: ['mark', 'Leave (the comment or tool; closes fullscreen)'],
     F1: ['view', 'Settings'],
-    F2: ['rate', 'Score mode (0–9 and * score 0–10)'],
-    '*': ['rate', 'Score 10 (score mode)'],
+    F2: ['rate', 'Score mode (0–9 score 0–9, . or * scores 10)'],
+    '*': ['rate', 'Score 10 (score mode, like .)'],
     0: rate('reject'),
     '.': rate('neutral'),
     ',': rate('neutral'),
