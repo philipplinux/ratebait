@@ -2579,6 +2579,10 @@ body.side :is(#ratings, #marks-bar, #comment-view, #details),
 body.side.marks-dock #marks-panel {
   zoom: var(--rs-scale, 1);
 }
+/* Mark tools stay a bit larger than the rest of the column: they are small to begin with. */
+body.side #marks-bar {
+  zoom: calc(var(--rs-scale, 1) * 1.25);
+}
 body:not(.side) :is(#bar, #details),
 body.marks-dock:not(.side) #marks-panel {
   zoom: var(--bar-scale, 1);
