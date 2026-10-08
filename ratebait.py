@@ -286,6 +286,11 @@ def clean_labels(labels) -> dict:
     return {k: v.strip() for k, v in labels.items() if v.strip()}
 
 
+def valid_score(score) -> bool:
+    # Score mode (F2): 0-10 next to the rating; absent or null means none.
+    return score is None or (type(score) is int and 0 <= score <= 10)
+
+
 def load_state(d: Path) -> dict:
     # Caller holds LOCK: malformed-state preservation is also a write.
     p = d / STATE_FILE
@@ -304,6 +309,7 @@ def load_state(d: Path) -> dict:
                 not isinstance(item, dict)
                 or item.get("rating") not in [None, *RATINGS]
                 or item.get("flag") not in [None, *FLAGS]
+                or not valid_score(item.get("score"))
                 or not isinstance(item.get("comment"), str)
             ):
                 raise ValueError("invalid review item")
@@ -416,6 +422,7 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
         if (
             item.get("rating") in [None, *RATINGS]
             and item.get("flag") in [None, *FLAGS]
+            and valid_score(item.get("score"))
             and isinstance(item.get("comment", ""), str)
         ):
             try:
@@ -427,6 +434,7 @@ def import_embedded(d: Path, state: dict, files: list[dict]) -> bool:
                 flag=item.get("flag"),
                 comment=item.get("comment", ""),
                 updated=item.get("updated"),
+                **({"score": item["score"]} if item.get("score") is not None else {}),
                 **marks,
             )
             added = True
@@ -607,6 +615,8 @@ def write_report(d: Path, state: dict, files: list[dict]):
         for f, item in groups[rating]:
             comment = " ".join(item.get("comment", "").splitlines())
             kind = f["kind"] + (f", {item['rating']}" if item.get("flag") and item.get("rating") else "")
+            if item.get("score") is not None:
+                kind += f", score {item['score']}/10"
             lines.append(f"- `{f['name']}` ({kind})" + (f": {comment}" if comment else ""))
             for n, pin in enumerate(item.get("pins", []), 1):
                 note = " ".join(pin["note"].splitlines())
@@ -843,6 +853,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             flag = data.get("flag")
             if flag not in [None, *FLAGS]:
                 raise ValueError("invalid flag")
+            score = data.get("score")
+            if not valid_score(score):
+                raise ValueError("score must be a whole number from 0 to 10 or null")
             comment = data.get("comment")
             if not isinstance(comment, str):
                 raise ValueError("comment must be a string")
@@ -855,12 +868,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             with LOCK:
                 state = load_state(d)
                 now = datetime.now().astimezone().isoformat(timespec="seconds")
-                cleared = rating is None and flag is None and not comment and not marks
+                cleared = rating is None and flag is None and score is None and not comment and not marks
                 # An explicit empty PNG entry prevents stale embedded data from being reimported.
                 if cleared and Path(name).suffix.lower() != ".png":
                     state["items"].pop(name, None)
                 else:
                     state["items"][name] = dict(rating=rating, flag=flag, comment=comment, updated=now, **marks)
+                    if score is not None:
+                        state["items"][name]["score"] = score
                 state.update(dir=str(d), updated=now)
                 if labels:
                     state["labels"] = {**state.get("labels", {}), **labels}

@@ -62,7 +62,7 @@ Verdicts, best to worst: `mvp`, `love`, `pass`, `neutral`, `reject`. A file can 
   "labels": {"custom7": "Print"},
   "items": {
     "phoenix.png": {
-      "rating": "mvp", "flag": null,
+      "rating": "mvp", "flag": null, "score": 9,
       "comment": "Huge energy, warm palette. Strong candidate for the hero image.",
       "updated": "2026-10-06T15:42:43+01:00",
       "pins": [{"x": 0.43, "y": 0.37, "note": "Head is small but readable"}],
@@ -71,6 +71,8 @@ Verdicts, best to worst: `mvp`, `love`, `pass`, `neutral`, `reject`. A file can 
   }
 }
 ```
+
+`score` (0 to 10) appears only when the person scored the file in score mode (F2); it sits beside the rating, not instead of it.
 
 Pin and stroke coordinates are fractions of the image (0 to 1, from the top left), so `x 0.43, y 0.37` is 43% across and 37% down. Unrated files have no entry in `items`.
 
@@ -99,6 +101,7 @@ curl -s http://127.0.0.1:8765/api/review -H 'Content-Type: application/json' -d 
 
 - `comment` is required and must be a string (it can be `""`).
 - `rating`/`flag` must be one of the values above or `null`. With everything empty, the entry is removed.
+- `score` (optional): a whole number 0–10 or `null`. Leave it out or send `null` and any score is removed.
 - `embed` (optional): leave it out and the PNG is not touched. `true` also writes the review into the PNG, `false` removes one stored there earlier.
 - Requests carrying a foreign `Origin` header or `Sec-Fetch-Site: cross-site`/`same-site` are rejected.
 - Writing `.review.json` by hand also works, but only while the app is not saving the same folder. `REVIEW.md` is regenerated on the next save in the app.

@@ -1042,40 +1042,40 @@ body.side [data-key='8'] {
 body.side [data-key='9'] {
   grid-area: 4/3;
 }
-body.side.customs [data-key='7'] {
+body.side:is(.customs, .score-mode) [data-key='7'] {
   grid-area: 1/1;
 }
-body.side.customs [data-key='8'] {
+body.side:is(.customs, .score-mode) [data-key='8'] {
   grid-area: 1/2;
 }
-body.side.customs [data-key='9'] {
+body.side:is(.customs, .score-mode) [data-key='9'] {
   grid-area: 1/3;
 }
-body.side.customs [data-key='4'] {
+body.side:is(.customs, .score-mode) [data-key='4'] {
   grid-area: 2/1;
 }
-body.side.customs [data-key='5'] {
+body.side:is(.customs, .score-mode) [data-key='5'] {
   grid-area: 2/2;
 }
-body.side.customs [data-key='6'] {
+body.side:is(.customs, .score-mode) [data-key='6'] {
   grid-area: 2/3;
 }
-body.side.customs [data-key='1'] {
+body.side:is(.customs, .score-mode) [data-key='1'] {
   grid-area: 3/1;
 }
-body.side.customs [data-key='2'] {
+body.side:is(.customs, .score-mode) [data-key='2'] {
   grid-area: 3/2;
 }
-body.side.customs [data-key='3'] {
+body.side:is(.customs, .score-mode) [data-key='3'] {
   grid-area: 3/3;
 }
-body.side.customs [data-key='0'] {
+body.side:is(.customs, .score-mode) [data-key='0'] {
   grid-area: 4/1;
 }
 body.side.customs [data-key='.'] {
   grid-area: 4/2;
 }
-body.side.customs #fs-key {
+body.side:is(.customs, .score-mode) #fs-key {
   grid-area: 4/3;
 }
 #fs-key {
@@ -1334,10 +1334,15 @@ body:not(.side) #ratings .keycap {
 .tile:has(.tile-badge:not([hidden])) .tile-name {
   padding-right: 36px;
 }
-.tile .tile-badge {
+.tile .tile-icons {
   position: absolute;
   right: 6px;
   bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tile .tile-badge {
   background: #000b;
   color: var(--tone, #a2aabb);
   padding: 2px 7px;
@@ -1346,9 +1351,6 @@ body:not(.side) #ratings .keycap {
   font-weight: 600;
 }
 .tile .tile-marks {
-  position: absolute;
-  top: 4px;
-  right: 6px;
   padding: 1px 4px;
   border-radius: 4px;
   background: #000b;
@@ -3688,4 +3690,51 @@ body.dir-folded .dir-section > :not(.dir-head) {
   grid-column: 1 / -1;
   font-size: 11px;
   padding: 2px 6px;
+}
+/* Score mode (F2): the digit keys score 0–10; the rating buttons make way for the score buttons. */
+.mode-pill[data-mode='score'],
+[data-active='score'] {
+  --mode: #ffb347;
+}
+body:not(.score-mode) #ratings .score-btn,
+body.score-mode #ratings :is(.rating-control, .flag-sep) {
+  display: none;
+}
+body.side.score-mode #ratings [data-key='*'] {
+  grid-area: 4/2;
+}
+body:not(.side) #ratings .score-btn {
+  flex: 0 1 60px;
+  min-width: 0;
+}
+#ratings .score-btn .rating-icon {
+  font-weight: 700;
+  color: var(--tone);
+}
+#ratings .score-btn.selected {
+  background: var(--tone);
+  color: #11161b;
+}
+#ratings .score-btn.selected .rating-icon {
+  color: inherit;
+}
+.score-pop {
+  font-weight: 700;
+}
+.score-mark,
+.tile .tile-score {
+  color: var(--tone);
+  font-weight: 700;
+}
+.tile .tile-score {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #000b;
+  font-size: 12px;
+}
+.tile .tile-score[hidden] {
+  display: none;
+}
+body.side-grid .row .comment-marker + .comment-marker + .comment-marker {
+  left: 48px;
 }

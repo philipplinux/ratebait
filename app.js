@@ -51,6 +51,15 @@ const customs = flags.slice(3);
 
 // Opt-in: copy each review into its PNG, so a copied file keeps it (and anyone it is shared with can read it).
 let embedPng = stored('embedPng') === '1';
+// Score mode (⚙ or F2): the digit keys score 0–9 and * scores 10, next to the rating.
+let scoreOn = stored('scoreMode') === '1';
+const scoreTone = (n) => `hsl(${n * 12} 70% 60%)`;
+// A key acts only while its button shows; in score mode the digits and * score instead.
+const keyLive = (k) =>
+  (scoreOn && /^[\d*]$/.test(k)) ||
+  (k !== '*' &&
+    !document.querySelector(`#ratings button[data-rating][data-key="${k}"]`)
+      ?.hidden);
 
 const nameOf = (v) =>
   state.customNames[v] ||
@@ -137,8 +146,7 @@ async function transact(action) {
         return;
       }
       const k = keyQueue.shift();
-      if (!document.querySelector(`#ratings button[data-key="${k}"]`)?.hidden)
-        keyAction[k]();
+      if (keyLive(k)) keyAction[k]();
     });
   return success;
 }
@@ -167,6 +175,10 @@ function paintRating() {
           : b.dataset.rating === rating,
       ),
     );
+  const score = state.items[current()?.name]?.score;
+  $('ratings')
+    .querySelectorAll('.score-btn')
+    .forEach((b) => b.classList.toggle('selected', +b.dataset.score === score));
 }
 
 async function save(
@@ -174,6 +186,7 @@ async function save(
   comment,
   flag = state.items[current().name]?.flag || null,
   marks = null,
+  score = state.items[current().name]?.score ?? null,
 ) {
   const item = state.items[current().name] || {};
   const { pins = item.pins || [], strokes = item.strokes || [] } = marks || {};
@@ -185,6 +198,7 @@ async function save(
     flag,
     pins,
     strokes,
+    score,
     embed: embedPng,
     labels: Object.fromEntries(
       customs
@@ -203,6 +217,7 @@ async function save(
   if (tag && (tag !== (item.flag || item.rating) || newComment))
     popRating(tag, now, item.flag || item.rating);
   else if (newComment) popRating(null);
+  if (now.score != null && now.score !== item.score) popRating(now.score);
   paintLists();
   paintRating();
   paintMarks();
@@ -330,6 +345,7 @@ function paintModes() {
   const modes = [
     markMode === 'pin' && ['pin', '📍 Pin', 'A'],
     markMode === 'draw' && ['draw', '✏️ Draw', 'D'],
+    scoreOn && ['score', '🔢 Score', 'F2'],
     document.body.classList.contains('comment-open') && [
       'comment',
       '💬 Comment',
@@ -424,7 +440,8 @@ function paintPicks() {
   }
 }
 
-async function applyPicks(value) {
+// score: undefined keeps each file's score.
+async function applyPicks(value, score) {
   const flag = flags.includes(value),
     names = [...state.picked],
     note = $('comment').value.trim();
@@ -446,6 +463,7 @@ async function applyPicks(value) {
           comment: note || it.comment || '',
           pins: it.pins || [],
           strokes: it.strokes || [],
+          score: score === undefined ? (it.score ?? null) : score,
           embed: embedPng,
           labels,
         })
@@ -462,6 +480,11 @@ async function applyPicks(value) {
     toast(
       `${nameOf(value)}${note ? ' + comment' : ''} → ${names.length} files`,
     );
+    state.picked.clear();
+    paintPicks();
+  } else if (score !== undefined) {
+    if (score != null) popRating(score);
+    toast(`Score ${score ?? 'removed'} → ${names.length} files`);
     state.picked.clear();
     paintPicks();
   } else if (note) {
@@ -504,18 +527,49 @@ function act(value) {
         $('comment').value,
         null,
       );
-    if (next) {
-      lastPop?.classList.add('swipe');
-      state.index = (state.index + 1) % state.files.length;
-      slideTo = slideKey();
-      paintLists();
-      paintCard();
-    }
+    if (next) advance();
   }).then((success) => {
     if (!success) return;
     if (next) setCommentOpen(false);
     else if (ask) setCommentOpen(true);
   });
+}
+
+function advance() {
+  lastPop?.classList.add('swipe');
+  state.index = (state.index + 1) % state.files.length;
+  slideTo = slideKey();
+  paintLists();
+  paintCard();
+}
+
+// Score mode: sets the score and moves on; the same score again removes it.
+function scoreAct(n) {
+  if (!current()) return;
+  if (multiOn()) return transact(() => applyPicks(null, n));
+  let next = false;
+  return transact(async () => {
+    const item = state.items[current().name] || {};
+    next = item.score !== n;
+    await save(
+      item.rating || null,
+      $('comment').value,
+      item.flag || null,
+      null,
+      next ? n : null,
+    );
+    if (next) advance();
+  }).then((success) => {
+    if (success && next) setCommentOpen(false);
+  });
+}
+
+function setScoreMode(on) {
+  scoreOn = on;
+  store('scoreMode', on ? '1' : '0');
+  $('set-score').checked = on;
+  document.body.classList.toggle('score-mode', on);
+  paintModes();
 }
 
 function setCommentMode(value, on) {
@@ -664,7 +718,8 @@ function initReview() {
     box.dataset.value = value;
     box.onchange = () => setCommentMode(value, box.checked);
     buttonFace(b, label, symbol, key);
-    keyAction[key] = () => act(value);
+    keyAction[key] = () =>
+      scoreOn && /\d/.test(key) ? scoreAct(+key) : act(value);
     b.onclick = (e) => {
       if (e.detail) b.blur();
       return keyAction[key]();
@@ -698,6 +753,24 @@ function initReview() {
     $('ratings').append(b);
   }
 
+  // Score mode swaps the rating buttons for 0–10, laid out on the same numpad (* is 10).
+  for (let n = 0; n <= 10; n++) {
+    const b = document.createElement('button'),
+      key = n === 10 ? '*' : String(n);
+    b.className = 'score-btn';
+    b.dataset.score = n;
+    b.dataset.key = key;
+    b.title = `Score ${n} (${key})`;
+    b.style.setProperty('--tone', scoreTone(n));
+    buttonFace(b, 'Score', String(n), key);
+    b.onclick = (e) => {
+      if (e.detail) b.blur();
+      scoreAct(n);
+    };
+    $('ratings').append(b);
+  }
+  keyAction['*'] = () => scoreOn && scoreAct(10);
+
   $('comment-view').onclick = $('mp-comment').onclick = () =>
     setCommentOpen(true);
 
@@ -715,7 +788,8 @@ function initReview() {
 
   $('clear').onclick = () =>
     transact(async () => {
-      if (current()) await save(null, '', null, { pins: [], strokes: [] });
+      if (current())
+        await save(null, '', null, { pins: [], strokes: [] }, null);
     });
 }
 
@@ -875,7 +949,13 @@ function paintGrid() {
       badge.className = 'tile-badge';
       const marks = document.createElement('span');
       marks.className = 'tile-marks';
-      tile.append(name, badge, marks);
+      const score = document.createElement('span');
+      score.className = 'tile-score';
+      // The icons sit together in one corner.
+      const icons = document.createElement('span');
+      icons.className = 'tile-icons';
+      icons.append(marks, score, badge);
+      tile.append(name, icons);
       tile.onclick = (e) => {
         if (e.shiftKey) {
           pickRange(k, e.ctrlKey || e.metaKey);
@@ -916,6 +996,7 @@ function paintGrid() {
     ]
       .filter(Boolean)
       .join('\n');
+    paintScore(tile.querySelector('.tile-score'), item.score);
   });
   // Scroll only when the selection moved, not on a background refresh.
   if (g.dataset.index !== String(state.index))
@@ -1206,12 +1287,17 @@ function popRating(r, item = {}, prev = null) {
     paintIcon(ghost, prev);
     el.classList.add('over');
   }
-  if (r) {
+  if (typeof r === 'number') {
+    el.textContent = r;
+    el.classList.add('score-pop');
+    el.style.setProperty('--tone', scoreTone(r));
+  } else if (r) {
     paintIcon(el, r);
     el.hidden = false;
   } else el.textContent = '💬';
   // Badges at fixed spots on the circle edge: comment top centre, pin bottom left, pen bottom right.
-  const extras = r
+  const extras =
+    r && typeof r !== 'number'
     ? [
         item.comment && ['💬', 0],
         item.pins?.length && ['📍', 225],
@@ -1240,6 +1326,13 @@ function popRating(r, item = {}, prev = null) {
     });
   }
   lastPop = el;
+}
+
+function paintScore(el, n) {
+  el.hidden = n == null;
+  el.textContent = n ?? '';
+  el.title = n == null ? '' : `Score ${n}/10`;
+  el.style.setProperty('--tone', n == null ? '' : scoreTone(n));
 }
 
 // Rating icon (same as on the rating button) in the rating's colour; hidden when unrated.
@@ -2173,6 +2266,12 @@ function paintLists() {
       marker.className = 'comment-marker';
       marker.textContent = '📍';
       marker.title = `${item.pins?.length || 0} pins · ${item.strokes?.length || 0} strokes`;
+      row.append(marker);
+    }
+    if (item.score != null) {
+      const marker = document.createElement('span');
+      marker.className = 'comment-marker score-mark';
+      paintScore(marker, item.score);
       row.append(marker);
     }
     list.append(row);
@@ -3488,6 +3587,8 @@ function keyBinds() {
   return {
     Esc: ['mark', 'Leave (the comment or tool; closes fullscreen)'],
     F1: ['view', 'Settings'],
+    F2: ['rate', 'Score mode (0–9 and * score 0–10)'],
+    '*': ['rate', 'Score 10 (score mode)'],
     0: rate('reject'),
     '.': rate('neutral'),
     ',': rate('neutral'),
@@ -3769,6 +3870,9 @@ function initSettings() {
   $('set-details').onchange = (e) => setShowDetails(e.target.checked);
 
   $('set-hints').onchange = (e) => setHints(e.target.checked);
+
+  $('set-score').onchange = (e) => setScoreMode(e.target.checked);
+  setScoreMode(scoreOn);
 
   $('set-embed').checked = embedPng;
   $('set-embed').onchange = (e) => setEmbed(e.target.checked);
@@ -4460,6 +4564,11 @@ function initKeyboard() {
       } else setMenu($('settings-menu').hidden);
       return;
     }
+    if (e.key === 'F2') {
+      e.preventDefault();
+      setScoreMode(!scoreOn);
+      return;
+    }
     const typing =
       ['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName) ||
       e.target.isContentEditable;
@@ -4609,10 +4718,7 @@ function initKeyboard() {
         ))
     )
       return;
-    if (
-      keyAction[key] &&
-      !document.querySelector(`#ratings button[data-key="${key}"]`).hidden
-    ) {
+    if (keyAction[key] && keyLive(key)) {
       e.preventDefault();
       keyAction[key]();
     } else if (['+', '=', '-'].includes(e.key)) {

@@ -171,7 +171,14 @@ def check():
                     request(listing, headers={"Host": host, "Origin": "http://" + host})
                     request("/api/review", review, headers={"Host": host, "Origin": "http://" + host})
                 request(listing, headers={"Host": "evil.example", "Origin": "http://evil.example"}, status=400)
-            for field, value in [("rating", []), ("rating", {}), ("flag", []), ("labels", []), ("labels", {"custom7": 7}), ("embed", "yes")]:
+            # Score mode: 0-10 next to the rating, listed in the report, dropped again with null.
+            assert request("/api/review", {**review, "score": 10})["items"]["b.png"]["score"] == 10
+            assert "score 10/10" in (d / rb.REPORT_FILE).read_text()
+            assert "score" not in request("/api/review", {**review, "score": None})["items"]["b.png"]
+            assert request("/api/review", {**review, "rating": None, "score": 0})["items"]["b.png"]["score"] == 0
+            for value in [11, -1, 2.5, True, "5"]:
+                request("/api/review", {**review, "score": value}, status=400)
+            for field, value in [("rating", []), ("rating", {}), ("flag", []), ("labels", []), ("labels", {"custom7": 7}), ("embed", "yes"), ("score", 11)]:
                 request("/api/review", {**review, field: value}, status=400)
 
         finally:
