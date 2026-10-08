@@ -1006,6 +1006,13 @@ body.side #ratings .flag-sep {
 body.side #ratings button {
   max-width: none;
 }
+body.side #ratings .rating-icon {
+  font-size: 20px;
+}
+body.side #ratings .rating-icon svg {
+  width: 20px;
+  height: 20px;
+}
 body.side [data-key='4'] {
   grid-area: 1/1;
 }
