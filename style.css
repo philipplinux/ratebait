@@ -1005,20 +1005,6 @@ body.side #ratings .flag-sep {
 }
 body.side #ratings button {
   max-width: none;
-  min-height: 0;
-  padding: 6px 4px;
-  gap: 3px;
-  font-size: 14px;
-}
-body.side #ratings .rating-icon {
-  font-size: 18px;
-}
-body.side #ratings .rating-control > .rating-foot {
-  bottom: 7px;
-}
-body.side #ratings .rating-icon svg {
-  width: 18px;
-  height: 18px;
 }
 body.side [data-key='4'] {
   grid-area: 1/1;
@@ -2592,6 +2578,12 @@ body.side #comment-view:not([hidden]) {
 body.side :is(#ratings, #marks-bar, #comment-view, #details),
 body.side.marks-dock #marks-panel {
   zoom: var(--rs-scale, 1);
+}
+/* The numpad keeps its square buttons at 70% of the column, centred. */
+body.side #ratings {
+  zoom: calc(var(--rs-scale, 1) * 0.7);
+  width: 338px;
+  justify-self: center;
 }
 body:not(.side) :is(#bar, #details),
 body.marks-dock:not(.side) #marks-panel {
