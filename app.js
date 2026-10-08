@@ -49,6 +49,9 @@ const flags = ['redo', 'broken', 'trash', 'custom7', 'custom8', 'custom9'];
 
 const customs = flags.slice(3);
 
+// Opt-in: copy each review into its PNG, so a copied file keeps it (and anyone it is shared with can read it).
+let embedPng = stored('embedPng') === '1';
+
 const nameOf = (v) =>
   state.customNames[v] ||
   state.folderLabels[v] ||
@@ -182,6 +185,7 @@ async function save(
     flag,
     pins,
     strokes,
+    embed: embedPng,
     labels: Object.fromEntries(
       customs
         .filter((v) => state.customNames[v])
@@ -442,6 +446,7 @@ async function applyPicks(value) {
           comment: note || it.comment || '',
           pins: it.pins || [],
           strokes: it.strokes || [],
+          embed: embedPng,
           labels,
         })
       ).items;
@@ -2312,6 +2317,7 @@ function clearFolder() {
           comment: '',
           pins: [],
           strokes: [],
+          embed: embedPng,
         });
         state.items = result.items;
       }
@@ -3747,6 +3753,12 @@ function initSettings() {
   $('set-details').onchange = (e) => setShowDetails(e.target.checked);
 
   $('set-hints').onchange = (e) => setHints(e.target.checked);
+
+  $('set-embed').checked = embedPng;
+  $('set-embed').onchange = (e) => {
+    embedPng = e.target.checked;
+    store('embedPng', embedPng ? '1' : '0');
+  };
 
   setHints(stored('hints') !== '0');
   document.body.classList.toggle('dir-folded', stored('dirFolded') === '1');

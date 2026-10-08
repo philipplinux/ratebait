@@ -630,6 +630,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def end_headers(self):
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+        super().end_headers()
+
     def trusted_authority(self):
         hosts = self.headers.get_all("Host", [])
         if len(hosts) != 1:
@@ -641,6 +647,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             host = host.removesuffix(":80")
         if host not in {name if port == 80 else f"{name}:{port}" for name in allowed}:
             raise ValueError("untrusted Host")
+        # Browsers send this even where they omit Origin (e.g. a cross-site <img>).
+        if self.headers.get("Sec-Fetch-Site") not in (None, "same-origin", "none"):
+            raise ValueError("cross-site request is not allowed")
         origin = self.headers.get("Origin")
         if origin is not None:
             origin = origin.lower().removesuffix(":80") if port == 80 else origin.lower()
@@ -838,6 +847,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if not isinstance(comment, str):
                 raise ValueError("comment must be a string")
             comment = comment.strip()
+            embed = data.get("embed")
+            if embed not in (None, True, False):
+                raise ValueError("embed must be true, false or absent")
             marks = clean_marks(data)
             labels = clean_labels(data.get("labels", {}))
             with LOCK:
@@ -854,9 +866,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     state["labels"] = {**state.get("labels", {}), **labels}
                 save_review(d, state, list_media(d))
                 embedded = True
-                if Path(name).suffix.lower() == ".png":
+                if embed is not None and Path(name).suffix.lower() == ".png":
                     try:
-                        embed_review(d / name, None if cleared else state["items"].get(name))
+                        # Opt-in from the browser setting; off strips a review stored earlier, absent leaves the PNG alone.
+                        if embed and not cleared:
+                            embed_review(d / name, state["items"].get(name))
+                        elif read_embedded(d / name) is not None:
+                            embed_review(d / name, None)
                     except (OSError, ValueError) as e:
                         embedded = False
                         print(f"embed skipped: {e}", file=sys.stderr, flush=True)

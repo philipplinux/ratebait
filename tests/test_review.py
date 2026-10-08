@@ -32,8 +32,8 @@ def check():
         worker.start()
         base = f"http://127.0.0.1:{server.server_port}"
 
-        def save(name, rating):
-            body = json.dumps(dict(dir=str(d), name=name, rating=rating, flag=None, comment="")).encode()
+        def save(name, rating, embed=True):
+            body = json.dumps(dict(dir=str(d), name=name, rating=rating, flag=None, comment="", embed=embed)).encode()
             with urlopen(
                 Request(base + "/api/review", data=body, headers={"Content-Type": "application/json"})
             ) as response:
@@ -76,6 +76,11 @@ def check():
             # Reload from disk, not a transient in-memory marker.
             assert rb.load_state(d)["items"]["a.png"]["rating"] is None
             (d / "a.png").chmod(0o644)
+            # Embedding is opt-in: absent leaves the PNG alone, false strips the review stored earlier.
+            save("a.png", "pass", embed=None)
+            assert rb.read_embedded(d / "a.png")["rating"] == "love"
+            save("a.png", "pass", embed=False)
+            assert rb.read_embedded(d / "a.png") is None
             state = rb.load_state(d)
             state["items"]["a.png"] = dict(rating="love", flag=None, comment="", pins=[dict(x=0.5, y=0.5)])
             (d / rb.STATE_FILE).write_text(json.dumps(state))
@@ -151,13 +156,22 @@ def check():
                 request(listing, headers={"Origin": origin}, status=400)
                 request("/api/review", review, headers={"Origin": origin}, status=400)
             request("/api/review", review)  # Non-browser clients need no Origin.
+            # Cross-site browser requests often carry no Origin (e.g. <img src>); Fetch Metadata catches them.
+            for site in ["cross-site", "same-site"]:
+                request(listing, headers={"Sec-Fetch-Site": site}, status=400)
+                request("/api/review", review, headers={"Sec-Fetch-Site": site}, status=400)
+            for site in ["same-origin", "none"]:
+                request(listing, headers={"Sec-Fetch-Site": site})
+            with urlopen(base + "/") as response:
+                assert response.headers["X-Content-Type-Options"] == "nosniff"
+                assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
             # HTTP default-port authorities omit :80 after browser URL normalization.
             with patch.object(server, "server_port", 80):
                 for host in ["127.0.0.1", "127.0.0.1:80", "localhost", "localhost:80"]:
                     request(listing, headers={"Host": host, "Origin": "http://" + host})
                     request("/api/review", review, headers={"Host": host, "Origin": "http://" + host})
                 request(listing, headers={"Host": "evil.example", "Origin": "http://evil.example"}, status=400)
-            for field, value in [("rating", []), ("rating", {}), ("flag", []), ("labels", []), ("labels", {"custom7": 7})]:
+            for field, value in [("rating", []), ("rating", {}), ("flag", []), ("labels", []), ("labels", {"custom7": 7}), ("embed", "yes")]:
                 request("/api/review", {**review, field: value}, status=400)
 
         finally:

@@ -41,7 +41,7 @@ Made for a 4K screen at 50 inches. ¯\\\_(ツ)\_/¯ Screenshots: [docs/screensho
 No database, no memory service, no index to keep in sync. Every review leaves a trail of bait that the next person, script or LLM agent can pick up:
 
 - **`REVIEW.md`** in each folder: plain Markdown, grouped by rating, with comments and marks. Easy to read, grep and diff, and to paste into a prompt.
-- **Embedded data:** PNGs carry their own review in an iTXt chunk, next to the generation prompt and seed. Copy or move a file and its rating goes with it; RateBait reads it back in any folder.
+- **Embedded data (opt-in):** with ⚙ **Save the review inside the PNG too** on, PNGs carry their own review in an iTXt chunk, next to the generation prompt and seed. Copy or move a file and its rating goes with it; RateBait reads it back in any folder. Off by default, because anyone you share the PNG with can read the comment and marks.
 - **File names:** the name links a picture to its review entry, its run log and its notes, so plain search finds every place it is mentioned.
 
 Plain files and stable names link everything that matters, cheaply and reliably. Any tool that reads text can follow the trail.
@@ -50,7 +50,7 @@ Plain files and stable names link everything that matters, cheaply and reliably.
 
 Setting it up with an AI agent, or letting one act on your reviews? Point it at [AGENTS.md](AGENTS.md).
 
-- **Required:** Python 3.10+ and a modern browser. Nothing to install: clone and run.
+- **Required:** Python 3.11+ and a modern browser. Nothing to install: clone and run.
 - **Optional, for Browse…:** on Linux, PyGObject (`python3-gobject` on Fedora, `python3-gi` on Debian/Ubuntu) plus a running `xdg-desktop-portal`, which most desktops ship. Without it, Browse… falls back to Tk (`python3-tkinter` / `python3-tk`). Without either, type the folder path instead.
 - **Folders:** pass `--root` per media folder, or set `MEDIA_RATER_ROOTS` once (e.g. in `~/.config/environment.d/`).
 
@@ -118,10 +118,10 @@ python3 ratebait.py --root ~/Pictures --root ~/Music --port 8765
   ```
 
   </details>
-- PNG files also carry their review in an embedded iTXt chunk (pixels and other metadata untouched, mtime kept). Copy a rated PNG into another folder and the rater picks up its rating there, so favourites can be promoted and demoted in a collection folder.
+- With the ⚙ PNG setting on, PNG files also carry their review in an embedded iTXt chunk (pixels and other metadata untouched, mtime kept); with it off, saving a PNG removes a review embedded earlier. Copy a rated PNG into another folder and the rater picks up its rating there, so favourites can be promoted and demoted in a collection folder.
 - Saves are atomic per file: `.review.json`, `REVIEW.md` and PNGs are written to a temporary file and then swapped in. A failed report save restores the previous JSON state. PNG embedding is a separate best-effort step: if a PNG cannot be rewritten, the folder review is saved, but a copy of that PNG may still carry its old embedded review. Atomic replacement does not guarantee durability across power loss.
 
-Images: PNG, JPG, WebP, GIF. Audio: MP3, FLAC, WAV, OGG, M4A, Opus. Listens on IPv4 loopback only; requests must use the listening loopback address or `localhost` and the actual server port. Foreign Host headers and cross-origin POSTs are rejected; command-line clients without Origin remain supported. **Browse…** (**B** or **O**) opens the system folder dialog via the XDG desktop portal (needs PyGObject), falling back to Tk.
+Images: PNG, JPG, WebP, GIF. Audio: MP3, FLAC, WAV, OGG, M4A, Opus. Listens on IPv4 loopback only; requests must use the listening loopback address or `localhost` and the actual server port. Foreign Host headers, cross-origin POSTs and cross-site browser requests (`Sec-Fetch-Site`) are rejected; command-line clients without Origin remain supported. **Browse…** (**B** or **O**) opens the system folder dialog via the XDG desktop portal (needs PyGObject), falling back to Tk.
 
 ## Support
 
