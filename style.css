@@ -1005,13 +1005,20 @@ body.side #ratings .flag-sep {
 }
 body.side #ratings button {
   max-width: none;
+  min-height: 0;
+  padding: 6px 4px;
+  gap: 3px;
+  font-size: 14px;
 }
 body.side #ratings .rating-icon {
-  font-size: 20px;
+  font-size: 18px;
+}
+body.side #ratings .rating-control > .rating-foot {
+  bottom: 7px;
 }
 body.side #ratings .rating-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 body.side [data-key='4'] {
   grid-area: 1/1;
