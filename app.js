@@ -3488,7 +3488,8 @@ function setRsScale(pct) {
   pct = Math.min(100, Math.max(50, +pct || 100));
   $('set-rs-width').value = pct;
   $('rs-width-out').value = pct + '%';
-  document.body.style.setProperty('--rs-scale', pct / 100);
+  // 100% is 70% of the original 340px column, so buttons, tools, Marks and Details shrink together.
+  document.body.style.setProperty('--rs-scale', (pct / 100) * 0.7);
   store('rsScale', pct);
   if (typeof placeMarksPanel === 'function') placeMarksPanel();
 }
